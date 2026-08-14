@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+source_record="$repo_root/sources/aperture.json"
+target_skill="$repo_root/skills/create-data-visualizations"
+temp_root=$(mktemp -d)
+trap 'rm -rf "$temp_root"' EXIT
+
+source_commit=$(node -e \
+  'const record = require(process.argv[1]); process.stdout.write(record.commit)' \
+  "$source_record")
+
+git -C "$temp_root" init --quiet
+git -C "$temp_root" remote add origin https://github.com/kevin-courbet/aperture.git
+git -C "$temp_root" fetch --quiet --depth 1 origin main
+published_commit=$(git -C "$temp_root" rev-parse --verify FETCH_HEAD)
+if [[ "$source_commit" != "$published_commit" ]]; then
+  echo "recorded Aperture commit is not origin/main: $source_commit" >&2
+  exit 1
+fi
+
+git -C "$temp_root" archive "$source_commit" skills/create-data-visualizations |
+  tar -x -C "$temp_root"
+
+diff -ru "$temp_root/skills/create-data-visualizations" "$target_skill"

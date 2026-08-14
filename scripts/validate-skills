@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+
+test -f "$repo_root/skills/ui-design/SKILL.md"
+test -f "$repo_root/skills/ui-design/references/method.md"
+test -f "$repo_root/skills/create-data-visualizations/SKILL.md"
+test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
+test -f "$repo_root/sources/aperture.json"
+
+npx --yes skills@1.5.22 use "$repo_root" --skill ui-design >/dev/null
+npx --yes skills@1.5.22 use "$repo_root" --skill create-data-visualizations >/dev/null
+bun "$repo_root/skills/create-data-visualizations/scripts/chart" capabilities --json >/dev/null
+bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema capabilities --json >/dev/null
+bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema chart-spec --json >/dev/null
+bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema command-result --json >/dev/null
+bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema diagnostic --json >/dev/null
+bun "$repo_root/skills/create-data-visualizations/scripts/chart" validate-spec \
+  "$repo_root/skills/create-data-visualizations/assets/examples/react-time-series.json" \
+  --json >/dev/null
+bash "$repo_root/scripts/verify-aperture-mirror"

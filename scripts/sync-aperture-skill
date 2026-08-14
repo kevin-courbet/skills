@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 2 ]]; then
+  echo "usage: sync-aperture-skill <aperture-repository> <source-commit>" >&2
+  exit 2
+fi
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+source_repo=$(cd "$1" && pwd)
+requested_commit=$2
+target_skill="$repo_root/skills/create-data-visualizations"
+source_record="$repo_root/sources/aperture.json"
+temp_root=$(mktemp -d)
+trap 'rm -rf "$temp_root"' EXIT
+
+remote_url=$(git -C "$source_repo" remote get-url origin)
+case "$remote_url" in
+  git@github.com:kevin-courbet/aperture.git | https://github.com/kevin-courbet/aperture.git)
+    ;;
+  *)
+    echo "unexpected Aperture remote: $remote_url" >&2
+    exit 1
+    ;;
+esac
+
+source_commit=$(git -C "$source_repo" rev-parse --verify "$requested_commit^{commit}")
+git -C "$source_repo" fetch --quiet origin main
+published_commit=$(git -C "$source_repo" rev-parse --verify FETCH_HEAD)
+if [[ "$source_commit" != "$published_commit" ]]; then
+  echo "source commit is not origin/main: $source_commit" >&2
+  exit 1
+fi
+
+git -C "$source_repo" archive "$source_commit" skills/create-data-visualizations |
+  tar -x -C "$temp_root"
+source_skill="$temp_root/skills/create-data-visualizations"
+
+npx --yes skills@1.5.22 use "$temp_root" --skill create-data-visualizations >/dev/null
+bun "$source_skill/scripts/chart" capabilities --json >/dev/null
+bun "$source_skill/scripts/chart" validate-spec \
+  "$source_skill/assets/examples/react-time-series.json" --json >/dev/null
+
+mkdir -p "$(dirname "$target_skill")"
+rsync -a --delete "$source_skill/" "$target_skill/"
+mkdir -p "$(dirname "$source_record")"
+printf '{\n  "repository": "kevin-courbet/aperture",\n  "commit": "%s"\n}\n' \
+  "$source_commit" >"$source_record"
