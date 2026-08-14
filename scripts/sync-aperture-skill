@@ -16,7 +16,9 @@ trap 'rm -rf "$temp_root"' EXIT
 
 remote_url=$(git -C "$source_repo" remote get-url origin)
 case "$remote_url" in
-  git@github.com:kevin-courbet/aperture.git | https://github.com/kevin-courbet/aperture.git)
+  git@github.com:kevin-courbet/aperture.git | \
+    https://github.com/kevin-courbet/aperture | \
+    https://github.com/kevin-courbet/aperture.git)
     ;;
   *)
     echo "unexpected Aperture remote: $remote_url" >&2
@@ -27,9 +29,19 @@ esac
 source_commit=$(git -C "$source_repo" rev-parse --verify "$requested_commit^{commit}")
 git -C "$source_repo" fetch --quiet origin main
 published_commit=$(git -C "$source_repo" rev-parse --verify FETCH_HEAD)
-if [[ "$source_commit" != "$published_commit" ]]; then
-  echo "source commit is not origin/main: $source_commit" >&2
+if ! git -C "$source_repo" merge-base --is-ancestor "$source_commit" "$published_commit"; then
+  echo "source commit is not on origin/main: $source_commit" >&2
   exit 1
+fi
+
+if [[ -f "$source_record" ]]; then
+  previous_commit=$(node -e \
+    'const record = require(process.argv[1]); process.stdout.write(record.commit)' \
+    "$source_record")
+  if ! git -C "$source_repo" merge-base --is-ancestor "$previous_commit" "$source_commit"; then
+    echo "source commit would move backwards: $source_commit" >&2
+    exit 1
+  fi
 fi
 
 git -C "$source_repo" archive "$source_commit" skills/create-data-visualizations |

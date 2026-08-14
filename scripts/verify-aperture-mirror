@@ -13,10 +13,10 @@ source_commit=$(node -e \
 
 git -C "$temp_root" init --quiet
 git -C "$temp_root" remote add origin https://github.com/kevin-courbet/aperture.git
-git -C "$temp_root" fetch --quiet --depth 1 origin main
+git -C "$temp_root" fetch --quiet origin main
 published_commit=$(git -C "$temp_root" rev-parse --verify FETCH_HEAD)
-if [[ "$source_commit" != "$published_commit" ]]; then
-  echo "recorded Aperture commit is not origin/main: $source_commit" >&2
+if ! git -C "$temp_root" merge-base --is-ancestor "$source_commit" "$published_commit"; then
+  echo "recorded Aperture commit is not on origin/main: $source_commit" >&2
   exit 1
 fi
 
