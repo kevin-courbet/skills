@@ -7,9 +7,15 @@ description: Create, review, or refactor information-dense UI hierarchy, layout,
 
 Apply a hierarchy-first method to make an existing interface clearer, easier to scan, and more polished without depending on decorative effects.
 
-## Required Reference
+## Required Workflow
 
-Read `references/method.md` before design or implementation. Treat it as the canonical method and checklist.
+1. Read `references/method.md` before design or implementation. Treat it as the canonical method and checklist.
+2. Read `references/component-patterns.md` before selecting page or component structures.
+3. Read `references/palette-usage.md` before creating or changing a color system.
+4. Read `references/font-selection.md` before selecting or pairing typefaces.
+5. Read `references/icon-usage.md` before selecting or implementing icons.
+
+Resolve all paths relative to this skill directory. Use the support directory printed by `skills use` when the skill is loaded on demand.
 
 ## Non-Negotiables
 
@@ -19,6 +25,7 @@ Read `references/method.md` before design or implementation. Treat it as the can
 - Use color as support, never as the only status or selection signal.
 - Adapt information and arrangement for small screens; do not only shrink or stack the desktop design.
 - Respect the existing product design system unless the user requests a new direction.
+- Treat bundled palettes and external icon libraries as starting resources, not automatic design decisions.
 
 ## Optional Coordination
 

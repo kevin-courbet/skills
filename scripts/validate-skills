@@ -5,6 +5,50 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
 test -f "$repo_root/skills/ui-design/SKILL.md"
 test -f "$repo_root/skills/ui-design/references/method.md"
+test -f "$repo_root/skills/ui-design/references/component-patterns.md"
+test -f "$repo_root/skills/ui-design/references/font-selection.md"
+test -f "$repo_root/skills/ui-design/references/icon-usage.md"
+test -f "$repo_root/skills/ui-design/references/palette-usage.md"
+test -f "$repo_root/skills/ui-design/assets/palettes/swatches.json"
+test -f "$repo_root/skills/ui-design/assets/palettes/NOTICE.md"
+
+shopt -s nullglob
+palette_files=()
+for index in {01..24}; do
+  palette_file="$repo_root/skills/ui-design/assets/palettes/palette-$index.json"
+  test -f "$palette_file"
+  palette_files+=("$palette_file")
+done
+
+all_palette_files=("$repo_root"/skills/ui-design/assets/palettes/palette-*.json)
+test "${#all_palette_files[@]}" -eq "${#palette_files[@]}"
+
+node - "${palette_files[@]}" "$repo_root/skills/ui-design/assets/palettes/swatches.json" <<'NODE'
+const fs = require("node:fs")
+
+for (const file of process.argv.slice(2)) {
+  const source = fs.readFileSync(file, "utf8")
+  const json = source
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/,\s*([}\]])/g, "$1")
+  const palette = JSON.parse(json)
+  const colors = Object.entries(palette)
+
+  if (colors.length === 0) {
+    throw new Error(`${file}: palette is empty`)
+  }
+
+  for (const [name, value] of colors) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*-(?:050|[1-9]00)$/.test(name)) {
+      throw new Error(`${file}: invalid color name ${name}`)
+    }
+    if (!/^#[0-9A-F]{6}$/.test(value)) {
+      throw new Error(`${file}: invalid color value for ${name}`)
+    }
+  }
+}
+NODE
+
 test -f "$repo_root/skills/create-data-visualizations/SKILL.md"
 test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
 test -f "$repo_root/sources/aperture.json"
