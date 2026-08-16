@@ -22,5 +22,5 @@ Validation runs without catalog write access. A separate catalog job publishes
 only the validated skill artifact and source record. A bounded monthly heartbeat
 keeps GitHub from disabling the scheduled publisher during repository inactivity.
 
-Consumers load and install both skills from `kevin-courbet/skills` with the
+Consumers load and install catalog skills from `kevin-courbet/skills` with the
 `skills` CLI.

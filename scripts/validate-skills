@@ -12,7 +12,20 @@ test -f "$repo_root/skills/ui-design/references/palette-usage.md"
 test -f "$repo_root/skills/ui-design/assets/palettes/swatches.json"
 test -f "$repo_root/skills/ui-design/assets/palettes/NOTICE.md"
 
+test -f "$repo_root/skills/form-design/SKILL.md"
+test -f "$repo_root/skills/form-design/references/method.md"
+test -f "$repo_root/skills/form-design/references/component-patterns.md"
+test -x "$repo_root/scripts/sync-form-design"
 shopt -s nullglob
+form_reference_files=("$repo_root"/skills/form-design/references/*)
+test "${#form_reference_files[@]}" -eq 2
+cmp -s \
+  "$repo_root/skills/ui-design/references/method.md" \
+  "$repo_root/skills/form-design/references/method.md"
+cmp -s \
+  "$repo_root/skills/ui-design/references/component-patterns.md" \
+  "$repo_root/skills/form-design/references/component-patterns.md"
+
 palette_files=()
 for index in {01..24}; do
   palette_file="$repo_root/skills/ui-design/assets/palettes/palette-$index.json"
@@ -54,7 +67,19 @@ test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
 test -f "$repo_root/sources/aperture.json"
 
 npx --yes skills@1.5.22 use "$repo_root" --skill ui-design >/dev/null
+npx --yes skills@1.5.22 use "$repo_root" --skill form-design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill create-data-visualizations >/dev/null
+install_root=$(mktemp -d)
+trap 'rm -rf "$install_root"' EXIT
+(
+  cd "$install_root"
+  npx --yes skills@1.5.22 add "$repo_root" \
+    --skill form-design \
+    --agent opencode \
+    --copy \
+    --yes >/dev/null
+)
+test -f "$install_root/.agents/skills/form-design/SKILL.md"
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" capabilities --json >/dev/null
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema capabilities --json >/dev/null
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema chart-spec --json >/dev/null

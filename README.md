@@ -16,6 +16,20 @@ Install it for later sessions:
 npx skills add kevin-courbet/skills --skill ui-design -y
 ```
 
+## Form Design
+
+Load the focused form-design entry for one session:
+
+```sh
+npx skills use kevin-courbet/skills@form-design
+```
+
+Install it for later sessions:
+
+```sh
+npx skills add kevin-courbet/skills --skill form-design -y
+```
+
 ## Data Visualizations
 
 Load the Aperture visualization skill for one session:
@@ -30,9 +44,10 @@ Install it for later sessions:
 npx skills add kevin-courbet/skills --skill create-data-visualizations -y
 ```
 
-`ui-design` is developed in this repository. `create-data-visualizations` is
-developed in [Aperture](https://github.com/kevin-courbet/aperture) and is
-published here by automation. Do not edit its generated distribution copy.
+`ui-design` and `form-design` are developed in this repository.
+`create-data-visualizations` is developed in
+[Aperture](https://github.com/kevin-courbet/aperture) and is published here by
+automation. Do not edit its generated distribution copy.
 
 ## Validation
 

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+source_dir="$repo_root/skills/ui-design/references"
+target_dir="$repo_root/skills/form-design/references"
+
+mkdir -p "$target_dir"
+cp "$source_dir/method.md" "$target_dir/method.md"
+cp "$source_dir/component-patterns.md" "$target_dir/component-patterns.md"
