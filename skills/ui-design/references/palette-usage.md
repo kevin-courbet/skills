@@ -35,6 +35,8 @@ Do not copy all colors into product tokens. Select only the scales and steps req
 6. Test focus, hover, selected, disabled, and high-contrast states.
 7. Verify that status and selection remain understandable without color.
 
+For a dark theme, also follow `dark-theme.md`. Do not derive the dark theme by inverting the light palette.
+
 ## Modern Use
 
 The assets contain hex values from the original package. Preserve them when an exact supplied palette is required. For a new system, use them as visual references and build project tokens in the color space already used by the project. Prefer OKLCH for a new web palette when supported.
