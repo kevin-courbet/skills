@@ -3,6 +3,15 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
+test -f "$repo_root/skills/frontend-design/SKILL.md"
+test -f "$repo_root/skills/frontend-design/reference/color-and-contrast.md"
+test -f "$repo_root/skills/frontend-design/reference/interaction-design.md"
+test -f "$repo_root/skills/frontend-design/reference/motion-design.md"
+test -f "$repo_root/skills/frontend-design/reference/responsive-design.md"
+test -f "$repo_root/skills/frontend-design/reference/spatial-design.md"
+test -f "$repo_root/skills/frontend-design/reference/typography.md"
+test -f "$repo_root/skills/frontend-design/reference/ux-writing.md"
+
 test -f "$repo_root/skills/ui-design/SKILL.md"
 test -f "$repo_root/skills/ui-design/references/method.md"
 test -f "$repo_root/skills/ui-design/references/component-patterns.md"
@@ -66,6 +75,7 @@ test -f "$repo_root/skills/create-data-visualizations/SKILL.md"
 test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
 test -f "$repo_root/sources/aperture.json"
 
+npx --yes skills@1.5.22 use "$repo_root" --skill frontend-design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill ui-design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill form-design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill create-data-visualizations >/dev/null

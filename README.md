@@ -2,6 +2,20 @@
 
 Standalone agent skills published for use with the `skills` CLI.
 
+## Frontend Design
+
+Load the skill for one session:
+
+```sh
+npx skills use kevin-courbet/skills@frontend-design
+```
+
+Install it for later sessions:
+
+```sh
+npx skills add kevin-courbet/skills --skill frontend-design -y
+```
+
 ## UI Design
 
 Load the skill for one session:
@@ -44,7 +58,7 @@ Install it for later sessions:
 npx skills add kevin-courbet/skills --skill create-data-visualizations -y
 ```
 
-`ui-design` and `form-design` are developed in this repository.
+`frontend-design`, `ui-design`, and `form-design` are developed in this repository.
 `create-data-visualizations` is developed in
 [Aperture](https://github.com/kevin-courbet/aperture) and is published here by
 automation. Do not edit its generated distribution copy.
