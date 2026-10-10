@@ -1,0 +1,722 @@
+#!/usr/bin/env bun
+// internal-app CLI: scaffold, install or update the design kit, audit an app,
+// and check conventions. Run with: bun "$SKILL_DIR/scripts/internal-app" <command>
+import { createHash } from "node:crypto";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const skillDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const templateDir = join(skillDir, "assets", "template");
+const manifestPath = join(skillDir, "assets", "kit.json");
+const lockName = "internal-app.kit.json";
+const dotfiles = ["gitignore", "oxlintrc.json", "oxfmtrc.json"] as const;
+
+interface Manifest {
+  readonly files: ReadonlyArray<string>;
+  readonly forbiddenDependencies: ReadonlyArray<string>;
+  readonly forbiddenDependencyPrefixes: ReadonlyArray<string>;
+  readonly appContract: Readonly<Record<string, ReadonlyArray<string>>>;
+}
+
+interface Lock {
+  readonly kit: "internal-app";
+  readonly files: Record<string, string>;
+}
+
+class CliError extends Error {}
+
+const usage = `internal-app <command> [options]
+
+Commands:
+  new <dir> [--name "App name"]       Scaffold a new app from the template.
+  sync [dir] [--write] [--force]      Compare the app's kit files with the skill.
+                                      --write installs and updates them.
+                                      --force also replaces locally edited or conflicting files.
+  doctor [dir]                        Audit an app against the stack and list fixes.
+  check [dir]                         Check conventions in src/ and package.json.
+
+Options:
+  --json                              Print machine-readable output.
+
+Exit status is 0 when the result is clean and 1 when action is needed.`;
+
+// ---------------------------------------------------------------- helpers
+
+function readManifest(): Manifest {
+  return JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest;
+}
+
+function sha256(path: string): string {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+function readJson(path: string): unknown {
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function readJsonc(path: string): unknown {
+  const source = readFileSync(path, "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:"'])\/\/.*$/gm, "$1")
+    .replace(/,(\s*[}\]])/g, "$1");
+  return JSON.parse(source);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stringRecord(value: unknown): Record<string, string> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) if (typeof entry === "string") out[key] = entry;
+  return out;
+}
+
+function readLock(appDir: string): Lock | undefined {
+  const path = join(appDir, lockName);
+  if (!existsSync(path)) return undefined;
+  const value = readJson(path);
+  if (!isRecord(value) || value.kit !== "internal-app") throw new CliError(`${lockName} is not an internal-app kit lock.`);
+  return { kit: "internal-app", files: stringRecord(value.files) };
+}
+
+function writeLock(appDir: string, files: Record<string, string>) {
+  const sorted = Object.fromEntries(Object.entries(files).sort(([a], [b]) => a.localeCompare(b)));
+  const lock: Lock = { kit: "internal-app", files: sorted };
+  writeFileSync(join(appDir, lockName), `${JSON.stringify(lock, null, 2)}\n`);
+}
+
+function walk(dir: string): Array<string> {
+  if (!existsSync(dir)) return [];
+  const out: Array<string> = [];
+  for (const entry of readdirSync(dir)) {
+    if (entry === "node_modules" || entry.startsWith(".")) continue;
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) out.push(...walk(path));
+    else out.push(path);
+  }
+  return out;
+}
+
+function toPosix(path: string): string {
+  return path.split(sep).join("/");
+}
+
+function majorOf(range: string): string | undefined {
+  const match = /(\d+)\.(\d+)/.exec(range);
+  if (!match) return undefined;
+  return match[1] === "0" ? `0.${match[2]}` : match[1];
+}
+
+function parseArgs(argv: ReadonlyArray<string>) {
+  const positional: Array<string> = [];
+  const flags = new Set<string>();
+  const values: Record<string, string> = {};
+  for (let index = 0; index < argv.length; index++) {
+    const arg = argv[index] ?? "";
+    if (arg === "--name") {
+      const value = argv[index + 1];
+      if (value === undefined) throw new CliError("--name needs a value.");
+      values.name = value;
+      index++;
+    } else if (arg.startsWith("--")) flags.add(arg.slice(2));
+    else positional.push(arg);
+  }
+  return { positional, flags, values };
+}
+
+// ---------------------------------------------------------------- sync
+
+type SyncStatus = "current" | "add" | "update" | "modified" | "conflict" | "remove" | "removed-modified";
+
+interface SyncEntry {
+  readonly path: string;
+  readonly status: SyncStatus;
+  readonly detail: string;
+}
+
+const syncDetails: Record<SyncStatus, string> = {
+  current: "Matches the skill.",
+  add: "Missing in the app.",
+  update: "The skill changed this file and the app did not.",
+  modified: "Edited in the app. Kit files are not edited locally; move the change into the skill or an app file.",
+  conflict: "Differs from the skill and has no record of a previous sync. Review it, then replace it with --force.",
+  remove: "No longer part of the kit and unchanged in the app.",
+  "removed-modified": "No longer part of the kit but edited in the app. Review it, then delete it with --force.",
+};
+
+function planSync(appDir: string): { entries: Array<SyncEntry>; lock: Lock | undefined } {
+  const manifest = readManifest();
+  const lock = readLock(appDir);
+  const entries: Array<SyncEntry> = [];
+  for (const path of manifest.files) {
+    const kitHash = sha256(join(templateDir, path));
+    const target = join(appDir, path);
+    const appHash = existsSync(target) ? sha256(target) : undefined;
+    const lockHash = lock?.files[path];
+    let status: SyncStatus;
+    if (appHash === undefined) status = "add";
+    else if (appHash === kitHash) status = "current";
+    else if (lockHash === undefined) status = "conflict";
+    else if (lockHash === appHash) status = "update";
+    else if (lockHash === kitHash) status = "modified";
+    else status = "conflict";
+    entries.push({ path, status, detail: syncDetails[status] });
+  }
+  for (const [path, lockHash] of Object.entries(lock?.files ?? {})) {
+    if (manifest.files.includes(path)) continue;
+    const target = join(appDir, path);
+    if (!existsSync(target)) continue;
+    const status: SyncStatus = sha256(target) === lockHash ? "remove" : "removed-modified";
+    entries.push({ path, status, detail: syncDetails[status] });
+  }
+  return { entries, lock };
+}
+
+function runSync(appDir: string, write: boolean, force: boolean) {
+  if (!existsSync(join(appDir, "package.json"))) throw new CliError(`${appDir} has no package.json.`);
+  const { entries, lock } = planSync(appDir);
+  const nextLock: Record<string, string> = { ...lock?.files };
+  const applied: Array<SyncEntry> = [];
+  const pending: Array<SyncEntry> = [];
+  for (const entry of entries) {
+    if (entry.status === "current") {
+      nextLock[entry.path] = sha256(join(appDir, entry.path));
+      continue;
+    }
+    const needsForce = entry.status === "modified" || entry.status === "conflict" || entry.status === "removed-modified";
+    if (!write || (needsForce && !force)) {
+      pending.push(entry);
+      continue;
+    }
+    const target = join(appDir, entry.path);
+    if (entry.status === "remove" || entry.status === "removed-modified") {
+      rmSync(target);
+      delete nextLock[entry.path];
+    } else {
+      mkdirSync(dirname(target), { recursive: true });
+      cpSync(join(templateDir, entry.path), target);
+      nextLock[entry.path] = sha256(target);
+    }
+    applied.push(entry);
+  }
+  if (write) writeLock(appDir, nextLock);
+  return { entries, applied, pending };
+}
+
+// ---------------------------------------------------------------- check
+
+interface Finding {
+  readonly rule: string;
+  readonly file: string;
+  readonly line: number;
+  readonly text: string;
+}
+
+interface LineRule {
+  readonly id: string;
+  readonly message: string;
+  readonly applies: (file: string) => boolean;
+  readonly test: (line: string, next: string) => boolean;
+}
+
+const isUiFile = (file: string) =>
+  /^src\/(components|routes|features)\//.test(file) && /\.(tsx?|jsx?)$/.test(file) && !file.endsWith(".stylex.ts");
+const isSrcCode = (file: string) => /^src\//.test(file) && /\.(tsx?|jsx?)$/.test(file) && !file.endsWith("routeTree.gen.ts");
+const isClientModule = (file: string) =>
+  /^src\/(features|routes|components|lib)\//.test(file) && !/\.server\.(tsx?)$/.test(file);
+const isAppScreen = (file: string) => /^src\/(routes|features)\//.test(file) && file.endsWith(".tsx");
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+}
+
+/** Matches imports of a forbidden package or any of its subpaths. */
+function forbiddenImportPattern(manifest: Manifest): RegExp {
+  const names = [
+    ...manifest.forbiddenDependencies.map((name) => `${escapeRegExp(name)}(?:/[^"']*)?`),
+    ...manifest.forbiddenDependencyPrefixes.map((prefix) => `${escapeRegExp(prefix)}[^"']*`),
+  ].join("|");
+  return new RegExp(`from ["'](?:${names})["']|import\\(["'](?:${names})["']\\)`);
+}
+
+function lineRules(manifest: Manifest): ReadonlyArray<LineRule> {
+  const forbiddenImport = forbiddenImportPattern(manifest);
+  return [
+    {
+      id: "forbidden-import",
+      message: "Import from a library the stack replaces. See references/stack.md.",
+      applies: isSrcCode,
+      test: (line) => forbiddenImport.test(line),
+    },
+    {
+      id: "class-name-string",
+      message: "className string. Style with stylex.create and stylex.props.",
+      applies: isUiFile,
+      test: (line) => /className="[^"]+"/.test(line),
+    },
+    {
+      id: "inline-style-object",
+      message: "Inline style object. Use stylex.create; dynamic values use a style function.",
+      applies: isUiFile,
+      test: (line) => /style=\{\{/.test(line),
+    },
+    {
+      id: "raw-color",
+      message: "Color literal in a component. Use a color token from tokens.stylex.ts.",
+      applies: isUiFile,
+      test: (line) =>
+        /["'`(\s]#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})(?=["'`)\s;,])/.test(line) ||
+        /\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb)\(/.test(line),
+    },
+    {
+      id: "font-size-literal",
+      message: "Font size literal. Use a font token.",
+      applies: isUiFile,
+      test: (line) => /fontSize:\s*(?:["'`][\d.]+(?:px|rem|em)["'`]|\d)/.test(line),
+    },
+    {
+      id: "stylex-shorthand",
+      message: "border, background, or outline shorthand. StyleX does not reset native styles with it; use longhands.",
+      applies: isUiFile,
+      test: (line) => /^\s*(?:border|background|outline):\s/.test(line),
+    },
+    {
+      id: "palette-import",
+      message: "palette.stylex imported outside tokens.stylex.ts and themes.ts. Components read tokens only.",
+      applies: (file) => isSrcCode(file) && !/^src\/styles\/(tokens\.stylex|themes|palette\.stylex)\.ts$/.test(file),
+      test: (line) => /from ["'][^"']*palette\.stylex["']/.test(line),
+    },
+    {
+      id: "left-edge-nav",
+      message: "Left-edge marker on navigation. Mark the current item with a selected surface and aria-current.",
+      applies: (file) => /^src\/components\/shell\//.test(file) || /nav/i.test(file.split("/").pop() ?? ""),
+      test: (line) => /\b(?:borderLeft|borderInlineStart)\w*\s*:|boxShadow:\s*["'`]inset/.test(line),
+    },
+    {
+      id: "theme-media-query",
+      message: "prefers-color-scheme in a component. Themes are a token concern.",
+      applies: (file) => isUiFile(file) && file !== "src/components/shell/app-document.tsx",
+      test: (line) => /prefers-color-scheme/.test(line),
+    },
+    {
+      id: "server-import-in-client",
+      message: "Top-level import from src/server in a client module. Import it dynamically inside the server-function handler.",
+      applies: isClientModule,
+      test: (line) => /^import\s(?!type\s).*from\s["']@\/server\//.test(line),
+    },
+    {
+      id: "static-server-module-import",
+      message: "Static import of a .server module. Import it dynamically inside the handler.",
+      applies: (file) => isSrcCode(file) && !/\.server\.tsx?$/.test(file) && !file.startsWith("src/server/"),
+      test: (line) => /^import\s(?!type\s).*from\s["'][^"']*\.server["']/.test(line),
+    },
+    {
+      id: "hand-written-search-validation",
+      message: "validateSearch without an Effect Schema. Use Schema.toStandardSchemaV1(schema).",
+      applies: (file) => file.startsWith("src/routes/"),
+      test: (line, next) => /validateSearch:/.test(line) && !/toStandardSchemaV1/.test(line) && !/toStandardSchemaV1/.test(next),
+    },
+    {
+      id: "legacy-api",
+      message: "Legacy API. Use Context.Service, useTable (Table v9), and .validator().",
+      applies: isSrcCode,
+      test: (line) => /\bContext\.Tag\b|\bEffect\.Service\b|\bServiceMap\b|\buseReactTable\b|\.inputValidator\(/.test(line),
+    },
+    {
+      id: "explicit-any",
+      message: "Explicit any. Use unknown with a schema or a type guard.",
+      applies: isSrcCode,
+      test: (line) => /:\s*any\b|\bas any\b|<any>/.test(line),
+    },
+    {
+      id: "raw-element",
+      message: "Native control or table in a screen. Use the kit primitive (Button, TextField, Select, DataTable).",
+      applies: isAppScreen,
+      test: (line) => /<(?:button|input|select|textarea|table)\b/.test(line),
+    },
+    {
+      id: "intl-in-component",
+      message: "Intl formatter created in a component. Use the formatters in src/lib/locale.ts.",
+      applies: isUiFile,
+      test: (line) => /new Intl\./.test(line),
+    },
+  ];
+}
+
+function runCheck(appDir: string): Array<Finding> {
+  const manifest = readManifest();
+  const findings: Array<Finding> = [];
+  const packagePath = join(appDir, "package.json");
+  if (existsSync(packagePath)) {
+    const pkg = readJson(packagePath);
+    const deps = isRecord(pkg) ? { ...stringRecord(pkg.dependencies), ...stringRecord(pkg.devDependencies) } : {};
+    for (const name of Object.keys(deps)) {
+      if (manifest.forbiddenDependencies.includes(name) || manifest.forbiddenDependencyPrefixes.some((prefix) => name.startsWith(prefix))) {
+        findings.push({ rule: "forbidden-dependency", file: "package.json", line: 0, text: name });
+      }
+    }
+  }
+  const rules = lineRules(manifest);
+  for (const absolute of walk(join(appDir, "src"))) {
+    const file = toPosix(relative(appDir, absolute));
+    const applicable = rules.filter((rule) => rule.applies(file));
+    if (applicable.length === 0) continue;
+    const lines = readFileSync(absolute, "utf8").split("\n");
+    lines.forEach((line, index) => {
+      for (const rule of applicable) {
+        if (rule.test(line, lines[index + 1] ?? "")) findings.push({ rule: rule.id, file, line: index + 1, text: line.trim() });
+      }
+    });
+  }
+  return findings;
+}
+
+function ruleMessages(): Record<string, string> {
+  const messages: Record<string, string> = {
+    "forbidden-dependency": "Dependency the stack replaces. Migrate its usages, then bun remove it.",
+  };
+  for (const rule of lineRules(readManifest())) messages[rule.id] = rule.message;
+  return messages;
+}
+
+// ---------------------------------------------------------------- doctor
+
+type CheckStatus = "pass" | "warn" | "fail";
+
+interface DoctorCheck {
+  readonly id: string;
+  readonly status: CheckStatus;
+  readonly message: string;
+  readonly fix?: string;
+}
+
+function fileText(path: string): string | undefined {
+  return existsSync(path) ? readFileSync(path, "utf8") : undefined;
+}
+
+function runDoctor(appDir: string): Array<DoctorCheck> {
+  const checks: Array<DoctorCheck> = [];
+  const add = (check: DoctorCheck) => checks.push(check);
+  const pkgPath = join(appDir, "package.json");
+  if (!existsSync(pkgPath)) {
+    add({ id: "package", status: "fail", message: "No package.json.", fix: "Run doctor in the app root, or create a new app with `internal-app new`." });
+    return checks;
+  }
+  const pkg = readJson(pkgPath);
+  const template = readJson(join(templateDir, "package.json"));
+  const deps = isRecord(pkg) ? stringRecord(pkg.dependencies) : {};
+  const devDeps = isRecord(pkg) ? stringRecord(pkg.devDependencies) : {};
+  const all = { ...deps, ...devDeps };
+  const templateDeps = isRecord(template) ? stringRecord(template.dependencies) : {};
+  const templateDevDeps = isRecord(template) ? stringRecord(template.devDependencies) : {};
+
+  const otherLocks = ["package-lock.json", "pnpm-lock.yaml", "yarn.lock"].filter((name) => existsSync(join(appDir, name)));
+  add(
+    otherLocks.length === 0 && existsSync(join(appDir, "bun.lock"))
+      ? { id: "package-manager", status: "pass", message: "bun.lock is the only lockfile." }
+      : {
+          id: "package-manager",
+          status: "warn",
+          message: otherLocks.length > 0 ? `Other lockfiles: ${otherLocks.join(", ")}.` : "No bun.lock.",
+          fix: `${otherLocks.map((name) => `rm ${name} && `).join("")}bun install`,
+        },
+  );
+
+  add(
+    "@tanstack/react-start" in all
+      ? { id: "framework", status: "pass", message: "TanStack Start app." }
+      : {
+          id: "framework",
+          status: "fail",
+          message: "Not a TanStack Start app.",
+          fix: "Follow references/upgrade.md, section 'Apps on another framework'.",
+        },
+  );
+
+  const missing = (source: Record<string, string>) =>
+    Object.entries(source).filter(([name]) => !(name in all)).map(([name, range]) => `${name}@${range}`);
+  const missingDeps = missing(templateDeps);
+  const missingDevDeps = missing(templateDevDeps);
+  const fixes = [
+    missingDeps.length > 0 ? `bun add ${missingDeps.join(" ")}` : undefined,
+    missingDevDeps.length > 0 ? `bun add -d ${missingDevDeps.join(" ")}` : undefined,
+  ].filter((line): line is string => line !== undefined);
+  add(
+    fixes.length === 0
+      ? { id: "dependencies", status: "pass", message: "Every stack dependency is declared." }
+      : { id: "dependencies", status: "fail", message: `${missingDeps.length + missingDevDeps.length} stack dependencies are missing.`, fix: fixes.join("\n") },
+  );
+
+  const drift = Object.entries({ ...templateDeps, ...templateDevDeps })
+    .filter(([name, range]) => name in all && majorOf(all[name] ?? "") !== majorOf(range))
+    .map(([name, range]) => `${name}@${range}`);
+  add(
+    drift.length === 0
+      ? { id: "versions", status: "pass", message: "Stack dependencies match the template major versions." }
+      : { id: "versions", status: "warn", message: `${drift.length} dependencies differ from the template major version.`, fix: `bun add ${drift.join(" ")}` },
+  );
+
+  const manifest = readManifest();
+  const forbidden = Object.keys(all).filter(
+    (name) => manifest.forbiddenDependencies.includes(name) || manifest.forbiddenDependencyPrefixes.some((prefix) => name.startsWith(prefix)),
+  );
+  add(
+    forbidden.length === 0
+      ? { id: "forbidden-dependencies", status: "pass", message: "No replaced libraries are installed." }
+      : {
+          id: "forbidden-dependencies",
+          status: "fail",
+          message: `Replaced libraries: ${forbidden.join(", ")}.`,
+          fix: `Migrate their usages (references/upgrade.md), then: bun remove ${forbidden.join(" ")}`,
+        },
+  );
+
+  const scripts = isRecord(pkg) ? stringRecord(pkg.scripts) : {};
+  const templateScripts = isRecord(template) ? stringRecord(template.scripts) : {};
+  const scriptDrift = Object.entries(templateScripts).filter(([name, command]) => scripts[name] !== command);
+  add(
+    scriptDrift.length === 0
+      ? { id: "scripts", status: "pass", message: "package.json scripts match the template." }
+      : {
+          id: "scripts",
+          status: "warn",
+          message: `Scripts differ: ${scriptDrift.map(([name]) => name).join(", ")}.`,
+          fix: scriptDrift.map(([name, command]) => `"${name}": "${command}"`).join("\n"),
+        },
+  );
+
+  const viteName = ["vite.config.ts", "vite.config.mts", "vite.config.js"].find((name) => existsSync(join(appDir, name)));
+  const vite = viteName === undefined ? undefined : fileText(join(appDir, viteName));
+  if (vite === undefined) {
+    add({ id: "vite-config", status: "fail", message: "No vite.config.ts.", fix: "Copy assets/template/vite.config.ts." });
+  } else {
+    const problems: Array<string> = [];
+    if (!vite.includes("@stylexjs/unplugin")) problems.push("StyleX plugin is missing");
+    const stylexAt = vite.indexOf("stylex.vite(");
+    const reactAt = Math.max(vite.indexOf("viteReact("), vite.indexOf("react("));
+    if (stylexAt === -1 || (reactAt !== -1 && stylexAt > reactAt)) problems.push("stylex.vite() must come before the React plugin");
+    if (!vite.includes("unstable_moduleResolution")) problems.push("unstable_moduleResolution is missing");
+    if (!vite.includes("aliases")) problems.push("StyleX aliases for @/* are missing");
+    if (!vite.includes("tanstackStart(")) problems.push("tanstackStart() is missing");
+    add(
+      problems.length === 0
+        ? { id: "vite-config", status: "pass", message: "Vite config has StyleX before React and TanStack Start." }
+        : { id: "vite-config", status: "fail", message: `${problems.join("; ")}.`, fix: "Compare with assets/template/vite.config.ts (references/styling.md, Build Wiring)." },
+    );
+  }
+
+  const tsconfigPath = join(appDir, "tsconfig.json");
+  if (!existsSync(tsconfigPath)) {
+    add({ id: "tsconfig", status: "fail", message: "No tsconfig.json.", fix: "Copy assets/template/tsconfig.json." });
+  } else {
+    let options: Record<string, unknown> = {};
+    try {
+      const parsed = readJsonc(tsconfigPath);
+      options = isRecord(parsed) && isRecord(parsed.compilerOptions) ? parsed.compilerOptions : {};
+    } catch {
+      add({ id: "tsconfig", status: "warn", message: "tsconfig.json could not be parsed.", fix: "Check strict, paths @/*, and verbatimModuleSyntax by hand." });
+    }
+    const problems: Array<string> = [];
+    if (options.strict !== true) problems.push("strict is off");
+    if (!isRecord(options.paths) || !("@/*" in options.paths)) problems.push("paths has no @/*");
+    if (options.verbatimModuleSyntax === true) problems.push("verbatimModuleSyntax is on (it can leak server code into the client)");
+    if (Object.keys(options).length > 0) {
+      add(
+        problems.length === 0
+          ? { id: "tsconfig", status: "pass", message: "tsconfig is strict with the @/* alias." }
+          : { id: "tsconfig", status: "fail", message: `${problems.join("; ")}.`, fix: "Compare with assets/template/tsconfig.json." },
+      );
+    }
+  }
+
+  const lintConfigs = [".oxlintrc.json", ".oxfmtrc.json"].filter((name) => !existsSync(join(appDir, name)));
+  add(
+    lintConfigs.length === 0
+      ? { id: "lint-config", status: "pass", message: "oxlint and oxfmt configs exist." }
+      : { id: "lint-config", status: "warn", message: `Missing ${lintConfigs.join(", ")}.`, fix: lintConfigs.map((name) => `cp "${join(templateDir, `_${name.slice(1)}`)}" ${name}`).join("\n") },
+  );
+
+  const { entries } = planSync(appDir);
+  const notCurrent = entries.filter((entry) => entry.status !== "current");
+  const counts = notCurrent.reduce<Record<string, number>>((acc, entry) => ({ ...acc, [entry.status]: (acc[entry.status] ?? 0) + 1 }), {});
+  add(
+    notCurrent.length === 0
+      ? { id: "kit", status: "pass", message: `All ${entries.length} kit files match the skill.` }
+      : {
+          id: "kit",
+          status: "fail",
+          message: `Kit files not current: ${Object.entries(counts).map(([status, count]) => `${count} ${status}`).join(", ")}.`,
+          fix: "bun \"$SKILL_DIR/scripts/internal-app\" sync --write   (add --force after reviewing modified or conflicting files)",
+        },
+  );
+
+  for (const [path, exportsNeeded] of Object.entries(manifest.appContract)) {
+    const text = fileText(join(appDir, path));
+    const absent = text === undefined ? exportsNeeded : exportsNeeded.filter((name) => !new RegExp(`export\\s+(?:const|type|interface|function|class)\\s+${name}\\b`).test(text));
+    add(
+      absent.length === 0
+        ? { id: `contract:${path}`, status: "pass", message: `${path} exports ${exportsNeeded.join(", ")}.` }
+        : { id: `contract:${path}`, status: "fail", message: `${path} must export ${absent.join(", ")}; kit files import them.`, fix: `Copy assets/template/${path} and adapt it.` },
+    );
+  }
+
+  const root = fileText(join(appDir, "src/routes/__root.tsx"));
+  add(
+    root !== undefined && root.includes("AppDocument") && root.includes("getThemeChoice")
+      ? { id: "root-route", status: "pass", message: "Root route renders AppDocument with the theme choice." }
+      : { id: "root-route", status: "fail", message: "Root route does not use AppDocument and getThemeChoice.", fix: "Replace its document markup as in assets/template/src/routes/__root.tsx (references/upgrade.md, step 4)." },
+  );
+
+  const router = fileText(join(appDir, "src/router.tsx"));
+  add(
+    router !== undefined && router.includes("routerDefaults") && router.includes("setupRouterSsrQueryIntegration")
+      ? { id: "router", status: "pass", message: "Router spreads routerDefaults and wires the SSR query integration." }
+      : { id: "router", status: "fail", message: "Router does not use routerDefaults and setupRouterSsrQueryIntegration.", fix: "Rewrite src/router.tsx as in assets/template/src/router.tsx." },
+  );
+
+  const routeSources = walk(join(appDir, "src/routes")).map((path) => readFileSync(path, "utf8"));
+  add(
+    routeSources.some((source) => source.includes("<AppShell"))
+      ? { id: "app-shell", status: "pass", message: "A layout route renders AppShell." }
+      : { id: "app-shell", status: "warn", message: "No route renders AppShell.", fix: "Add a pathless layout as in assets/template/src/routes/_app.tsx." },
+  );
+  add(
+    routeSources.some((source) => source.includes("<ChartProvider"))
+      ? { id: "chart-provider", status: "pass", message: "ChartProvider wraps the app layout." }
+      : { id: "chart-provider", status: "warn", message: "No ChartProvider in the routes.", fix: "Wrap AppShell in <ChartProvider locale={appLocale} timeZone={appTimeZone}>." },
+  );
+
+  const findings = runCheck(appDir);
+  const byRule = findings.reduce<Record<string, number>>((acc, finding) => ({ ...acc, [finding.rule]: (acc[finding.rule] ?? 0) + 1 }), {});
+  add(
+    findings.length === 0
+      ? { id: "conventions", status: "pass", message: "No convention findings." }
+      : {
+          id: "conventions",
+          status: "fail",
+          message: `${findings.length} findings: ${Object.entries(byRule).map(([rule, count]) => `${rule} ${count}`).join(", ")}.`,
+          fix: "bun \"$SKILL_DIR/scripts/internal-app\" check   (lists each finding with file and line)",
+        },
+  );
+  return checks;
+}
+
+// ---------------------------------------------------------------- new
+
+function runNew(target: string, name: string) {
+  if (existsSync(target) && readdirSync(target).length > 0) throw new CliError(`${target} exists and is not empty.`);
+  mkdirSync(target, { recursive: true });
+  cpSync(templateDir, target, { recursive: true });
+  for (const dotfile of dotfiles) {
+    const stored = join(target, `_${dotfile}`);
+    if (existsSync(stored)) renameSync(stored, join(target, `.${dotfile}`));
+  }
+  const pkgPath = join(target, "package.json");
+  const pkg = readJson(pkgPath);
+  if (!isRecord(pkg)) throw new CliError("Template package.json is not an object.");
+  pkg.name = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "internal-app";
+  writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  for (const path of ["src/routes/__root.tsx", "src/routes/_app.tsx"]) {
+    const file = join(target, path);
+    writeFileSync(file, readFileSync(file, "utf8").replaceAll("Internal app", name));
+  }
+  const files: Record<string, string> = {};
+  for (const path of readManifest().files) files[path] = sha256(join(target, path));
+  writeLock(target, files);
+}
+
+// ---------------------------------------------------------------- output
+
+function print(json: boolean, value: unknown, human: () => string) {
+  console.log(json ? JSON.stringify(value, null, 2) : human());
+}
+
+function main(argv: ReadonlyArray<string>): number {
+  const [command, ...rest] = argv;
+  const { positional, flags, values } = parseArgs(rest);
+  const json = flags.has("json");
+  const appDir = resolve(positional[0] ?? ".");
+
+  switch (command) {
+    case "new": {
+      const target = positional[0];
+      if (target === undefined) throw new CliError("Usage: internal-app new <dir> [--name \"App name\"]");
+      const name = values.name ?? "Internal app";
+      runNew(resolve(target), name);
+      print(json, { ok: true, dir: resolve(target), name }, () =>
+        [
+          `Created ${resolve(target)} from the internal-app template.`,
+          "Next:",
+          `  cd ${target}`,
+          "  bun install",
+          "  bun run build && bun run tsc && bun run lint",
+          "  bun run dev",
+        ].join("\n"),
+      );
+      return 0;
+    }
+    case "sync": {
+      const result = runSync(appDir, flags.has("write"), flags.has("force"));
+      const ok = result.pending.length === 0;
+      print(json, { ok, applied: result.applied, pending: result.pending }, () => {
+        const lines = [
+          ...result.applied.map((entry) => `applied  ${entry.status.padEnd(16)} ${entry.path}`),
+          ...result.pending.map((entry) => `pending  ${entry.status.padEnd(16)} ${entry.path}\n         ${entry.detail}`),
+        ];
+        if (lines.length === 0) lines.push(`All kit files match the skill (${result.entries.length} files).`);
+        if (!ok && !flags.has("write")) lines.push("\nRun with --write to apply. Review modified and conflicting files before adding --force.");
+        return lines.join("\n");
+      });
+      return ok ? 0 : 1;
+    }
+    case "doctor": {
+      const checks = runDoctor(appDir);
+      const ok = checks.every((check) => check.status !== "fail");
+      print(json, { ok, checks }, () =>
+        checks
+          .map((check) => {
+            const head = `${check.status.toUpperCase().padEnd(5)} ${check.id.padEnd(28)} ${check.message}`;
+            return check.status === "pass" || check.fix === undefined ? head : `${head}\n${check.fix.split("\n").map((line) => `      ${line}`).join("\n")}`;
+          })
+          .join("\n"),
+      );
+      return ok ? 0 : 1;
+    }
+    case "check": {
+      const findings = runCheck(appDir);
+      const messages = ruleMessages();
+      print(json, { ok: findings.length === 0, findings }, () => {
+        if (findings.length === 0) return "check: OK";
+        const rules = [...new Set(findings.map((finding) => finding.rule))];
+        return rules
+          .map((rule) => {
+            const items = findings.filter((finding) => finding.rule === rule);
+            return [`FAIL ${rule} (${items.length}): ${messages[rule] ?? ""}`, ...items.slice(0, 40).map((item) => `  ${item.file}:${item.line}  ${item.text}`)].join("\n");
+          })
+          .join("\n\n");
+      });
+      return findings.length === 0 ? 0 : 1;
+    }
+    case undefined:
+    case "help":
+    case "--help": {
+      console.log(usage);
+      return command === undefined ? 1 : 0;
+    }
+    default:
+      throw new CliError(`Unknown command "${command}".\n\n${usage}`);
+  }
+}
+
+try {
+  process.exit(main(process.argv.slice(2)));
+} catch (error) {
+  if (error instanceof CliError) {
+    console.error(`internal-app: ${error.message}`);
+    process.exit(2);
+  }
+  throw error;
+}

@@ -44,6 +44,21 @@ Install it for later sessions:
 npx skills add kevin-courbet/skills --skill form-design -y
 ```
 
+## Internal App
+
+Load the internal-app stack skill (TanStack Start, Effect 4, StyleX,
+react-aria-components, Aperture) for one session:
+
+```sh
+npx skills use kevin-courbet/skills@internal-app
+```
+
+Install it for later sessions:
+
+```sh
+npx skills add kevin-courbet/skills --skill internal-app -y
+```
+
 ## Data Visualizations
 
 Load the Aperture visualization skill for one session:
@@ -58,7 +73,7 @@ Install it for later sessions:
 npx skills add kevin-courbet/skills --skill create-data-visualizations -y
 ```
 
-`frontend-design`, `ui-design`, and `form-design` are developed in this repository.
+`frontend-design`, `ui-design`, `form-design`, and `internal-app` are developed in this repository.
 `create-data-visualizations` is developed in
 [Aperture](https://github.com/kevin-courbet/aperture) and is published here by
 automation. Do not edit its generated distribution copy.

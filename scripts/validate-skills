@@ -71,6 +71,49 @@ for (const file of process.argv.slice(2)) {
 }
 NODE
 
+internal_app="$repo_root/skills/internal-app"
+internal_app_cli="$internal_app/scripts/internal-app"
+test -f "$internal_app/SKILL.md"
+for reference in stack styling components data charts upgrade review; do
+  test -f "$internal_app/references/$reference.md"
+done
+test -x "$internal_app_cli"
+test -f "$internal_app/assets/kit.json"
+test -f "$internal_app/assets/template/bun.lock"
+test ! -e "$internal_app/assets/template/node_modules"
+test ! -e "$internal_app/assets/template/.output"
+test ! -e "$internal_app/assets/template/internal-app.kit.json"
+node - "$internal_app" <<'NODE'
+const fs = require("node:fs")
+const path = require("node:path")
+const root = process.argv[2]
+const manifest = JSON.parse(fs.readFileSync(path.join(root, "assets/kit.json"), "utf8"))
+for (const file of manifest.files) {
+  if (!fs.existsSync(path.join(root, "assets/template", file))) {
+    throw new Error(`kit.json lists a missing template file: ${file}`)
+  }
+}
+NODE
+scaffold_root=$(mktemp -d)
+bun "$internal_app_cli" new "$scaffold_root/app" --name "Validation app" >/dev/null
+test -f "$scaffold_root/app/.oxlintrc.json"
+test -f "$scaffold_root/app/.oxfmtrc.json"
+test -f "$scaffold_root/app/.gitignore"
+test -f "$scaffold_root/app/internal-app.kit.json"
+grep -q '"name": "validation-app"' "$scaffold_root/app/package.json"
+(
+  cd "$scaffold_root/app"
+  bun install --frozen-lockfile >/dev/null
+  NODE_ENV=production bun run build >/dev/null
+  bun run tsc >/dev/null
+  bun run lint >/dev/null
+  bun --bun oxfmt --check >/dev/null
+)
+bun "$internal_app_cli" check "$scaffold_root/app" >/dev/null
+bun "$internal_app_cli" sync "$scaffold_root/app" >/dev/null
+bun "$internal_app_cli" doctor "$scaffold_root/app" >/dev/null
+rm -rf "$scaffold_root"
+
 test -f "$repo_root/skills/create-data-visualizations/SKILL.md"
 test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
 test -f "$repo_root/sources/aperture.json"
@@ -78,6 +121,7 @@ test -f "$repo_root/sources/aperture.json"
 npx --yes skills@1.5.22 use "$repo_root" --skill frontend-design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill ui-design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill form-design >/dev/null
+npx --yes skills@1.5.22 use "$repo_root" --skill internal-app >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill create-data-visualizations >/dev/null
 install_root=$(mktemp -d)
 trap 'rm -rf "$install_root"' EXIT

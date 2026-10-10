@@ -1,0 +1,47 @@
+{
+  "name": "internal-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --bun vite dev",
+    "build": "bun --bun vite build",
+    "start": "bun .output/server/index.mjs",
+    "tsc": "bunx --bun tsc --noEmit",
+    "lint": "bun --bun oxlint",
+    "format": "bun --bun oxfmt",
+    "test": "bun --bun vitest run"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@internationalized/date": "^3.12.3",
+    "@kevin-courbet/aperture": "^0.5.0",
+    "@stylexjs/stylex": "^0.19.1",
+    "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-query": "^5.104.1",
+    "@tanstack/react-router": "^1.170.42",
+    "@tanstack/react-router-ssr-query": "^1.167.3",
+    "@tanstack/react-start": "^1.168.61",
+    "@tanstack/react-table": "^9.2.8",
+    "@tanstack/react-virtual": "^3.14.14",
+    "effect": "^4.0.2",
+    "lucide-react": "^1.55.0",
+    "nitro": "3.0.260903-beta",
+    "react": "^19.2.0",
+    "react-aria-components": "^1.22.1",
+    "react-dom": "^19.2.0",
+    "sonner": "^2.0.7"
+  },
+  "devDependencies": {
+    "@stylexjs/unplugin": "^0.19.1",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxfmt": "^0.72.0",
+    "oxlint": "^1.87.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}
