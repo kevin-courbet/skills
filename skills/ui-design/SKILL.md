@@ -24,6 +24,7 @@ Resolve all paths relative to this skill directory. Use the support directory pr
 - Use hierarchy, proximity, and alignment before adding containers or decoration.
 - Preserve semantic HTML and accessible names even when visible labels are reduced.
 - Use color as support, never as the only status or selection signal.
+- Never mark the current navigation item with a left-edge border, rail, stripe, pseudo-element, or inset shadow. Use surface and typography changes with `aria-current` instead.
 - Adapt information and arrangement for small screens; do not only shrink or stack the desktop design.
 - Respect the existing product design system unless the user requests a new direction.
 - Treat bundled palettes and external icon libraries as starting resources, not automatic design decisions.

@@ -46,6 +46,8 @@ The source gallery covers:
 - Use pagination when users need stable location or direct page access.
 - Use continuous loading only when exact position and total count are not important.
 - Keep active state visible without relying only on color.
+- Never use a left-edge border or accent rail to mark the current navigation item. This also prohibits equivalent pseudo-elements and inset shadows.
+- Use a subtle selected surface and clear typography. Add `aria-current="page"` to the current page link.
 - Group long vertical navigation by user goal.
 
 ## Overlays And Alerts
