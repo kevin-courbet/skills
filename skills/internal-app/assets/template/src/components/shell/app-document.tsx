@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { HeadContent, Scripts } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { I18nProvider } from "react-aria-components";
 import "@/styles/app.css";
 import { appLocale } from "@/lib/locale";
@@ -47,7 +47,15 @@ function DevStyleXRuntime() {
  * for every react-aria field so dates and numbers match the app formatters.
  */
 export function AppDocument({ theme: initialTheme, children }: AppDocumentProps) {
-  const [theme, setTheme] = useState(initialTheme);
+  const [selection, setSelection] = useState<
+    | { readonly _tag: "DocumentSnapshot" }
+    | { readonly _tag: "UserChoice"; readonly choice: ThemeChoice }
+  >({ _tag: "DocumentSnapshot" });
+  const theme = selection._tag === "UserChoice" ? selection.choice : initialTheme;
+  const setTheme = useCallback(
+    (choice: ThemeChoice) => setSelection({ _tag: "UserChoice", choice }),
+    [],
+  );
   useEffect(() => {
     if (theme !== "system") return;
     const preference = window.matchMedia("(prefers-color-scheme: dark)");

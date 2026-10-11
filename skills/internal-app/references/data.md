@@ -15,6 +15,8 @@ Wrap `RouteError` in an app-owned error component when the app needs diagnostic 
 
 Own HTTP observability in the application's Start server entry. Record handled loader failures at that boundary, including failures that return an error page. Preserve request references through SSR hydration.
 
+Keep `AppDocument` in the root route's `shellComponent`. The document and application scripts must remain available when `beforeLoad` fails. Use the system theme for an initial theme-lookup error until the lookup succeeds. `AppDocument` uses the recovered document snapshot unless the user selects a theme.
+
 ## Effect 4 On The Server
 
 Use the Effect 4 API that the installed package exposes. Verify names against

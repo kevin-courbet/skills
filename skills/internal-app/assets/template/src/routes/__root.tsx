@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { AppDocument } from "@/components/shell/app-document";
 import { getThemeChoice } from "@/lib/theme";
+import type { ReactNode } from "react";
 
 interface RouterContext {
   readonly queryClient: QueryClient;
@@ -16,14 +17,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { title: "Internal app" },
     ],
   }),
-  component: RootComponent,
+  shellComponent: RootDocument,
+  component: Outlet,
 });
 
-function RootComponent() {
+function RootDocument({ children }: { readonly children: ReactNode }) {
   const { theme } = Route.useRouteContext();
-  return (
-    <AppDocument theme={theme}>
-      <Outlet />
-    </AppDocument>
-  );
+  return <AppDocument theme={theme ?? "system"}>{children}</AppDocument>;
 }
