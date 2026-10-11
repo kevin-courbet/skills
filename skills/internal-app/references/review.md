@@ -59,6 +59,7 @@ States and data:
 - SSR-loaded data renders without a loading state.
 - Empty states appear only after data resolved to empty. Filtered-to-zero has a clear-filters action.
 - Errors are visible with a next action. No silent fallback, no empty plot in place of an error.
+- Route errors show recognized expected messages or generic retry guidance. Unexpected diagnostic messages do not appear as UI copy.
 - Mutations show failures inline with `failureMessage`. Success is shown by the UI, not a toast.
 - Search, sort, filter, and page live in the URL and survive reload.
 - A missing record shows the not-found page, not a generic error.

@@ -8,6 +8,7 @@ import {
 import { Button, LinkButton } from "@/components/ui/button";
 import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { space } from "@/styles/tokens.stylex";
+import { failureMessage, isServerFnError } from "@/lib/server-result";
 
 /**
  * Default error boundary for routes. Loader and render failures land here.
@@ -20,7 +21,7 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
       <div {...stylex.props(styles.wrap)}>
         <ErrorState
           title="This link has invalid filters"
-          message={error.message}
+          message="Reset the filters and try again."
           action={
             <LinkButton to="." search={{}} replace>
               Reset filters
@@ -50,7 +51,7 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof Error && error.message !== "") return error.message;
+  if (isServerFnError(error)) return failureMessage(error);
   return "The page could not load. The details are in the server log.";
 }
 

@@ -91,6 +91,10 @@ const runtime = ManagedRuntime.make(clients);
 Use `runtime.runPromise` at the query boundary and pass the TanStack Query abort signal.
 Preserve tagged expected failures for UI mapping. `Effect.runPromise` without deliberate exit handling can wrap failures in a fiber error.
 Transport failures, defects, and interruption must remain distinguishable from expected workflow errors.
+Preserve the failure or `Cause.squash(exit.cause)` through the client adapter. Apply generic copy only at the final UI boundary.
+Install backend error reporting for unexpected RPC failures. Encoded RPC errors do not reach an outer HTTP exception handler automatically.
+
+Keep list responses as bounded metadata projections. Large captured payloads and attachments need a separate transfer endpoint because NDJSON frames have decoder limits.
 
 HTTP cancellation aborts fetch and interrupts the server request scope. It does not roll back already committed side effects.
 Mutation idempotency and transaction boundaries remain backend responsibilities.
