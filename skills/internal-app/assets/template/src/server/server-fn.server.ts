@@ -15,7 +15,8 @@ const encodeWireError = Schema.encodeSync(WireErrorSchema);
  * The effect may only fail with WireError. Map internal errors before calling
  * this, so every expected failure reaches the client with its tag and fields.
  * Defects, interruptions, and layer failures throw, which surfaces them as a
- * 500 with a server log instead of a silent empty state.
+ * rejected server function. The application's function middleware records the
+ * failure before Start serializes its response.
  */
 export async function runServerFn<A, E extends WireError>(
   effect: Effect.Effect<A, E, AppServices>,

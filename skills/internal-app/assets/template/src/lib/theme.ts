@@ -1,6 +1,7 @@
 import { createIsomorphicFn, createServerFn } from "@tanstack/react-start";
 import { Result, Schema } from "effect";
 import { createContext, useContext } from "react";
+import { ValidationError } from "@/lib/wire-errors";
 
 export const THEME_COOKIE = "theme";
 
@@ -40,7 +41,11 @@ export const getThemeChoice = createIsomorphicFn()
   .client((): ThemeChoice => parseThemeChoice(readCookie(document.cookie, THEME_COOKIE)));
 
 export const setThemeChoiceFn = createServerFn({ method: "POST" })
-  .validator(Schema.toStandardSchemaV1(ThemeChoice))
+  .validator((raw: unknown): ThemeChoice => {
+    const result = decodeThemeChoice(raw);
+    if (Result.isSuccess(result)) return result.success;
+    throw new ValidationError({ field: "theme", message: "Select Light, Dark, or System." });
+  })
   .handler(async ({ data }) => {
     const { setCookie } = await import("@tanstack/react-start/server");
     setCookie(THEME_COOKIE, data, {

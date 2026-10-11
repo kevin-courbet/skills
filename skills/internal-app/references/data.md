@@ -15,6 +15,10 @@ Wrap `RouteError` in an app-owned error component when the app needs diagnostic 
 
 Own HTTP observability in the application's Start server entry. Record handled loader failures at that boundary, including failures that return an error page. Preserve request references through SSR hydration.
 
+Configure global function middleware in the app-owned `src/start.ts` to observe validation and handler exceptions before serialization. Start can serialize a rejected server function with HTTP 200. Status-only HTTP classification therefore does not own these failures. Keep the original error and its request reference through the app's serialization adapter and client middleware.
+
+Theme validation throws the kit's schema-backed `ValidationError`. The wire-error serializer preserves that expected class, and `failureMessage` provides its precise copy. Configure the Start CSRF middleware for server-function requests.
+
 Keep `AppDocument` in the root route's `shellComponent`. The document and application scripts must remain available when `beforeLoad` fails. Use the system theme for an initial theme-lookup error until the lookup succeeds. `AppDocument` uses the recovered document snapshot unless the user selects a theme.
 
 `routerDefaults.serializationAdapters` preserves `SearchParamError` through SSR hydration. Register `config: typeof routerConfig` in the router's `Register` interface so serializer types match the runtime configuration. Keep these adapters when an application adds its own. Otherwise the router's shallow error serializer loses the expected validation class and the reset-filters action.
@@ -44,7 +48,7 @@ export async function runServerFn<A, E extends WireError>(
 ```
 
 - The effect may only fail with `WireError`. An unmapped internal error is a type error at the call site. Map it with `Effect.mapError` before the boundary.
-- Expected failures return `{ ok: false, error }` with the encoded tagged error. Defects, interruptions, and layer failures throw, which yields a 500 and a server log. Nothing is swallowed.
+- Expected failures return `{ ok: false, error }` with the encoded tagged error. Defects, interruptions, and layer failures throw. Function middleware records these failures before Start serializes the response. Nothing is swallowed.
 - On the client, `unwrap(result)` from `src/lib/server-result.ts` returns the value or throws `ServerFnError` carrying the typed error. Use it in `queryFn` and `mutationFn` so TanStack Query sees a thrown error.
 - Branch on failures with `isServerFnError<WireErrorEncoded>(error) && error.error._tag === "ConflictError"`.
 - Show a failure to users with `failureMessage(error)`. It returns the wire error's own `message`, a "no longer exists" text for `NotFoundError`, or a generic retry text for anything unexpected. Unexpected details stay in the server log.

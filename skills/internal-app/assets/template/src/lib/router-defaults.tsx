@@ -9,6 +9,7 @@ import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { RouterProvider as AriaRouterProvider } from "react-aria-components";
 import { RouteError, RouteNotFound } from "@/components/shell/route-error";
+import { WireError, isWireError } from "@/lib/wire-errors";
 
 const decodeSearchParamError = Schema.decodeUnknownSync(Schema.Struct({ message: Schema.String }));
 const searchParamErrorAdapter = createSerializationAdapter({
@@ -18,7 +19,15 @@ const searchParamErrorAdapter = createSerializationAdapter({
   fromSerializable: (value) => new SearchParamError(decodeSearchParamError(value).message),
 });
 export const routerConfig = createRouterConfig({
-  serializationAdapters: [searchParamErrorAdapter],
+  serializationAdapters: [
+    searchParamErrorAdapter,
+    createSerializationAdapter({
+      key: "InternalAppWireError",
+      test: (value): value is WireError => value instanceof Error && isWireError(value),
+      toSerializable: Schema.encodeSync(WireError),
+      fromSerializable: Schema.decodeUnknownSync(WireError),
+    }),
+  ],
 });
 
 /** getRouter runs once per request on the server, so each request gets its own cache. */

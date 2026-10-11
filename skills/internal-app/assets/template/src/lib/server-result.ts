@@ -2,6 +2,8 @@
  * Serializable result of a server function. Expected failures travel as data so
  * the client keeps their tag and fields. Defects still throw on the server.
  */
+import { isWireError } from "@/lib/wire-errors";
+
 export type ServerResult<A, E extends { readonly _tag: string }> =
   | { readonly ok: true; readonly value: A }
   | { readonly ok: false; readonly error: E };
@@ -36,6 +38,10 @@ function stringField(value: object, key: string): string | undefined {
  * anything else is unexpected and its details stay in the server log.
  */
 export function failureMessage(error: unknown): string {
+  if (isWireError(error)) {
+    if (error._tag === "NotFoundError") return `This ${error.entity} no longer exists.`;
+    return error.message;
+  }
   if (isServerFnError(error)) {
     const message = stringField(error.error, "message");
     if (message !== undefined) return message;
