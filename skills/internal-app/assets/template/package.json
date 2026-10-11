@@ -6,7 +6,7 @@
     "dev": "bun --bun vite dev",
     "build": "bun --bun vite build",
     "start": "bun .output/server/index.mjs",
-    "tsc": "bunx --bun tsc --noEmit",
+    "tsc": "bun --bun node_modules/.bin/tsc --noEmit",
     "lint": "bun --bun oxlint",
     "format": "bun --bun oxfmt",
     "test": "bun --bun vitest run"
