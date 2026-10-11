@@ -310,7 +310,7 @@ function lineRules(manifest: Manifest): ReadonlyArray<LineRule> {
     {
       id: "static-server-module-import",
       message: "Static import of a .server module. Import it dynamically inside the handler.",
-      applies: (file) => isSrcCode(file) && !/\.server\.tsx?$/.test(file) && !file.startsWith("src/server/"),
+      applies: (file) => isSrcCode(file) && file !== "src/server.ts" && !/\.server\.tsx?$/.test(file) && !file.startsWith("src/server/"),
       test: (line) => /^import\s(?!type\s).*from\s["'][^"']*\.server["']/.test(line),
     },
     {
