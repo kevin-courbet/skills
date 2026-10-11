@@ -1,6 +1,6 @@
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
-import { createQueryClient, routerDefaults } from "@/lib/router-defaults";
+import { createQueryClient, routerDefaults, routerConfig } from "@/lib/router-defaults";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -12,6 +12,7 @@ export function getRouter() {
 
 declare module "@tanstack/react-router" {
   interface Register {
+    config: typeof routerConfig;
     router: ReturnType<typeof getRouter>;
   }
 }

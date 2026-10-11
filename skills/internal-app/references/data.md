@@ -17,6 +17,8 @@ Own HTTP observability in the application's Start server entry. Record handled l
 
 Keep `AppDocument` in the root route's `shellComponent`. The document and application scripts must remain available when `beforeLoad` fails. Use the system theme for an initial theme-lookup error until the lookup succeeds. `AppDocument` uses the recovered document snapshot unless the user selects a theme.
 
+`routerDefaults.serializationAdapters` preserves `SearchParamError` through SSR hydration. Register `config: typeof routerConfig` in the router's `Register` interface so serializer types match the runtime configuration. Keep these adapters when an application adds its own. Otherwise the router's shallow error serializer loses the expected validation class and the reset-filters action.
+
 ## Effect 4 On The Server
 
 Use the Effect 4 API that the installed package exposes. Verify names against

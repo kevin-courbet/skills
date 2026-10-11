@@ -1,8 +1,25 @@
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import {
+  useRouter,
+  createSerializationAdapter,
+  createRouterConfig,
+  SearchParamError,
+} from "@tanstack/react-router";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { RouterProvider as AriaRouterProvider } from "react-aria-components";
 import { RouteError, RouteNotFound } from "@/components/shell/route-error";
+
+const decodeSearchParamError = Schema.decodeUnknownSync(Schema.Struct({ message: Schema.String }));
+const searchParamErrorAdapter = createSerializationAdapter({
+  key: "InternalAppSearchParamError",
+  test: (value): value is SearchParamError => value instanceof SearchParamError,
+  toSerializable: (error) => ({ message: error.message }),
+  fromSerializable: (value) => new SearchParamError(decodeSearchParamError(value).message),
+});
+export const routerConfig = createRouterConfig({
+  serializationAdapters: [searchParamErrorAdapter],
+});
 
 /** getRouter runs once per request on the server, so each request gets its own cache. */
 export function createQueryClient(
@@ -32,6 +49,7 @@ function AriaRouterBridge({ children }: { readonly children: ReactNode }) {
 
 /** Spread into createRouter before the app's own options. */
 export const routerDefaults = {
+  serializationAdapters: routerConfig.serializationAdapters,
   scrollRestoration: true,
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
