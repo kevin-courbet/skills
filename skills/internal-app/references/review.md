@@ -33,6 +33,7 @@ Use the `agent-browser` skill (`ab chrome --url ...`, `ab snapshot`,
 3. Each dialog, sheet, menu, and popover the page opens, and one invalid form field.
 4. The page at 400 px and at 1440 px wide. At 400 px, the navigation opens from the menu button in the top bar.
 5. `/design-kit` after a kit install or update, in both themes.
+6. System theme mode during hydration and after a native color-scheme change. The document theme must follow the native preference without hydration errors.
 
 Compare against the tokens: surfaces, text, borders, and spacing must come
 from tokens, and the dark theme must keep hierarchy without inverting.

@@ -26,6 +26,13 @@ function themeStyles(choice: ThemeChoice) {
   return [];
 }
 
+function effectiveTheme(choice: ThemeChoice) {
+  if (choice !== "system") return choice;
+  if (import.meta.env.SSR) return undefined;
+  // Match the system-theme script's attribute before React hydrates the document.
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 /** Loads the StyleX hot-reload client in development only. */
 function DevStyleXRuntime() {
   useEffect(() => {
@@ -40,11 +47,20 @@ function DevStyleXRuntime() {
  * for every react-aria field so dates and numbers match the app formatters.
  */
 export function AppDocument({ theme, children }: AppDocumentProps) {
+  useEffect(() => {
+    if (theme !== "system") return;
+    const preference = window.matchMedia("(prefers-color-scheme: dark)");
+    const update = () => {
+      document.documentElement.dataset.theme = preference.matches ? "dark" : "light";
+    };
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
+  }, [theme]);
   const explicitTheme = theme === "system" ? undefined : theme;
   return (
     <html
       lang={appLocale}
-      data-theme={explicitTheme}
+      data-theme={effectiveTheme(theme)}
       {...stylex.props(styles.html, themeStyles(theme))}
     >
       <head>

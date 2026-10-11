@@ -17,6 +17,7 @@ Use one Effect module instance inside each process or bundle. Matching version n
 Effect 4 uses instance-local parser sentinels. A contract loaded through another dependency tree can fail decoding valid numbers.
 Put contracts in a package with an Effect peer dependency. Use Bun's isolated linker so each app resolves its own matching peer instance.
 Configure Vite `resolve.dedupe: ["effect"]`. Compile a local contract package through `ssr.noExternal` when required by the framework.
+Exclude editable local contracts from `optimizeDeps` so development does not retain an obsolete prebundled schema after contract edits.
 With an isolated dependency tree, declare packages imported by generated SSR code directly in the app. Nitro must not resolve them from a parent app.
 The inspector verified `@tanstack/router-core`, `@tanstack/history`, `h3-v2`, and `seroval` at the versions selected by its Start lockfile.
 Verify the built server and browser. A root-package Bun smoke alone does not exercise the frontend dependency graph.
