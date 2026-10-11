@@ -40,7 +40,7 @@ with them and prints the `bun add` commands for any gap.
 |---|---|---|
 | Lint | `oxlint` | `.oxlintrc.json`. `no-explicit-any`, `no-nested-ternary`, `no-console`, `no-barrel-file` are errors. |
 | Format | `oxfmt` | `.oxfmtrc.json`. Width 100, double quotes, trailing commas. |
-| Types | `typescript` 5.9 | `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals`. Keep `verbatimModuleSyntax` off; TanStack Start warns it can leak server code into client bundles. |
+| Types | Go-native `typescript` 7 | `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals`. Remove `baseUrl` and use explicit relative `paths`. Keep `verbatimModuleSyntax` off. |
 | Tests | `vitest` 5 | Effect tests use explicit layers and `Effect.runPromise`. |
 
 ## Replaced Libraries
@@ -58,9 +58,14 @@ is in `assets/kit.json`.
 | `motion`, framer-motion | StyleX keyframes with reduced-motion overrides |
 | react-virtuoso | `@tanstack/react-virtual` |
 
-Effect RPC is not forbidden but is not part of the stack. Server functions
-with `runServerFn` are enough for internal tools. Add RPC only when a second
-client needs the same contract, and record that decision in the app.
+Prefer Effect RPC for a separately deployed backend or a contract shared by multiple clients.
+Use server functions with `runServerFn` for features owned by a single Start process.
+RPC is not universally faster or simpler. It adds contract, transport, and runtime ownership.
+Read `rpc.md` for the verified Effect v4 pattern and its tradeoffs.
+
+TypeScript 7 is the CLI typechecker, not a JavaScript compiler-API dependency.
+If a tool imports the TypeScript JavaScript API, declare `typescript-js` as an npm alias to TypeScript 5 and configure that tool explicitly.
+Do not replace the CLI compiler with the JavaScript alias. Verify both the build and CLI typecheck after toolchain changes.
 
 ## Project Layout
 

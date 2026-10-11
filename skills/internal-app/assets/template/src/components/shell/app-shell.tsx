@@ -13,6 +13,7 @@ import { ThemeSwitch } from "./theme-switch";
 
 export interface NavItem {
   readonly to: LinkProps["to"];
+  readonly params?: LinkProps["params"];
   readonly label: string;
   readonly icon: LucideIcon;
   /** Match only this exact path, for the index route. */
@@ -50,6 +51,7 @@ function Navigation({
             <NavLink
               key={item.label}
               to={item.to}
+              params={item.params}
               icon={item.icon}
               exact={item.exact}
               onNavigate={onNavigate}

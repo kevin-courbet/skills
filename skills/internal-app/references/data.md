@@ -1,5 +1,12 @@
 # Data: Effect Server, Server Functions, Queries, Forms
 
+## Choose the boundary
+
+Use Effect RPC when an independent backend owns the data or workflows. Read `rpc.md` before implementation.
+The feature `api.ts` remains the route-facing boundary and owns the same query options for SSR and client reads.
+For a feature owned by the Start server, use the server-function pattern in this document.
+Do not add server-function wrappers around an existing RPC backend merely to satisfy the template layout.
+
 ## Effect 4 On The Server
 
 Use the Effect 4 API that the installed package exposes. Verify names against

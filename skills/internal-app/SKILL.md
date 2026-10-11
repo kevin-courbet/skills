@@ -72,6 +72,7 @@ needed. Treat it as a failure, not a warning.
 | `references/styling.md` | Writing any style, token, or theme code. |
 | `references/components.md` | Composing a page or adding a primitive. |
 | `references/data.md` | Writing a route, server function, Effect service, query, mutation, or form. |
+| `references/rpc.md` | Connecting a separate backend with Effect v4 RPC, typed errors, SSR, or cancellation. |
 | `references/charts.md` | Adding a chart or widget. Also load the `create-data-visualizations` skill. |
 | `references/upgrade.md` | Migrating an existing app. |
 | `references/review.md` | Handing off any change. |
@@ -89,6 +90,7 @@ fixes the design method.
 - **Dense and quiet.** Use 13 px body text, 32 px controls, and 36 px table rows. One primary action per view. Sentence case. No success toasts for results the UI already shows.
 - **Current navigation** uses a selected surface, medium weight, and `aria-current="page"`. Never a left-edge border, rail, pseudo-element, or inset shadow.
 - **Effect at the boundary.** Services are `Context.Service` classes with layers in one `ManagedRuntime`. Server functions validate input with Effect Schema and run through `runServerFn`. Expected failures travel as typed data; defects throw. Nothing is swallowed.
+- **Separate backends.** Prefer Effect RPC for an independently running backend. Share schema-only contracts, use HTTP for both SSR and browser calls, and keep runtime ownership explicit. Use TypeScript 7 for CLI checks.
 - **URL state.** Search, sort, filter, and page live in schema-validated search params.
 - **Data states.** Loaders prefetch with `ensureQueryData`. SSR data never shows a loading state. Empty states appear only after data resolved to empty. Errors are visible and give a next action.
 - **Verify, then report.** Format, lint, typecheck, build, `check`, `sync`, `doctor`, and screenshots in both themes are part of done. Report every unmet item.

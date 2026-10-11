@@ -81,7 +81,8 @@ Code:
 
 - No `any`, no non-null assertions, no nested ternaries, no console output.
 - Routes import feature `api.ts`, components, and lib only.
-- Server functions validate input with Effect Schema and run through `runServerFn`.
+- Server functions validate input with Effect Schema and run through `runServerFn`. Separate backends use the schema-backed Effect RPC boundary in `rpc.md`.
+- RPC checks exercise the actual HTTP wire protocol, typed failures, and cancellation. SSR does not import remote backend handlers.
 - Effect services use `Context.Service` and `Layer`. Errors are tagged and mapped at the boundary.
 - Styles use tokens only. Variants are StyleX maps. No kit file is edited.
 - Charts use Aperture with the host bridge on every Aperture root and SVG rendering for SSR.

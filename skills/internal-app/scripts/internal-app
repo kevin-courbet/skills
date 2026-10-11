@@ -521,6 +521,7 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
     }
     const problems: Array<string> = [];
     if (options.strict !== true) problems.push("strict is off");
+    if ("baseUrl" in options) problems.push("baseUrl was removed in TypeScript 7; use explicit relative paths");
     if (!isRecord(options.paths) || !("@/*" in options.paths)) problems.push("paths has no @/*");
     if (options.verbatimModuleSyntax === true) problems.push("verbatimModuleSyntax is on (it can leak server code into the client)");
     if (Object.keys(options).length > 0) {

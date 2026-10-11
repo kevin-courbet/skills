@@ -74,7 +74,7 @@ NODE
 internal_app="$repo_root/skills/internal-app"
 internal_app_cli="$internal_app/scripts/internal-app"
 test -f "$internal_app/SKILL.md"
-for reference in stack styling components data charts upgrade review; do
+for reference in stack styling components data rpc charts upgrade review; do
   test -f "$internal_app/references/$reference.md"
 done
 test -x "$internal_app_cli"

@@ -6,6 +6,7 @@ import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface NavLinkProps {
   readonly to: LinkProps["to"];
+  readonly params?: LinkProps["params"];
   readonly icon?: LucideIcon;
   readonly children: ReactNode;
   readonly exact?: boolean;
@@ -16,10 +17,18 @@ export interface NavLinkProps {
  * Sidebar navigation item. The current page uses a selected surface and
  * stronger text with aria-current. Never add a left-edge border or rail.
  */
-export function NavLink({ to, icon: Icon, children, exact = false, onNavigate }: NavLinkProps) {
+export function NavLink({
+  to,
+  params,
+  icon: Icon,
+  children,
+  exact = false,
+  onNavigate,
+}: NavLinkProps) {
   return (
     <Link
       to={to}
+      params={params}
       onClick={onNavigate}
       activeOptions={{ exact }}
       {...stylex.props(styles.link)}
