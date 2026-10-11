@@ -3,6 +3,7 @@
  * the client keeps their tag and fields. Defects still throw on the server.
  */
 import { isWireError } from "@/lib/wire-errors";
+import { unexpectedFailureMessage } from "@/lib/error-presentation";
 
 export type ServerResult<A, E extends { readonly _tag: string }> =
   | { readonly ok: true; readonly value: A }
@@ -49,5 +50,5 @@ export function failureMessage(error: unknown): string {
       return `This ${stringField(error.error, "entity") ?? "record"} no longer exists.`;
     }
   }
-  return "The action failed. Try again.";
+  return unexpectedFailureMessage(error);
 }

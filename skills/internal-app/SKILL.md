@@ -33,9 +33,10 @@ needed. Treat it as a failure, not a warning.
   in this skill, then run `sync --write` in each app.
 - **App files** belong to the app: routes, features, server services, the
   router, the root route, `src/lib/locale.ts`, and config. The template
-  contains working examples of each. Kit files import two app modules:
-   `src/server/runtime.server.ts` (`runtime`, `AppServices`, `recordEffectCause`) and `src/lib/locale.ts`
-  (`appLocale`, `appTimeZone`).
+  contains working examples of each. Kit files import app modules:
+  `src/server/runtime.server.ts` (`runtime`, `AppServices`, `recordEffectCause`),
+  `src/lib/locale.ts` (`appLocale`, `appTimeZone`), and
+  `src/lib/error-presentation.ts` (`unexpectedFailureMessage`).
 
 ## Workflows
 

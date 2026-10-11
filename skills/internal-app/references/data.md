@@ -13,6 +13,8 @@ Configure `createQueryClient({ onError })` with the application's error reporter
 
 Wrap `RouteError` in an app-owned error component when the app needs diagnostic correlation. Pass `onError` for reporting and `describeError` for final presentation. The reporter must deduplicate errors that also reach a query or mutation cache.
 
+Export `unexpectedFailureMessage` from the app-owned `src/lib/error-presentation.ts`. The kit's `failureMessage` uses it for unexpected action errors, including theme-save errors. Keep diagnostic references in this final presentation function. Expected wire errors retain their precise messages.
+
 Own HTTP observability in the application's Start server entry. Record handled loader failures at that boundary, including failures that return an error page. Preserve request references through SSR hydration.
 
 Export `recordEffectCause` from the app-owned `src/server/runtime.server.ts`. Connect it to the application's request boundary. `runServerFn` sends each full failed cause to this recorder before serialization. The starter recorder writes safe reason counts to stderr. Replace that starter recorder with the application's boundary recorder when you add HTTP observability.

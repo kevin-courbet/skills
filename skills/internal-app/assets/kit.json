@@ -85,6 +85,9 @@
     "@tanstack/zod-adapter"
   ],
   "appContract": {
+    "src/lib/error-presentation.ts": [
+      "unexpectedFailureMessage"
+    ],
     "src/server/runtime.server.ts": [
       "runtime",
       "AppServices",
