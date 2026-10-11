@@ -87,7 +87,8 @@
   "appContract": {
     "src/server/runtime.server.ts": [
       "runtime",
-      "AppServices"
+      "AppServices",
+      "recordEffectCause"
     ],
     "src/lib/locale.ts": [
       "appLocale",

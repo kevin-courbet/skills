@@ -15,6 +15,8 @@ Wrap `RouteError` in an app-owned error component when the app needs diagnostic 
 
 Own HTTP observability in the application's Start server entry. Record handled loader failures at that boundary, including failures that return an error page. Preserve request references through SSR hydration.
 
+Export `recordEffectCause` from the app-owned `src/server/runtime.server.ts`. Connect it to the application's request boundary. `runServerFn` sends each full failed cause to this recorder before serialization. The starter recorder writes safe reason counts to stderr. Replace that starter recorder with the application's boundary recorder when you add HTTP observability.
+
 Configure global function middleware in the app-owned `src/start.ts` to observe validation and handler exceptions before serialization. Start can serialize a rejected server function with HTTP 200. Status-only HTTP classification therefore does not own these failures. Keep the original error and its request reference through the app's serialization adapter and client middleware.
 
 Theme validation throws the kit's schema-backed `ValidationError`. The wire-error serializer preserves that expected class, and `failureMessage` provides its precise copy. Configure the Start CSRF middleware for server-function requests.

@@ -6,7 +6,7 @@ import {
   type WireErrorEncoded,
   isWireError,
 } from "@/lib/wire-errors";
-import { type AppServices, runtime } from "./runtime.server";
+import { type AppServices, recordEffectCause, runtime } from "./runtime.server";
 
 const encodeWireError = Schema.encodeSync(WireErrorSchema);
 
@@ -15,14 +15,15 @@ const encodeWireError = Schema.encodeSync(WireErrorSchema);
  * The effect may only fail with WireError. Map internal errors before calling
  * this, so every expected failure reaches the client with its tag and fields.
  * Defects, interruptions, and layer failures throw, which surfaces them as a
- * rejected server function. The application's function middleware records the
- * failure before Start serializes its response.
+ * rejected server function. The application records the full failed cause
+ * before this boundary serializes or throws the failure.
  */
 export async function runServerFn<A, E extends WireError>(
   effect: Effect.Effect<A, E, AppServices>,
 ): Promise<ServerResult<A, WireErrorEncoded>> {
   const exit = await runtime.runPromiseExit(effect);
   if (Exit.isSuccess(exit)) return { ok: true, value: exit.value };
+  recordEffectCause(exit.cause);
   const failure = exit.cause.reasons.find(Cause.isFailReason);
   if (
     failure !== undefined &&
