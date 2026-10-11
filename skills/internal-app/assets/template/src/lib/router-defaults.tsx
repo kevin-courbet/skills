@@ -1,12 +1,16 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { RouterProvider as AriaRouterProvider } from "react-aria-components";
 import { RouteError, RouteNotFound } from "@/components/shell/route-error";
 
 /** getRouter runs once per request on the server, so each request gets its own cache. */
-export function createQueryClient(): QueryClient {
+export function createQueryClient(
+  options: { readonly onError?: (error: unknown) => void } = {},
+): QueryClient {
   return new QueryClient({
+    queryCache: new QueryCache({ onError: options.onError }),
+    mutationCache: new MutationCache({ onError: options.onError }),
     defaultOptions: {
       queries: {
         staleTime: 30_000,

@@ -11,12 +11,24 @@ import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { space } from "@/styles/tokens.stylex";
 import { failureMessage, isServerFnError } from "@/lib/server-result";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 /**
  * Default error boundary for routes. Loader and render failures land here.
  * Invalid search params get a reset link instead of a generic failure.
  */
-export function RouteError({ error, reset }: ErrorComponentProps) {
+export function RouteError({
+  error,
+  reset,
+  onError,
+  describeError: describe = describeError,
+}: ErrorComponentProps & {
+  readonly onError?: (error: unknown) => void;
+  readonly describeError?: (error: unknown) => string;
+}) {
+  useEffect(() => {
+    onError?.(error);
+  }, [error, onError]);
   const router = useRouter();
   const client = useQueryClient();
   const matchId = useMatch({ strict: false, select: (match) => match.id });
@@ -54,7 +66,7 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
   return (
     <div {...stylex.props(styles.wrap)}>
       <ErrorState
-        message={describeError(retry.isError ? retry.error : error)}
+        message={describe(retry.isError ? retry.error : error)}
         action={
           <Button isDisabled={retry.isPending} onPress={() => retry.mutate()}>
             Try again

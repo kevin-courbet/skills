@@ -7,6 +7,14 @@ The feature `api.ts` remains the route-facing boundary and owns the same query o
 For a feature owned by the Start server, use the server-function pattern in this document.
 Do not add server-function wrappers around an existing RPC backend merely to satisfy the template layout.
 
+## Error ownership
+
+Configure `createQueryClient({ onError })` with the application's error reporter. Both `QueryCache` and `MutationCache` use that callback. Exclude expected workflow failures and preserve the ownership of server-correlated incidents.
+
+Wrap `RouteError` in an app-owned error component when the app needs diagnostic correlation. Pass `onError` for reporting and `describeError` for final presentation. The reporter must deduplicate errors that also reach a query or mutation cache.
+
+Own HTTP observability in the application's Start server entry. Record handled loader failures at that boundary, including failures that return an error page. Preserve request references through SSR hydration.
+
 ## Effect 4 On The Server
 
 Use the Effect 4 API that the installed package exposes. Verify names against
