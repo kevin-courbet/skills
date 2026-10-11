@@ -38,7 +38,7 @@ Run `bun install` and `bun run build`. The build must pass before the next step.
 
 1. Move every conflicting app file out of the kit paths first, for example `src/components/ui/` to `src/components/legacy/`. Update its imports. Do not use `--force` to overwrite an app file that pages still use.
 2. Run `sync --write`. It adds every kit file and writes `internal-app.kit.json`. Commit both.
-3. Create the app contract files if they are missing. Copy and adapt `src/lib/locale.ts` (`appLocale`, `appTimeZone`, formatters) and `src/server/runtime.ts` (`runtime`, `AppServices`) from the template. If the app already has an Effect runtime, export these two names from it instead of creating a second runtime.
+3. Create the app contract files if they are missing. Copy and adapt `src/lib/locale.ts` (`appLocale`, `appTimeZone`, formatters) and `src/server/runtime.server.ts` (`runtime`, `AppServices`) from the template. If the app already has an Effect runtime, export these two names from it instead of creating a second runtime.
 
 ## 4. Wire The Root, The Router, And The Shell
 

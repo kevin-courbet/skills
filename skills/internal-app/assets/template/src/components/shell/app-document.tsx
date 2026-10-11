@@ -1,10 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
 import { HeadContent, Scripts } from "@tanstack/react-router";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { I18nProvider } from "react-aria-components";
 import "@/styles/app.css";
 import { appLocale } from "@/lib/locale";
-import type { ThemeChoice } from "@/lib/theme";
+import { ThemeContext, type ThemeChoice } from "@/lib/theme";
 import { darkTheme, lightTheme } from "@/styles/themes";
 import { color, font } from "@/styles/tokens.stylex";
 
@@ -46,7 +46,8 @@ function DevStyleXRuntime() {
  * development StyleX stylesheet, the router head and scripts, and one locale
  * for every react-aria field so dates and numbers match the app formatters.
  */
-export function AppDocument({ theme, children }: AppDocumentProps) {
+export function AppDocument({ theme: initialTheme, children }: AppDocumentProps) {
+  const [theme, setTheme] = useState(initialTheme);
   useEffect(() => {
     if (theme !== "system") return;
     const preference = window.matchMedia("(prefers-color-scheme: dark)");
@@ -58,22 +59,24 @@ export function AppDocument({ theme, children }: AppDocumentProps) {
   }, [theme]);
   const explicitTheme = theme === "system" ? undefined : theme;
   return (
-    <html
-      lang={appLocale}
-      data-theme={effectiveTheme(theme)}
-      {...stylex.props(styles.html, themeStyles(theme))}
-    >
-      <head>
-        <HeadContent />
-        {import.meta.env.DEV ? <link rel="stylesheet" href="/virtual:stylex.css" /> : null}
-        {explicitTheme === undefined ? <script>{systemThemeScript}</script> : null}
-      </head>
-      <body {...stylex.props(styles.body)}>
-        <I18nProvider locale={appLocale}>{children}</I18nProvider>
-        <DevStyleXRuntime />
-        <Scripts />
-      </body>
-    </html>
+    <ThemeContext.Provider value={{ choice: theme, setChoice: setTheme }}>
+      <html
+        lang={appLocale}
+        data-theme={effectiveTheme(theme)}
+        {...stylex.props(styles.html, themeStyles(theme))}
+      >
+        <head>
+          <HeadContent />
+          {import.meta.env.DEV ? <link rel="stylesheet" href="/virtual:stylex.css" /> : null}
+          {explicitTheme === undefined ? <script>{systemThemeScript}</script> : null}
+        </head>
+        <body {...stylex.props(styles.body)}>
+          <I18nProvider locale={appLocale}>{children}</I18nProvider>
+          <DevStyleXRuntime />
+          <Scripts />
+        </body>
+      </html>
+    </ThemeContext.Provider>
   );
 }
 

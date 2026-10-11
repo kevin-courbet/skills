@@ -31,10 +31,9 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { theme } = Route.useRouteContext();
   return (
     <ChartProvider locale={appLocale} timeZone={appTimeZone}>
-      <AppShell appName="Internal app" theme={theme} nav={nav}>
+      <AppShell appName="Internal app" nav={nav}>
         <Outlet />
       </AppShell>
     </ChartProvider>

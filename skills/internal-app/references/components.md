@@ -64,7 +64,9 @@ All primitives take typed props, render visible labels, and accept a
 `src/components/shell` holds the app frame:
 
 - `AppDocument` renders `<html>`, `<head>`, and `<body>` with global CSS, theme wiring, the locale provider, and the router head and scripts. The root route renders it.
-- `AppShell` renders the sidebar, the top bar with breadcrumbs and the theme switch, and the scrolling page region. Below the `md` breakpoint the sidebar moves into a left `Sheet` opened from the top bar. Props: `appName`, `theme`, `nav`, optional `actions` for global top-bar actions such as a user menu.
+- `AppShell` renders the sidebar, the top bar with breadcrumbs and the theme switch, and the scrolling page region. Below the `md` breakpoint the sidebar moves into a left `Sheet` opened from the top bar. Props: `appName`, `nav`, optional `actions` for global top-bar actions such as a user menu.
+- `AppDocument` owns theme presentation state through `ThemeContext`. Saving the cookie updates that state without refreshing application data. Theme save failures use classified toast feedback.
+- `RouteError` retries queries that hold the failed error. For a retained loader error, it invalidates only the failed router match. Data refresh uses query-cache operations, and theme changes use presentation state.
 - `nav` is `ReadonlyArray<NavGroup>`. A group has a `label` by user goal and `items` of `{ to, params?, label, icon, exact? }`. Use `params` with typed dynamic routes. `icon` is a lucide component. Set `exact: true` on the index route.
 - `RouteBreadcrumbs` reads `staticData.crumb` from each matched route. A loader can return `{ crumb }` to use a record name. Give a parent a layout route (`items/route.tsx`) when its children need the parent crumb.
 - `RouteError` and `RouteNotFound` are the router defaults. An invalid search param shows a reset action.

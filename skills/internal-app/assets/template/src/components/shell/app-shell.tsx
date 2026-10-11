@@ -5,7 +5,6 @@ import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { Toaster } from "@/components/ui/toaster";
-import type { ThemeChoice } from "@/lib/theme";
 import { color, font, layer, media, size, space } from "@/styles/tokens.stylex";
 import { NavLink } from "./nav-link";
 import { RouteBreadcrumbs } from "./route-breadcrumbs";
@@ -28,7 +27,6 @@ export interface NavGroup {
 
 export interface AppShellProps {
   readonly appName: string;
-  readonly theme: ThemeChoice;
   readonly nav: ReadonlyArray<NavGroup>;
   /** Global actions next to the theme switch, such as a user menu. */
   readonly actions?: ReactNode;
@@ -69,7 +67,7 @@ function Navigation({
  * Sidebar, top bar with breadcrumbs, and the scrolling page region. Below the
  * md breakpoint the sidebar moves into a sheet opened from the top bar.
  */
-export function AppShell({ appName, theme, nav, actions, children }: AppShellProps) {
+export function AppShell({ appName, nav, actions, children }: AppShellProps) {
   const [isNavOpen, setNavOpen] = useState(false);
   return (
     <div {...stylex.props(styles.root)}>
@@ -96,7 +94,7 @@ export function AppShell({ appName, theme, nav, actions, children }: AppShellPro
           </div>
           <div {...stylex.props(styles.topbarActions)}>
             {actions}
-            <ThemeSwitch value={theme} />
+            <ThemeSwitch />
           </div>
         </header>
         <main {...stylex.props(styles.main)}>{children}</main>

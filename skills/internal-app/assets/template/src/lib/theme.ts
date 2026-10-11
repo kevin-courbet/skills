@@ -1,16 +1,26 @@
 import { createIsomorphicFn, createServerFn } from "@tanstack/react-start";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
+import { createContext, useContext } from "react";
 
 export const THEME_COOKIE = "theme";
 
 export const ThemeChoice = Schema.Literals(["light", "dark", "system"]);
 export type ThemeChoice = typeof ThemeChoice.Type;
+export const ThemeContext = createContext<{
+  readonly choice: ThemeChoice;
+  readonly setChoice: (choice: ThemeChoice) => void;
+} | null>(null);
+export function useTheme() {
+  const value = useContext(ThemeContext);
+  if (value === null) throw new Error("Theme controls require AppDocument");
+  return value;
+}
 
 const decodeThemeChoice = Schema.decodeUnknownResult(ThemeChoice);
 
 function parseThemeChoice(raw: string | undefined): ThemeChoice {
   const result = decodeThemeChoice(raw);
-  return result._tag === "Success" ? result.success : "system";
+  return Result.isSuccess(result) ? result.success : "system";
 }
 
 function readCookie(source: string, name: string): string | undefined {

@@ -99,10 +99,10 @@ src/
     theme.ts                   kit. Theme cookie read and write.
     wire-errors.ts             kit. Schema.TaggedError classes that cross the boundary.
   server/
-    runtime.ts                 App. ManagedRuntime from the app layer; exports runtime and AppServices.
+    runtime.server.ts          App. ManagedRuntime from the app layer; exports runtime and AppServices.
     config.ts                  App. Config.all groups exposed as services.
     errors.ts                  App. Internal Data.TaggedError classes.
-    server-fn.ts               kit. runServerFn: Exit to ServerResult.
+    server-fn.server.ts        kit. runServerFn: Exit to ServerResult.
     *.service.ts               App. Context.Service classes with a static layer.
   vite-env.d.ts                kit.
 ```

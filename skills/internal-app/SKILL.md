@@ -34,7 +34,7 @@ needed. Treat it as a failure, not a warning.
 - **App files** belong to the app: routes, features, server services, the
   router, the root route, `src/lib/locale.ts`, and config. The template
   contains working examples of each. Kit files import two app modules:
-  `src/server/runtime.ts` (`runtime`, `AppServices`) and `src/lib/locale.ts`
+  `src/server/runtime.server.ts` (`runtime`, `AppServices`) and `src/lib/locale.ts`
   (`appLocale`, `appTimeZone`).
 
 ## Workflows

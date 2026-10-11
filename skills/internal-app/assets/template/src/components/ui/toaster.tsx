@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { Toaster as SonnerToaster } from "sonner";
+import { CircleAlert } from "lucide-react";
 import { color, font, layer, radius, shadow, space } from "@/styles/tokens.stylex";
 
 export { toast } from "sonner";
@@ -15,6 +16,7 @@ export function Toaster() {
     <SonnerToaster
       position="bottom-right"
       closeButton
+      icons={{ error: <CircleAlert width={16} height={16} {...stylex.props(styles.errorIcon)} /> }}
       className={region.className}
       style={region.style}
       toastOptions={{
@@ -24,8 +26,6 @@ export function Toaster() {
           title: stylex.props(styles.title).className ?? "",
           description: stylex.props(styles.description).className ?? "",
           closeButton: stylex.props(styles.close).className ?? "",
-          error: stylex.props(styles.error).className ?? "",
-          success: stylex.props(styles.success).className ?? "",
         },
       }}
     />
@@ -53,6 +53,5 @@ const styles = stylex.create({
   title: { fontWeight: font.medium },
   description: { color: color.textMuted, fontSize: font.sm },
   close: { color: color.textMuted },
-  error: { borderColor: color.dangerBorder },
-  success: { borderColor: color.successBorder },
+  errorIcon: { color: color.danger },
 });

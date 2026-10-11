@@ -49,7 +49,7 @@
     "src/lib/server-result.ts",
     "src/lib/theme.ts",
     "src/lib/wire-errors.ts",
-    "src/server/server-fn.ts",
+    "src/server/server-fn.server.ts",
     "src/vite-env.d.ts"
   ],
   "forbiddenDependencies": [
@@ -85,7 +85,7 @@
     "@tanstack/zod-adapter"
   ],
   "appContract": {
-    "src/server/runtime.ts": [
+    "src/server/runtime.server.ts": [
       "runtime",
       "AppServices"
     ],

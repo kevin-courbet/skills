@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { ItemsService } from "@/server/items.service";
-import { runServerFn } from "@/server/server-fn";
+import { runServerFn } from "@/server/server-fn.server";
 import type { CreateItem, ItemsQuery } from "./schemas";
 
 export const listItems = (query: ItemsQuery) =>

@@ -13,7 +13,7 @@ Use the Effect 4 API that the installed package exposes. Verify names against
 `node_modules/effect/dist/*.d.ts` before using anything not listed here.
 
 - Services: `class ItemsService extends Context.Service<ItemsService, Shape>()("@app/ItemsService")` with a `static readonly layer = Layer.effect(ItemsService, Effect.gen(...))`. Never `Context.Tag`, `Effect.Service`, or `ServiceMap`.
-- Composition: `Layer.mergeAll(...)` and `Layer.provideMerge(...)` into one `AppLayer`; `export const runtime = ManagedRuntime.make(AppLayer)` in `src/server/runtime.ts`. One runtime per process, disposed on `SIGTERM`.
+- Composition: `Layer.mergeAll(...)` and `Layer.provideMerge(...)` into one `AppLayer`; `export const runtime = ManagedRuntime.make(AppLayer)` in `src/server/runtime.server.ts`. One runtime per process, disposed on `SIGTERM`.
 - Config: `Config.all({ name: Config.String("APP_NAME").pipe(Config.withDefault("x")) })` exposed as a service through `Layer.effect(AppConfig, config)`. Secrets use `Config.Redacted`.
 - Workflows: `Effect.gen` inline; `Effect.fn("Service.method")` for reusable traced functions. Do not wrap an `Effect.gen` in a function that only returns it.
 - Internal errors: `Data.TaggedError` in `src/server/errors.ts`.
@@ -23,7 +23,7 @@ Use the Effect 4 API that the installed package exposes. Verify names against
 
 ## The Server-Function Boundary
 
-`src/server/server-fn.ts` exports `runServerFn`:
+`src/server/server-fn.server.ts` exports `runServerFn`:
 
 ```ts
 export async function runServerFn<A, E extends WireError>(

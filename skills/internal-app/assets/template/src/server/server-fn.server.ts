@@ -6,7 +6,7 @@ import {
   type WireErrorEncoded,
   isWireError,
 } from "@/lib/wire-errors";
-import { type AppServices, runtime } from "./runtime";
+import { type AppServices, runtime } from "./runtime.server";
 
 const encodeWireError = Schema.encodeSync(WireErrorSchema);
 
