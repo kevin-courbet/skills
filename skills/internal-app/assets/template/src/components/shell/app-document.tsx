@@ -92,7 +92,7 @@ const styles = stylex.create({
   // Keep the root font size at the browser default so rem tokens stay 16px-based.
   html: {
     colorScheme: color.scheme,
-    backgroundColor: color.page,
+    backgroundColor: color.frame,
     color: color.text,
   },
   body: {

@@ -8,6 +8,7 @@ import {
 import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { RouterProvider as AriaRouterProvider } from "react-aria-components";
+import { mainContentId } from "@/components/shell/app-shell";
 import { RouteError, RouteNotFound } from "@/components/shell/route-error";
 import { WireError, isWireError } from "@/lib/wire-errors";
 
@@ -57,9 +58,13 @@ function AriaRouterBridge({ children }: { readonly children: ReactNode }) {
 }
 
 /** Spread into createRouter before the app's own options. */
+// The shell scrolls the page inside its panel, not the window.
+const scrollToTopSelectors: Array<string> = [`#${mainContentId}`];
+
 export const routerDefaults = {
   serializationAdapters: routerConfig.serializationAdapters,
   scrollRestoration: true,
+  scrollToTopSelectors,
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
   defaultErrorComponent: RouteError,

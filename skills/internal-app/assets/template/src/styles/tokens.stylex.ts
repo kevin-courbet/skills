@@ -6,6 +6,9 @@ const DARK = "@media (prefers-color-scheme: dark)";
 /** Semantic color roles. Components use only these, never palette values. */
 export const color = stylex.defineVars({
   scheme: { default: lightPalette.scheme, [DARK]: darkPalette.scheme },
+  frame: { default: lightPalette.frame, [DARK]: darkPalette.frame },
+  frameHover: { default: lightPalette.frameHover, [DARK]: darkPalette.frameHover },
+  frameSelected: { default: lightPalette.frameSelected, [DARK]: darkPalette.frameSelected },
   page: { default: lightPalette.page, [DARK]: darkPalette.page },
   subtle: { default: lightPalette.subtle, [DARK]: darkPalette.subtle },
   raised: { default: lightPalette.raised, [DARK]: darkPalette.raised },
@@ -22,6 +25,7 @@ export const color = stylex.defineVars({
   accentHover: { default: lightPalette.accentHover, [DARK]: darkPalette.accentHover },
   accentText: { default: lightPalette.accentText, [DARK]: darkPalette.accentText },
   accentMuted: { default: lightPalette.accentMuted, [DARK]: darkPalette.accentMuted },
+  accentBorder: { default: lightPalette.accentBorder, [DARK]: darkPalette.accentBorder },
   onAccent: { default: lightPalette.onAccent, [DARK]: darkPalette.onAccent },
   selected: { default: lightPalette.selected, [DARK]: darkPalette.selected },
   focus: { default: lightPalette.focus, [DARK]: darkPalette.focus },
@@ -44,6 +48,7 @@ export const shadow = stylex.defineVars({
   sm: { default: lightPalette.shadowSm, [DARK]: darkPalette.shadowSm },
   md: { default: lightPalette.shadowMd, [DARK]: darkPalette.shadowMd },
   lg: { default: lightPalette.shadowLg, [DARK]: darkPalette.shadowLg },
+  frame: { default: lightPalette.shadowFrame, [DARK]: darkPalette.shadowFrame },
 });
 
 export const font = stylex.defineVars({
@@ -96,6 +101,8 @@ export const size = stylex.defineVars({
   iconLg: "1.25rem",
   sidebar: "15rem",
   topbar: "3rem",
+  /** Gap between the sidebar frame and the content panel. */
+  frameGap: "0.5rem",
   contentMax: "90rem",
   readingMax: "72ch",
   fieldMax: "28rem",
@@ -126,4 +133,6 @@ export const motion = stylex.defineConsts({
   normal: "180ms",
   slow: "260ms",
   ease: "cubic-bezier(0.2, 0, 0, 1)",
+  /** Enter motion: a fast start that settles softly. */
+  easeOut: "cubic-bezier(0.23, 1, 0.32, 1)",
 });

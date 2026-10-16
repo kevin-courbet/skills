@@ -1,11 +1,22 @@
 import * as stylex from "@stylexjs/stylex";
 import { Link, type LinkProps } from "@tanstack/react-router";
-import { type LucideIcon, Menu } from "lucide-react";
+import { ChevronDown, type LucideIcon, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { Button as AriaButton, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { Toaster } from "@/components/ui/toaster";
-import { color, font, layer, media, size, space } from "@/styles/tokens.stylex";
+import {
+  color,
+  font,
+  layer,
+  media,
+  motion,
+  radius,
+  shadow,
+  size,
+  space,
+} from "@/styles/tokens.stylex";
 import { NavLink } from "./nav-link";
 import { RouteBreadcrumbs } from "./route-breadcrumbs";
 import { ThemeSwitch } from "./theme-switch";
@@ -27,11 +38,18 @@ export interface NavGroup {
 
 export interface AppShellProps {
   readonly appName: string;
+  /** Short context under the app name, such as the environment or the tenant. */
+  readonly environment?: string;
   readonly nav: ReadonlyArray<NavGroup>;
-  /** Global actions next to the theme switch, such as a user menu. */
+  /** Global actions at the end of the top bar, such as a user menu. */
   readonly actions?: ReactNode;
+  /** Quiet links at the bottom of the sidebar, such as help or system status. */
+  readonly sidebarFooter?: ReactNode;
   readonly children: ReactNode;
 }
+
+/** Element id of the scrolling page region. The router resets it to the top on navigation. */
+export const mainContentId = "main-content";
 
 function Navigation({
   nav,
@@ -43,64 +61,141 @@ function Navigation({
   return (
     <nav aria-label="Main" {...stylex.props(styles.nav)}>
       {nav.map((group) => (
-        <div key={group.label} {...stylex.props(styles.group)}>
-          <span {...stylex.props(styles.groupLabel)}>{group.label}</span>
-          {group.items.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              params={item.params}
-              icon={item.icon}
-              exact={item.exact}
-              onNavigate={onNavigate}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
+        <Disclosure key={group.label} defaultExpanded {...stylex.props(styles.group)}>
+          {({ isExpanded }) => (
+            <>
+              <AriaButton slot="trigger" {...stylex.props(styles.groupTrigger)}>
+                {group.label}
+                <ChevronDown
+                  aria-hidden
+                  {...stylex.props(styles.groupChevron, !isExpanded && styles.groupChevronClosed)}
+                />
+              </AriaButton>
+              <DisclosurePanel {...stylex.props(styles.groupItems)}>
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.label}
+                    to={item.to}
+                    params={item.params}
+                    icon={item.icon}
+                    exact={item.exact}
+                    onNavigate={onNavigate}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </DisclosurePanel>
+            </>
+          )}
+        </Disclosure>
       ))}
     </nav>
   );
 }
 
+function Brand({
+  appName,
+  environment,
+}: {
+  readonly appName: string;
+  readonly environment?: string;
+}) {
+  return (
+    <Link to="/" {...stylex.props(styles.brand)}>
+      <span aria-hidden {...stylex.props(styles.brandMark)}>
+        {appName.slice(0, 1)}
+      </span>
+      <span {...stylex.props(styles.brandText)}>
+        <span {...stylex.props(styles.brandName)}>{appName}</span>
+        {environment ? <span {...stylex.props(styles.brandContext)}>{environment}</span> : null}
+      </span>
+    </Link>
+  );
+}
+
 /**
- * Sidebar, top bar with breadcrumbs, and the scrolling page region. Below the
+ * Sidebar on the frame color and the page in a raised panel next to it. The
+ * panel holds the top bar with breadcrumbs and scrolls on its own. Below the
  * md breakpoint the sidebar moves into a sheet opened from the top bar.
  */
-export function AppShell({ appName, nav, actions, children }: AppShellProps) {
+export function AppShell({
+  appName,
+  environment,
+  nav,
+  actions,
+  sidebarFooter,
+  children,
+}: AppShellProps) {
   const [isNavOpen, setNavOpen] = useState(false);
+  const [isSidebarHidden, setSidebarHidden] = useState(false);
+  const footer = (
+    <div {...stylex.props(styles.sidebarFooter)}>
+      <div {...stylex.props(styles.sidebarFooterLinks)}>{sidebarFooter}</div>
+      <ThemeSwitch />
+    </div>
+  );
   return (
-    <div {...stylex.props(styles.root)}>
-      <aside {...stylex.props(styles.sidebar)}>
-        <Link to="/" {...stylex.props(styles.brand)}>
-          {appName}
-        </Link>
+    <div {...stylex.props(styles.root, isSidebarHidden && styles.rootSidebarHidden)}>
+      <aside {...stylex.props(styles.sidebar, isSidebarHidden && styles.sidebarHidden)}>
+        <div {...stylex.props(styles.sidebarHeader)}>
+          <Brand appName={appName} environment={environment} />
+          <Button
+            intent="ghost"
+            size="sm"
+            iconOnly
+            aria-label="Hide sidebar"
+            onPress={() => setSidebarHidden(true)}
+          >
+            <PanelLeftClose aria-hidden {...stylex.props(styles.icon)} />
+          </Button>
+        </div>
         <Navigation nav={nav} />
+        {footer}
       </aside>
-      <div {...stylex.props(styles.column)}>
-        <header {...stylex.props(styles.topbar)}>
-          <div {...stylex.props(styles.topbarStart)}>
-            <Button
-              intent="ghost"
-              size="sm"
-              iconOnly
-              aria-label="Open navigation"
-              onPress={() => setNavOpen(true)}
-              style={styles.menuButton}
-            >
-              <Menu aria-hidden {...stylex.props(styles.menuIcon)} />
-            </Button>
-            <RouteBreadcrumbs />
-          </div>
-          <div {...stylex.props(styles.topbarActions)}>
-            {actions}
-            <ThemeSwitch />
-          </div>
-        </header>
-        <main {...stylex.props(styles.main)}>{children}</main>
+      <div {...stylex.props(styles.column, isSidebarHidden && styles.columnSidebarHidden)}>
+        <div {...stylex.props(styles.panel)}>
+          <header {...stylex.props(styles.topbar)}>
+            <div {...stylex.props(styles.topbarStart)}>
+              <Button
+                intent="ghost"
+                size="sm"
+                iconOnly
+                aria-label="Open navigation"
+                onPress={() => setNavOpen(true)}
+                style={styles.mobileOnly}
+              >
+                <Menu aria-hidden {...stylex.props(styles.icon)} />
+              </Button>
+              {isSidebarHidden ? (
+                <Button
+                  intent="ghost"
+                  size="sm"
+                  iconOnly
+                  aria-label="Show sidebar"
+                  onPress={() => setSidebarHidden(false)}
+                  style={styles.desktopOnly}
+                >
+                  <PanelLeftOpen aria-hidden {...stylex.props(styles.icon)} />
+                </Button>
+              ) : null}
+              <RouteBreadcrumbs />
+            </div>
+            {actions ? <div {...stylex.props(styles.topbarActions)}>{actions}</div> : null}
+          </header>
+          <main
+            id={mainContentId}
+            data-scroll-restoration-id={mainContentId}
+            {...stylex.props(styles.main)}
+          >
+            {children}
+          </main>
+        </div>
       </div>
       <Sheet isOpen={isNavOpen} onOpenChange={setNavOpen} side="left" size="sm" title={appName}>
-        <Navigation nav={nav} onNavigate={() => setNavOpen(false)} />
+        <div {...stylex.props(styles.sheetNav)}>
+          <Navigation nav={nav} onNavigate={() => setNavOpen(false)} />
+          {footer}
+        </div>
       </Sheet>
       <Toaster />
     </div>
@@ -114,63 +209,151 @@ const styles = stylex.create({
       default: "minmax(0, 1fr)",
       [media.md]: `${size.sidebar} minmax(0, 1fr)`,
     },
-    minHeight: "100dvh",
+    // One full-height row; the panel scrolls inside it, never the document.
+    gridTemplateRows: "minmax(0, 1fr)",
+    height: "100dvh",
+    backgroundColor: color.frame,
   },
+  rootSidebarHidden: { gridTemplateColumns: "minmax(0, 1fr)" },
   sidebar: {
     display: { default: "none", [media.md]: "flex" },
     flexDirection: "column",
-    gap: space.md,
-    position: "sticky",
-    top: 0,
-    height: "100dvh",
+    gap: space.lg,
+    minHeight: 0,
     overflowY: "auto",
-    paddingBlock: space.md,
+    paddingBlock: space.sm,
     paddingInline: space.sm,
-    backgroundColor: color.subtle,
-    borderRightWidth: "1px",
-    borderRightStyle: "solid",
-    borderRightColor: color.borderSubtle,
   },
+  sidebarHidden: { display: "none" },
+  sidebarHeader: { display: "flex", alignItems: "center", gap: space.xs },
   brand: {
     display: "flex",
     alignItems: "center",
-    height: size.controlMd,
-    paddingInline: space.sm,
-    fontSize: font.md,
-    fontWeight: font.semibold,
+    gap: space.sm,
+    flex: "1",
+    minWidth: 0,
+    height: size.controlLg,
+    paddingInline: space.xs,
+    borderRadius: radius.lg,
     color: color.text,
     textDecoration: "none",
+    backgroundColor: { default: "transparent", ":hover": color.frameHover },
+    outlineStyle: { default: "none", ":focus-visible": "solid" },
+    outlineWidth: "2px",
+    outlineColor: color.focus,
+    outlineOffset: "-2px",
   },
-  nav: { display: "flex", flexDirection: "column", gap: space.md },
-  group: { display: "flex", flexDirection: "column", gap: "2px" },
-  groupLabel: {
-    paddingInline: space.sm,
-    paddingBottom: space.xs,
+  brandMark: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: size.iconLg,
+    height: size.iconLg,
+    flexShrink: 0,
+    borderRadius: radius.sm,
+    backgroundColor: color.text,
+    color: color.textInverse,
     fontSize: font.xs,
-    fontWeight: font.medium,
-    color: color.textFaint,
-    textTransform: "uppercase",
-    letterSpacing: "0.04em",
+    fontWeight: font.semibold,
+    lineHeight: "1",
   },
-  column: { display: "flex", flexDirection: "column", minWidth: 0 },
+  brandText: { display: "flex", flexDirection: "column", minWidth: 0 },
+  brandName: {
+    fontSize: font.md,
+    fontWeight: font.semibold,
+    lineHeight: font.leadingTight,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  brandContext: {
+    fontSize: font.xs,
+    color: color.textMuted,
+    lineHeight: font.leadingTight,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  nav: { display: "flex", flexDirection: "column", gap: space.md, flex: "1" },
+  group: { display: "flex", flexDirection: "column", gap: "1px" },
+  groupTrigger: {
+    display: "flex",
+    alignItems: "center",
+    gap: space.xs,
+    alignSelf: "flex-start",
+    height: size.controlSm,
+    paddingInline: space.sm,
+    borderStyle: "none",
+    borderRadius: radius.md,
+    backgroundColor: { default: "transparent", ":hover": color.frameHover },
+    color: { default: color.textFaint, ":hover": color.textMuted },
+    fontSize: font.sm,
+    fontWeight: font.medium,
+    cursor: "pointer",
+    outlineStyle: { default: "none", ":focus-visible": "solid" },
+    outlineWidth: "2px",
+    outlineColor: color.focus,
+    outlineOffset: "-2px",
+  },
+  groupChevron: {
+    width: size.iconSm,
+    height: size.iconSm,
+    transitionProperty: "transform",
+    transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    transitionTimingFunction: motion.ease,
+  },
+  groupChevronClosed: { transform: "rotate(-90deg)" },
+  groupItems: { display: "flex", flexDirection: "column", gap: "1px" },
+  sidebarFooter: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: space.xs,
+    paddingTop: space.sm,
+  },
+  sidebarFooterLinks: { display: "flex", alignItems: "center", gap: space.xs, minWidth: 0 },
+  sheetNav: { display: "flex", flexDirection: "column", gap: space.lg, minHeight: "100%" },
+  column: {
+    display: "flex",
+    minWidth: 0,
+    minHeight: 0,
+    paddingTop: { default: 0, [media.md]: size.frameGap },
+    paddingBottom: { default: 0, [media.md]: size.frameGap },
+    paddingInlineEnd: { default: 0, [media.md]: size.frameGap },
+  },
+  columnSidebarHidden: { paddingInlineStart: { default: 0, [media.md]: size.frameGap } },
+  panel: {
+    display: "flex",
+    flexDirection: "column",
+    flex: "1",
+    minWidth: 0,
+    minHeight: 0,
+    overflow: "hidden",
+    backgroundColor: color.page,
+    borderWidth: { default: 0, [media.md]: "1px" },
+    borderStyle: "solid",
+    borderColor: color.borderSubtle,
+    borderRadius: { default: 0, [media.md]: radius.xl },
+    boxShadow: { default: "none", [media.md]: shadow.frame },
+  },
   topbar: {
-    position: "sticky",
-    top: 0,
     zIndex: layer.sticky,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: space.md,
+    flexShrink: 0,
     height: size.topbar,
-    paddingInline: { default: space.md, [media.md]: space.xxl },
-    backgroundColor: color.page,
+    paddingInline: { default: space.md, [media.md]: space.lg },
     borderBottomWidth: "1px",
     borderBottomStyle: "solid",
     borderBottomColor: color.borderSubtle,
   },
-  topbarStart: { display: "flex", alignItems: "center", gap: space.sm, minWidth: 0, flex: "1" },
-  menuButton: { display: { default: "inline-flex", [media.md]: "none" } },
-  menuIcon: { width: size.icon, height: size.icon },
+  topbarStart: { display: "flex", alignItems: "center", gap: space.xs, minWidth: 0, flex: "1" },
+  mobileOnly: { display: { default: "inline-flex", [media.md]: "none" } },
+  desktopOnly: { display: { default: "none", [media.md]: "inline-flex" } },
+  icon: { width: size.icon, height: size.icon },
   topbarActions: { display: "flex", alignItems: "center", gap: space.xs },
-  main: { flex: "1", minWidth: 0 },
+  // Positioned so visually hidden, absolutely positioned content stays inside the scroller.
+  main: { position: "relative", flex: "1", minWidth: 0, minHeight: 0, overflowY: "auto" },
 });

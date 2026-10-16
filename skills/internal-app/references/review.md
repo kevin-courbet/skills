@@ -28,7 +28,7 @@ Start the built server (`bun run start`) and inspect it with a real browser.
 Use the `agent-browser` skill (`ab chrome --url ...`, `ab snapshot`,
 `ab screenshot`). Capture:
 
-1. Each changed page in the light theme and the dark theme. Switch with the theme menu in the top bar or set the `theme` cookie to `light` or `dark`.
+1. Each changed page in the light theme and the dark theme. Switch with the theme menu in the sidebar footer or set the `theme` cookie to `light` or `dark`.
 2. Every empty, loading, and error state the page can show.
 3. Each dialog, sheet, menu, and popover the page opens, and one invalid form field.
 4. The page at 400 px and at 1440 px wide. At 400 px, the navigation opens from the menu button in the top bar.
@@ -42,7 +42,7 @@ Browser pitfalls:
 
 - Confirm `innerWidth` and `devicePixelRatio` with `ab eval` before capturing. A saved page zoom in the browser profile changes the layout width while the screenshot size stays the same.
 - An automated window can report `document.visibilityState` as `hidden`. The browser then pauses CSS animations and drops key events, and react-aria overlays wait for their exit animation. Run `ab set media reduced-motion` before checking open and close flows. Open overlays with a click on their trigger, not with key presses.
-- Router scroll restoration can reopen a page scrolled down. Scroll to the element before capturing an overlay anchored to it.
+- The page scrolls inside the shell panel (`#main-content`), not the window. Scroll that element, not `window`, before capturing an element below the fold. Router scroll restoration can reopen it scrolled down.
 - Find controls by role and name. A column header and a filter can both be named "Status".
 
 ## Checklist
@@ -54,6 +54,8 @@ Hierarchy and layout:
 - Labels are quieter than values. Section titles are quieter than content.
 - Spacing shows grouping. Cards wrap only distinct or actionable groups.
 - Tables: text left, numbers right with tabular figures, sort state announced, names link to detail pages.
+- List filters sit in the table frame as a compact `Toolbar`. Each active filter shows a `FilterChip`.
+- Identifiers use `Code`; values people paste elsewhere have a `CopyButton`.
 
 States and data:
 
@@ -78,6 +80,7 @@ Navigation:
 - The current item uses a selected surface and `aria-current="page"`. No left-edge border, rail, pseudo-element, or inset shadow.
 - Breadcrumbs name the location; detail pages show the record name.
 - At 400 px the sheet navigation contains every sidebar item.
+- After "Hide sidebar", the top bar shows a "Show sidebar" button.
 
 Code:
 

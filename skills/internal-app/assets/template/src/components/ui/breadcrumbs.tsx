@@ -54,7 +54,7 @@ const styles = stylex.create({
   },
   item: { display: "flex", alignItems: "center", gap: space.xs, minWidth: 0 },
   link: {
-    fontSize: font.md,
+    fontSize: font.lg,
     color: { default: color.textMuted, ":hover": color.text },
     textDecoration: "none",
     whiteSpace: "nowrap",

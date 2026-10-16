@@ -1,24 +1,42 @@
 import * as stylex from "@stylexjs/stylex";
 import type { SortingState } from "@tanstack/react-table";
-import { Bell, Copy, Filter, LayoutGrid, List, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bell,
+  Copy,
+  Download,
+  Filter,
+  LayoutGrid,
+  List,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Badge, StatusDot } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ComboBox } from "@/components/ui/combo-box";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CopyButton } from "@/components/ui/copy-button";
+import { DataTable, type DataTableColumn, MeterCell } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog } from "@/components/ui/dialog";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui/feedback";
+import { FilterChip } from "@/components/ui/filter-chip";
 import {
   Card,
+  Code,
   DescriptionList,
   Kbd,
   PageHeader,
   Section,
+  SettingRow,
+  SettingsCard,
+  StatStrip,
   StatTile,
   Toolbar,
 } from "@/components/ui/layout";
@@ -41,26 +59,25 @@ import { color, font, media, size, space } from "@/styles/tokens.stylex";
 interface SampleRow {
   readonly id: string;
   readonly name: string;
+  readonly status: "healthy" | "failed" | "paused";
   readonly region: string;
   readonly volume: number;
 }
 
 const sampleRows: ReadonlyArray<SampleRow> = [
-  { id: "r1", name: "Northwind export", region: "EU West", volume: 12840 },
-  { id: "r2", name: "Ledger sync", region: "US East", volume: 9310 },
-  { id: "r3", name: "Payroll check", region: "EU Central", volume: 4022 },
+  { id: "job_7f3a", name: "Northwind export", status: "healthy", region: "EU West", volume: 12840 },
+  { id: "job_19c2", name: "Ledger sync", status: "failed", region: "US East", volume: 9310 },
+  { id: "job_4be8", name: "Payroll check", status: "paused", region: "EU Central", volume: 4022 },
 ];
 
-const sampleColumns: ReadonlyArray<DataTableColumn<SampleRow>> = [
-  { id: "name", accessorKey: "name", header: "Job" },
-  { id: "region", accessorKey: "region", header: "Region" },
-  {
-    id: "volume",
-    accessorKey: "volume",
-    header: "Rows",
-    cell: (info) => info.getValue<number>().toLocaleString("en-GB"),
-  },
-];
+const statusDisplay = {
+  healthy: { intent: "success", label: "Healthy" },
+  failed: { intent: "danger", label: "Failed" },
+  paused: { intent: "warning", label: "Paused" },
+} as const;
+
+const maxVolume = Math.max(...sampleRows.map((row) => row.volume));
+const totalVolume = sampleRows.reduce((sum, row) => sum + row.volume, 0);
 
 const teams = [
   { id: "ops", label: "Operations" },
@@ -91,6 +108,54 @@ export function KitShowcase() {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isConfirmOpen, setConfirmOpen] = useState(false);
   const [isSheetOpen, setSheetOpen] = useState(false);
+  const [peekIndex, setPeekIndex] = useState<number | null>(null);
+  const peekRow = peekIndex === null ? undefined : sampleRows[peekIndex];
+
+  const sampleColumns: ReadonlyArray<DataTableColumn<SampleRow>> = [
+    {
+      id: "name",
+      accessorKey: "name",
+      header: "Job",
+      cell: (info) => (
+        <span {...stylex.props(styles.nameCell)}>
+          <Button
+            intent="ghost"
+            size="sm"
+            onPress={() => setPeekIndex(info.row.index)}
+            style={styles.rowLink}
+          >
+            {info.row.original.name}
+          </Button>
+          <Code>{info.row.original.id}</Code>
+        </span>
+      ),
+      footer: `${sampleRows.length} jobs`,
+    },
+    {
+      id: "status",
+      header: "Status",
+      enableSorting: false,
+      cell: (info) => {
+        const status = statusDisplay[info.row.original.status];
+        return <StatusDot intent={status.intent}>{status.label}</StatusDot>;
+      },
+      footer: "1 failed",
+    },
+    { id: "region", accessorKey: "region", header: "Region" },
+    {
+      id: "volume",
+      accessorKey: "volume",
+      header: "Rows",
+      cell: (info) => (
+        <MeterCell
+          label={info.getValue<number>().toLocaleString("en-GB")}
+          value={info.getValue<number>()}
+          max={maxVolume}
+        />
+      ),
+      footer: `${totalVolume.toLocaleString("en-GB")} total`,
+    },
+  ];
 
   return (
     <div {...stylex.props(styles.root)}>
@@ -226,19 +291,28 @@ export function KitShowcase() {
 
       <Section title="Data">
         <div {...stylex.props(styles.stats)}>
-          <StatTile label="Jobs" value="1,284" hint="last 30 days" />
+          <StatTile
+            label="Jobs"
+            value="1,284"
+            delta={{ value: "8.1%", direction: "up" }}
+            footnote="Measured · last 12 days"
+          />
           <StatTile
             label="Failures"
             value="12"
             delta={{ value: "3", direction: "down", tone: "good" }}
             hint="vs last week"
           />
-          <StatTile label="Rows synced" value="26.4M" delta={{ value: "8.1%", direction: "up" }} />
+          <StatTile label="Rows synced" value="26.4M" hint="last 30 days" />
         </div>
-        <Toolbar label="Filter jobs">
-          <SearchField label="Search jobs" hideLabel placeholder="Search jobs" />
-          <Badge intent="accent">3 filters</Badge>
-        </Toolbar>
+        <StatStrip
+          items={[
+            { label: "Elapsed", value: "320 ms" },
+            { label: "Steps", value: "3", hint: "3 types" },
+            { label: "Failed steps", value: "2", tone: "danger" },
+            { label: "Coverage", value: "100%" },
+          ]}
+        />
         <DataTable
           caption="Sample jobs"
           columns={sampleColumns}
@@ -247,9 +321,66 @@ export function KitShowcase() {
           numericColumns={["volume"]}
           sorting={sorting}
           onSortingChange={setSorting}
+          stickyFirstColumn
+          activeRowId={peekRow?.id}
+          toolbar={
+            <Toolbar
+              label="Filter jobs"
+              density="compact"
+              actions={
+                <>
+                  <Button intent="ghost" size="sm" iconOnly aria-label="Refresh">
+                    <RefreshCw aria-hidden width={14} height={14} />
+                  </Button>
+                  <Button intent="ghost" size="sm" iconOnly aria-label="Export">
+                    <Download aria-hidden width={14} height={14} />
+                  </Button>
+                </>
+              }
+            >
+              <Select
+                label="Scope"
+                hideLabel
+                size="sm"
+                defaultValue="all"
+                options={[
+                  { id: "all", label: "All jobs" },
+                  { id: "mine", label: "My jobs" },
+                ]}
+                style={styles.scope}
+              />
+              <FilterChip label="Region" value="EU West" onRemove={() => undefined} />
+              <SearchField
+                label="Search jobs"
+                hideLabel
+                size="sm"
+                focusShortcut
+                placeholder="Search jobs"
+                style={styles.toolbarSearch}
+              />
+            </Toolbar>
+          }
           emptyState={<EmptyState title="No jobs" />}
         />
         <Pagination page={page} pageCount={4} onPageChange={setPage} />
+        <SettingsCard title="Organization">
+          <SettingRow label="Name" description="Shown in the sidebar and in exports.">
+            <TextField
+              label="Name"
+              hideLabel
+              defaultValue="Northwind"
+              style={styles.settingField}
+            />
+            <Button size="sm">Save</Button>
+          </SettingRow>
+          <SettingRow label="Organization ID">
+            <Code>org_northwind</Code>
+            <CopyButton value="org_northwind" label="Copy organization ID" />
+          </SettingRow>
+          <SettingRow label="Mode">
+            <Badge>Managed</Badge>
+          </SettingRow>
+        </SettingsCard>
         <div {...stylex.props(styles.grid)}>
           <Card>
             <DescriptionList
@@ -387,6 +518,49 @@ export function KitShowcase() {
           ]}
         />
       </Sheet>
+      {peekRow && peekIndex !== null ? (
+        <Sheet
+          isOpen
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setPeekIndex(null);
+          }}
+          size="peek"
+          title={peekRow.name}
+          meta={
+            <>
+              <Code>{peekRow.id}</Code>
+              <CopyButton value={peekRow.id} label="Copy job ID" />
+            </>
+          }
+          headerActions={
+            <Button size="sm">
+              Open page
+              <ArrowUpRight aria-hidden width={14} height={14} />
+            </Button>
+          }
+          navigation={{
+            onPrevious: peekIndex > 0 ? () => setPeekIndex(peekIndex - 1) : undefined,
+            onNext:
+              peekIndex < sampleRows.length - 1 ? () => setPeekIndex(peekIndex + 1) : undefined,
+          }}
+        >
+          <div {...stylex.props(styles.peekBody)}>
+            <StatStrip
+              items={[
+                { label: "Status", value: statusDisplay[peekRow.status].label },
+                { label: "Region", value: peekRow.region },
+                { label: "Rows", value: peekRow.volume.toLocaleString("en-GB") },
+              ]}
+            />
+            <DescriptionList
+              items={[
+                { term: "Schedule", detail: "Every day at 02:00 UTC" },
+                { term: "Owner", detail: "Finance" },
+              ]}
+            />
+          </div>
+        </Sheet>
+      ) : null}
     </div>
   );
 }
@@ -425,4 +599,17 @@ const styles = stylex.create({
   wide: { width: "100%" },
   skeletonWide: { width: "100%", height: size.controlMd },
   skeletonNarrow: { width: "60%" },
+  nameCell: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" },
+  rowLink: {
+    height: "auto",
+    paddingInline: 0,
+    fontSize: font.md,
+    color: color.text,
+    backgroundColor: { default: "transparent", ":hover": "transparent", ":active": "transparent" },
+    textDecoration: { default: "none", ":hover": "underline" },
+  },
+  scope: { width: "8rem" },
+  toolbarSearch: { flex: "1", minWidth: "12rem" },
+  settingField: { width: "14rem" },
+  peekBody: { display: "flex", flexDirection: "column", gap: space.lg },
 });

@@ -17,6 +17,8 @@ export interface TextFieldProps extends Omit<
   "className" | "style" | "children"
 > {
   readonly label: string;
+  /** Hide the visible label where a SettingRow or toolbar names the field. Screen readers keep it. */
+  readonly hideLabel?: boolean;
   readonly description?: string;
   readonly errorMessage?: string;
   readonly placeholder?: string;
@@ -26,6 +28,7 @@ export interface TextFieldProps extends Omit<
 
 export function TextField({
   label,
+  hideLabel = false,
   description,
   errorMessage,
   placeholder,
@@ -36,7 +39,7 @@ export function TextField({
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaTextField {...props} isInvalid={isInvalid} {...stylex.props(field.root, style)}>
-      <Label {...stylex.props(field.label)}>{label}</Label>
+      <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
       {multiline ? (
         <TextArea
           placeholder={placeholder}

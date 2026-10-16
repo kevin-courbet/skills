@@ -4,10 +4,11 @@ import { createFileRoute, Link, stripSearchParams } from "@tanstack/react-router
 import type { SortingState } from "@tanstack/react-table";
 import { Schema } from "effect";
 import { Package, SearchX } from "lucide-react";
-import { Badge, type BadgeIntent } from "@/components/ui/badge";
+import { type BadgeIntent, StatusDot } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/feedback";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { Page, PageHeader, Toolbar } from "@/components/ui/layout";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchField } from "@/components/ui/search-field";
@@ -95,7 +96,7 @@ function ItemsPage() {
       header: "Status",
       cell: (info) => {
         const status = info.getValue<ItemStatus>();
-        return <Badge intent={statusIntent[status]}>{statusLabel[status]}</Badge>;
+        return <StatusDot intent={statusIntent[status]}>{statusLabel[status]}</StatusDot>;
       },
     },
     {
@@ -103,6 +104,8 @@ function ItemsPage() {
       accessorKey: "amount",
       header: "Amount",
       cell: (info) => formatCurrency(info.getValue<number>()),
+      footer: () =>
+        `${formatCurrency(data.items.reduce((sum, item) => sum + item.amount, 0))} on this page`,
     },
     {
       id: "updatedAt",
@@ -121,43 +124,66 @@ function ItemsPage() {
         description={`${formatInteger(data.total)} items`}
         actions={<CreateItemDialog />}
       />
-      <Toolbar label="Filter items">
-        <SearchField
-          label="Search"
-          placeholder="Name or owner"
-          value={search.q ?? ""}
-          onChange={(q) =>
-            void navigate({
-              search: (prev) => ({ ...prev, q: q === "" ? undefined : q, page: undefined }),
-              replace: true,
-            })
-          }
-          style={styles.search}
-        />
-        <Select
-          label="Status"
-          options={statusOptions}
-          value={search.status ?? "all"}
-          onChange={(status) =>
-            void navigate({
-              search: (prev) => ({
-                ...prev,
-                status: status === "all" ? undefined : status,
-                page: undefined,
-              }),
-              replace: true,
-            })
-          }
-          style={styles.status}
-        />
-        {isFetching ? <span {...stylex.props(styles.muted)}>Updating</span> : null}
-      </Toolbar>
       <DataTable
         caption="Items"
         columns={columns}
         data={data.items}
         getRowId={(item) => item.id}
         numericColumns={["amount"]}
+        stickyFirstColumn
+        toolbar={
+          <Toolbar
+            label="Filter items"
+            density="compact"
+            actions={isFetching ? <span {...stylex.props(styles.muted)}>Updating</span> : null}
+          >
+            <Select
+              label="Status"
+              hideLabel
+              size="sm"
+              options={statusOptions}
+              value={search.status ?? "all"}
+              onChange={(status) =>
+                void navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    status: status === "all" ? undefined : status,
+                    page: undefined,
+                  }),
+                  replace: true,
+                })
+              }
+              style={styles.status}
+            />
+            {search.status === undefined ? null : (
+              <FilterChip
+                label="Status"
+                value={statusLabel[search.status]}
+                onRemove={() =>
+                  void navigate({
+                    search: (prev) => ({ ...prev, status: undefined, page: undefined }),
+                    replace: true,
+                  })
+                }
+              />
+            )}
+            <SearchField
+              label="Search"
+              hideLabel
+              size="sm"
+              focusShortcut
+              placeholder="Search by name or owner"
+              value={search.q ?? ""}
+              onChange={(q) =>
+                void navigate({
+                  search: (prev) => ({ ...prev, q: q === "" ? undefined : q, page: undefined }),
+                  replace: true,
+                })
+              }
+              style={styles.search}
+            />
+          </Toolbar>
+        }
         sorting={sorting}
         onSortingChange={(next) => {
           const first = next[0];
@@ -205,8 +231,8 @@ function ItemsPage() {
 }
 
 const styles = stylex.create({
-  search: { width: "18rem", maxWidth: "100%" },
-  status: { width: "11rem" },
+  search: { flex: "1", minWidth: "12rem", maxWidth: "24rem" },
+  status: { width: "9rem" },
   rowLink: {
     fontWeight: font.medium,
     color: color.text,

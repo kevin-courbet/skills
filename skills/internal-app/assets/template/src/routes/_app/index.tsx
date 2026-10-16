@@ -28,7 +28,11 @@ function OverviewPage() {
         }
       />
       <div {...stylex.props(styles.stats)}>
-        <StatTile label="Items" value={formatInteger(data.total)} />
+        <StatTile
+          label="Items"
+          value={formatInteger(data.total)}
+          footnote="Items service · UTC days"
+        />
         <StatTile
           label="Active"
           value={formatInteger(data.active)}

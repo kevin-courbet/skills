@@ -29,7 +29,7 @@ export const overlay = stylex.create({
   entering: {
     animationName: fadeIn,
     animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
-    animationTimingFunction: motion.ease,
+    animationTimingFunction: motion.easeOut,
   },
   exiting: {
     animationName: fadeOut,

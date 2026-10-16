@@ -132,7 +132,7 @@ const styles = stylex.create({
   modalEntering: {
     animationName: modalIn,
     animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
-    animationTimingFunction: motion.ease,
+    animationTimingFunction: motion.easeOut,
   },
   modalExiting: {
     animationName: modalOut,

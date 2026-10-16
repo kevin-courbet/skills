@@ -55,18 +55,19 @@ Semantic color roles (every component uses these names and nothing else):
 
 | Group | Roles |
 |---|---|
-| Surfaces | `page`, `subtle`, `raised`, `overlay`, `inset` |
+| Frame | `frame` behind the sidebar and panel, `frameHover`, `frameSelected` for sidebar items |
+| Surfaces | `page` (the content panel), `subtle`, `raised`, `overlay`, `inset` |
 | Text | `text`, `textMuted`, `textFaint`, `textInverse` |
 | Borders | `borderSubtle`, `border`, `borderStrong` |
-| Accent | `accent`, `accentHover`, `accentText`, `accentMuted`, `onAccent`, `selected`, `focus` |
+| Accent | `accent`, `accentHover`, `accentText`, `accentMuted`, `accentBorder`, `onAccent`, `selected`, `focus` |
 | Status | `success`, `successMuted`, `successBorder` and the same triple for `warning`, `danger`, `info` |
 | Overlay | `backdrop` behind dialogs and sheets |
 
-Other groups: `shadow` (`sm`, `md`, `lg`), `font` (families, sizes `xs` to
+Other groups: `shadow` (`sm`, `md`, `lg`, and `frame` for the content panel), `font` (families, sizes `xs` to
 `xxxl`, weights, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
-`size` (control heights, icon sizes, sidebar and top bar, content widths),
+`size` (control heights, icon sizes, sidebar, top bar, frame gap, content widths),
 `media` (breakpoints, reduced motion, forced colors), `layer` (z-index), and
-`motion` (durations and easing).
+`motion` (durations, `ease` for state changes and exits, `easeOut` for enter motion).
 
 Density defaults:
 
@@ -78,8 +79,10 @@ Density defaults:
 | Control height | `size.controlMd` (32px); `controlSm` 28px for toolbars and table rows |
 | Table row | 36px total: 8px padding plus one text line |
 | Spacing between fields | `space.lg` (16px); between sections `space.xxl` (24px) |
-| Radius | `radius.md` (6px) controls, `radius.lg` (8px) cards and popovers, `radius.xl` (12px) dialogs |
-| Sidebar | `size.sidebar` (240px) |
+| Radius | `radius.md` (6px) controls, `radius.lg` (8px) sidebar items, popovers, and the table frame, `radius.xl` (12px) the content panel, cards, stat tiles, settings cards, dialogs, and the peek sheet |
+| Sidebar | `size.sidebar` (240px), items `size.controlSm` (28px) |
+| Content panel | `size.frameGap` (8px) from the window edges and the sidebar |
+| Identifiers | `Code`: `font.mono` at `font.xs` (11px), medium weight, `textMuted` |
 
 Change a density value in the token file of this skill, never in a component
 and never in an app's copy of a kit file.
@@ -108,7 +111,10 @@ scrollbars match.
 
 Dark values are not inverted light values. They follow `ui-design`'s
 `dark-theme.md`: tinted near-black page, lighter raised surfaces, reduced
-chroma on large areas, higher contrast text.
+chroma on large areas, higher contrast text. Dark neutrals keep chroma
+near 0.003 so the frame, panel, and cards read as neutral grey steps:
+`frame` (L 0.145) < `page` (0.178) < `subtle` (0.198) < `raised` (0.212) <
+`overlay` (0.24). Each step stays visible without a border.
 
 ## Writing Styles
 

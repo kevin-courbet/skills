@@ -8,6 +8,9 @@ import { color, shadow } from "./tokens.stylex";
  */
 const lightColor = stylex.createTheme(color, {
   scheme: lightPalette.scheme,
+  frame: lightPalette.frame,
+  frameHover: lightPalette.frameHover,
+  frameSelected: lightPalette.frameSelected,
   page: lightPalette.page,
   subtle: lightPalette.subtle,
   raised: lightPalette.raised,
@@ -24,6 +27,7 @@ const lightColor = stylex.createTheme(color, {
   accentHover: lightPalette.accentHover,
   accentText: lightPalette.accentText,
   accentMuted: lightPalette.accentMuted,
+  accentBorder: lightPalette.accentBorder,
   onAccent: lightPalette.onAccent,
   selected: lightPalette.selected,
   focus: lightPalette.focus,
@@ -46,12 +50,16 @@ const lightShadow = stylex.createTheme(shadow, {
   sm: lightPalette.shadowSm,
   md: lightPalette.shadowMd,
   lg: lightPalette.shadowLg,
+  frame: lightPalette.shadowFrame,
 });
 
 export const lightTheme = [lightColor, lightShadow] as const;
 
 const darkColor = stylex.createTheme(color, {
   scheme: darkPalette.scheme,
+  frame: darkPalette.frame,
+  frameHover: darkPalette.frameHover,
+  frameSelected: darkPalette.frameSelected,
   page: darkPalette.page,
   subtle: darkPalette.subtle,
   raised: darkPalette.raised,
@@ -68,6 +76,7 @@ const darkColor = stylex.createTheme(color, {
   accentHover: darkPalette.accentHover,
   accentText: darkPalette.accentText,
   accentMuted: darkPalette.accentMuted,
+  accentBorder: darkPalette.accentBorder,
   onAccent: darkPalette.onAccent,
   selected: darkPalette.selected,
   focus: darkPalette.focus,
@@ -90,6 +99,7 @@ const darkShadow = stylex.createTheme(shadow, {
   sm: darkPalette.shadowSm,
   md: darkPalette.shadowMd,
   lg: darkPalette.shadowLg,
+  frame: darkPalette.shadowFrame,
 });
 
 export const darkTheme = [darkColor, darkShadow] as const;

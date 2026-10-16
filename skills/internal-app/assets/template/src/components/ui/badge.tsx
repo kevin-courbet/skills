@@ -14,6 +14,19 @@ export function Badge({ intent = "neutral", children }: BadgeProps) {
   return <span {...stylex.props(styles.base, intents[intent])}>{children}</span>;
 }
 
+/**
+ * Dense status for table cells and lists: a colored dot and the status text.
+ * Use Badge where the status stands alone.
+ */
+export function StatusDot({ intent = "neutral", children }: BadgeProps) {
+  return (
+    <span {...stylex.props(styles.dotLabel)}>
+      <span aria-hidden {...stylex.props(styles.dot, dots[intent])} />
+      {children}
+    </span>
+  );
+}
+
 const styles = stylex.create({
   base: {
     display: "inline-flex",
@@ -29,6 +42,15 @@ const styles = stylex.create({
     lineHeight: "1",
     whiteSpace: "nowrap",
   },
+  dotLabel: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space.sm,
+    fontSize: font.md,
+    color: color.text,
+    whiteSpace: "nowrap",
+  },
+  dot: { width: "0.375rem", height: "0.375rem", flexShrink: 0, borderRadius: radius.full },
 });
 
 const intents = stylex.create({
@@ -58,4 +80,13 @@ const intents = stylex.create({
     borderColor: color.dangerBorder,
   },
   info: { color: color.info, backgroundColor: color.infoMuted, borderColor: color.infoBorder },
+});
+
+const dots = stylex.create({
+  neutral: { backgroundColor: color.textFaint },
+  accent: { backgroundColor: color.accent },
+  success: { backgroundColor: color.success },
+  warning: { backgroundColor: color.warning },
+  danger: { backgroundColor: color.danger },
+  info: { backgroundColor: color.info },
 });

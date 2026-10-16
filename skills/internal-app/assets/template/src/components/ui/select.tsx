@@ -36,6 +36,10 @@ type AriaSingleSelectProps<Value extends string> = Omit<
 export interface SelectProps<Value extends string> extends AriaSingleSelectProps<Value> {
   readonly label: string;
   readonly options: ReadonlyArray<SelectOption<Value>>;
+  /** Hide the visible label in dense toolbars. The label stays available to screen readers. */
+  readonly hideLabel?: boolean;
+  /** `sm` uses the compact control height for toolbars inside a table frame. */
+  readonly size?: "sm" | "md";
   readonly value?: Value | null;
   readonly defaultValue?: Value;
   readonly onChange?: (value: Value) => void;
@@ -48,6 +52,8 @@ export interface SelectProps<Value extends string> extends AriaSingleSelectProps
 /** Single choice from a short, fixed list. Use ComboBox when users need to type to find. */
 export function Select<Value extends string>({
   label,
+  hideLabel = false,
+  size: sizeKey = "md",
   options,
   value,
   defaultValue,
@@ -72,11 +78,12 @@ export function Select<Value extends string>({
       }}
       {...stylex.props(field.root, style)}
     >
-      <Label {...stylex.props(field.label)}>{label}</Label>
+      <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
       <Button
         {...renderStyles<{ isDisabled: boolean }>((state) => [
           control.base,
           styles.trigger,
+          sizeKey === "sm" && control.compact,
           isInvalid && control.invalid,
           state.isDisabled && control.disabled,
         ])}

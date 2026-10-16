@@ -71,6 +71,8 @@ export const control = stylex.create({
     opacity: "0.5",
     cursor: "not-allowed",
   },
+  /** Toolbar and table density: the controlSm height. */
+  compact: { height: size.controlSm },
   placeholder: {
     color: color.textFaint,
   },
