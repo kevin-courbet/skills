@@ -72,6 +72,7 @@ needed. Treat it as a failure, not a warning.
 | `references/stack.md` | Installing anything, or creating files. Packages, forbidden libraries, layout, scripts. |
 | `references/styling.md` | Writing any style, token, or theme code. |
 | `references/components.md` | Composing a page or adding a primitive. |
+| `references/reui-coverage.md` | Porting a ReUI component. It lists what the kit covers and what it leaves out. |
 | `references/data.md` | Writing a route, server function, Effect service, query, mutation, or form. |
 | `references/rpc.md` | Connecting a separate backend with Effect v4 RPC, typed errors, SSR, or cancellation. |
 | `references/charts.md` | Adding a chart or widget. Also load the `create-data-visualizations` skill. |

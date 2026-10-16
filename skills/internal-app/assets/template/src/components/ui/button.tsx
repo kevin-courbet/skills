@@ -1,9 +1,33 @@
+// Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components";
 import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+
+/** Set by ButtonGroup so its buttons join into one control. */
+const ButtonGroupContext = createContext(false);
+
+export interface ButtonGroupProps {
+  /** Names the group, such as "Deploy actions" or "Zoom". */
+  readonly label: string;
+  /** Buttons, and MenuTrigger elements whose trigger is a Button. Use one intent for all. */
+  readonly children: ReactNode;
+}
+
+/**
+ * Buttons joined into one control, such as a split button ("Deploy" and a
+ * menu of targets), zoom in and out, or previous and next. Use
+ * SegmentedControl for a choice of views.
+ */
+export function ButtonGroup({ label, children }: ButtonGroupProps) {
+  return (
+    <div role="group" aria-label={label} {...stylex.props(styles.group)}>
+      <ButtonGroupContext.Provider value>{children}</ButtonGroupContext.Provider>
+    </div>
+  );
+}
 
 export type ButtonIntent = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -28,6 +52,7 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
+  const isGrouped = useContext(ButtonGroupContext);
   return (
     <AriaButton
       {...props}
@@ -36,6 +61,8 @@ export function Button({
         intents[intent],
         sizes[sizeKey],
         iconOnly && squareSizes[sizeKey],
+        isGrouped && styles.grouped,
+        isGrouped && intent === "primary" && styles.groupedPrimary,
         style,
       )}
     >
@@ -100,6 +127,24 @@ const styles = stylex.create({
     outlineOffset: "2px",
   },
   disabledLink: { opacity: "0.5", pointerEvents: "none" },
+  group: {
+    display: "inline-flex",
+    flexShrink: 0,
+    borderRadius: radius.md,
+    // Clips the outer corners of the joined buttons; their focus rings sit inside.
+    overflow: "hidden",
+  },
+  grouped: {
+    position: "relative",
+    zIndex: { default: 0, ":hover": 1, ":focus-visible": 2 },
+    borderRadius: 0,
+    marginInlineStart: { default: "-1px", ":first-child": 0 },
+    outlineOffset: "-3px",
+  },
+  // Primary buttons have no border; a darker line keeps the joined parts apart.
+  groupedPrimary: {
+    borderInlineStartColor: { default: color.accentHover, ":first-child": "transparent" },
+  },
 });
 
 const intents = stylex.create({

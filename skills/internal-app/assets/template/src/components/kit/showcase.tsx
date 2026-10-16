@@ -6,8 +6,10 @@ import {
   Copy,
   Download,
   Filter,
+  Globe,
   LayoutGrid,
   List,
+  Pause,
   Pencil,
   Plus,
   RefreshCw,
@@ -17,18 +19,28 @@ import { type ReactNode, useState } from "react";
 import { Sparkline } from "@/components/charts/sparkline";
 import { TrendChart } from "@/components/charts/trend-chart";
 import { Alert } from "@/components/ui/alert";
+import { Avatar, AvatarGroup } from "@/components/ui/avatar";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ComboBox } from "@/components/ui/combo-box";
+import { useCommandPalette, useCommandPaletteShortcut } from "@/components/ui/command-palette";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CopyButton } from "@/components/ui/copy-button";
-import { DataTable, type DataTableColumn, MeterCell } from "@/components/ui/data-table";
+import {
+  DataTable,
+  type DataTableColumn,
+  MeterCell,
+  TwoLineCell,
+} from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
+import { type DateRange, DateRangePicker } from "@/components/ui/date-range-picker";
 import { Dialog } from "@/components/ui/dialog";
+import { Accordion, Disclosure } from "@/components/ui/disclosure";
 import { EmptyState, ErrorState, Skeleton, Spinner } from "@/components/ui/feedback";
-import { FilterChip } from "@/components/ui/filter-chip";
+import { FileUpload, type UploadFile } from "@/components/ui/file-upload";
+import { Filters } from "@/components/ui/filters";
 import {
   Card,
   Code,
@@ -42,21 +54,30 @@ import {
   StatTile,
   Toolbar,
 } from "@/components/ui/layout";
+import { type LogLine, LogViewer } from "@/components/ui/log-viewer";
 import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Meter } from "@/components/ui/meter";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { NumberField } from "@/components/ui/number-field";
 import { Pagination } from "@/components/ui/pagination";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { SearchField } from "@/components/ui/search-field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
+import { Stepper } from "@/components/ui/stepper";
 import { Switch } from "@/components/ui/switch";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
+import { TagGroup } from "@/components/ui/tag-group";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toaster";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import type { ActiveFilter, FilterField } from "@/lib/filter-params";
 import { color, font, media, size, space } from "@/styles/tokens.stylex";
+import { OperationsShowcase } from "./showcase-operations";
+import { WorkspaceShowcase } from "./showcase-workspace";
 
 interface SampleRow {
   readonly id: string;
@@ -100,6 +121,101 @@ const teams = [
   { id: "support", label: "Support" },
 ] as const;
 
+function cycle<T>(values: ReadonlyArray<T>, index: number): T {
+  const value = values[index % values.length];
+  if (value === undefined) throw new Error("cycle needs at least one value.");
+  return value;
+}
+
+const sampleStatuses = ["healthy", "healthy", "failed", "healthy", "paused"] as const;
+const sampleRegions = ["EU West", "US East", "EU Central", "AP South"] as const;
+
+const jobFilterFields = [
+  {
+    id: "region",
+    kind: "multiSelect",
+    label: "Region",
+    icon: Globe,
+    options: sampleRegions.map((region) => ({
+      id: region.toLowerCase().replace(" ", "-"),
+      label: region,
+    })),
+  },
+] as const satisfies ReadonlyArray<FilterField>;
+
+/** One thousand rows for the virtualized table. */
+const manyRows: ReadonlyArray<SampleRow> = Array.from({ length: 1000 }, (_, index) => ({
+  id: `run_${String(index + 1).padStart(4, "0")}`,
+  name: `Nightly batch ${index + 1}`,
+  status: cycle(sampleStatuses, index),
+  region: cycle(sampleRegions, index),
+  volume: (index * 7919) % 20000,
+}));
+
+function compareValues(left: string | number, right: string | number): number {
+  if (typeof left === "number" && typeof right === "number") return left - right;
+  return String(left).localeCompare(String(right), "en-GB", { numeric: true });
+}
+
+function sortRows(rows: ReadonlyArray<SampleRow>, sorting: SortingState) {
+  const first = sorting[0];
+  if (first === undefined) return rows;
+  const key = first.id;
+  if (key !== "name" && key !== "region" && key !== "volume") return rows;
+  const direction = first.desc ? -1 : 1;
+  return rows.toSorted((a, b) => compareValues(a[key], b[key]) * direction);
+}
+
+const datePresets = [
+  { label: "Last 7 days", value: { start: "2026-10-06", end: "2026-10-12" } },
+  { label: "Last 30 days", value: { start: "2026-09-13", end: "2026-10-12" } },
+  { label: "This month", value: { start: "2026-10-01", end: "2026-10-12" } },
+];
+
+const sampleFiles: ReadonlyArray<UploadFile> = [
+  { id: "f1", name: "payroll-october.csv", size: 482_113, status: "done" },
+  { id: "f2", name: "ledger-2026-q3.xlsx", size: 2_301_220, status: "uploading", progress: 64 },
+  {
+    id: "f3",
+    name: "bank-export.csv",
+    size: 12_044,
+    status: "failed",
+    error: "The file has no header row. Add one and upload it again.",
+  },
+  { id: "f4", name: "vendors.csv", size: 3_120, status: "queued" },
+];
+
+const buildSteps = ["install", "build", "test"] as const;
+const sampleLog: ReadonlyArray<LogLine> = [
+  ...Array.from({ length: 48 }, (_, index): LogLine => {
+    const step = cycle(buildSteps, Math.floor(index / 16));
+    const isWarning = index === 21;
+    return {
+      id: `l${index}`,
+      at: `2026-10-12T02:00:${String(index).padStart(2, "0")}Z`,
+      level: isWarning ? "warn" : "info",
+      source: step,
+      text: isWarning
+        ? "Deprecated option experimentalDecorators is ignored."
+        : `step ${index + 1} finished in ${(index * 37) % 400} ms`,
+    };
+  }),
+  {
+    id: "l48",
+    at: "2026-10-12T02:00:48Z",
+    level: "error",
+    source: "test",
+    text: "FAIL src/ledger.test.ts > totals > rounds to cents. Expected 104.25, received 104.2",
+  },
+  {
+    id: "l49",
+    at: "2026-10-12T02:00:49Z",
+    level: "info",
+    source: "test",
+    text: "Tests 1 failed | 211 passed",
+  },
+];
+
 function Specimen({ label, children }: { readonly label: string; readonly children: ReactNode }) {
   return (
     <div {...stylex.props(styles.specimen)}>
@@ -124,24 +240,37 @@ export function KitShowcase() {
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [peekIndex, setPeekIndex] = useState<number | null>(null);
   const peekRow = peekIndex === null ? undefined : sampleRows[peekIndex];
+  const [selectedIds, setSelectedIds] = useState<ReadonlyArray<string>>([]);
+  const [jobFilters, setJobFilters] = useState<ReadonlyArray<ActiveFilter>>([
+    { kind: "multiSelect", field: "region", operator: "is", value: ["eu-west"] },
+  ]);
+  const [hiddenColumns, setHiddenColumns] = useState<ReadonlyArray<string>>([]);
+  const [runSorting, setRunSorting] = useState<SortingState>([{ id: "name", desc: false }]);
+  const [range, setRange] = useState<DateRange | null>({ start: "2026-10-06", end: "2026-10-12" });
+  const [owners, setOwners] = useState<ReadonlyArray<string>>(["finance", "ops"]);
+  const [labels, setLabels] = useState([
+    { id: "billing", label: "Billing" },
+    { id: "eu", label: "EU" },
+    { id: "nightly", label: "Nightly" },
+  ]);
+  const [files, setFiles] = useState(sampleFiles);
+  const [importStep, setImportStep] = useState<"source" | "mapping" | "review" | "import">(
+    "review",
+  );
+  const palette = useCommandPalette();
+  const shortcut = useCommandPaletteShortcut();
 
   const sampleColumns: ReadonlyArray<DataTableColumn<SampleRow>> = [
     {
       id: "name",
       accessorKey: "name",
       header: "Job",
+      enableHiding: false,
       cell: (info) => (
-        <span {...stylex.props(styles.nameCell)}>
-          <Button
-            intent="ghost"
-            size="sm"
-            onPress={() => setPeekIndex(info.row.index)}
-            style={styles.rowLink}
-          >
-            {info.row.original.name}
-          </Button>
-          <Code>{info.row.original.id}</Code>
-        </span>
+        <TwoLineCell
+          primary={<span {...stylex.props(styles.rowName)}>{info.row.original.name}</span>}
+          secondary={<Code>{info.row.original.id}</Code>}
+        />
       ),
       footer: `${sampleRows.length} jobs`,
     },
@@ -168,6 +297,28 @@ export function KitShowcase() {
         />
       ),
       footer: `${totalVolume.toLocaleString("en-GB")} total`,
+    },
+  ];
+
+  const runColumns: ReadonlyArray<DataTableColumn<SampleRow>> = [
+    { id: "name", accessorKey: "name", header: "Run", size: 220 },
+    {
+      id: "status",
+      header: "Status",
+      enableSorting: false,
+      size: 120,
+      cell: (info) => {
+        const status = statusDisplay[info.row.original.status];
+        return <StatusDot intent={status.intent}>{status.label}</StatusDot>;
+      },
+    },
+    { id: "region", accessorKey: "region", header: "Region", size: 140 },
+    {
+      id: "volume",
+      accessorKey: "volume",
+      header: "Rows",
+      size: 120,
+      cell: (info) => info.getValue<number>().toLocaleString("en-GB"),
     },
   ];
 
@@ -245,6 +396,10 @@ export function KitShowcase() {
               </Popover>
             </PopoverTrigger>
           </Specimen>
+          <Specimen label="Command palette">
+            <Button onPress={palette.open}>Open command palette</Button>
+            <Kbd>{shortcut}</Kbd>
+          </Specimen>
         </div>
       </Section>
 
@@ -279,6 +434,15 @@ export function KitShowcase() {
             onChange={setTeam}
           />
           <DatePicker label="Start date" value={date} onChange={setDate} />
+          <DateRangePicker label="Period" value={range} onChange={setRange} presets={datePresets} />
+          <MultiSelect
+            label="Owners"
+            placeholder="Any team"
+            options={teams}
+            value={owners}
+            onChange={setOwners}
+            showTags
+          />
           <SearchField label="Search" placeholder="Search items" />
           <TextField label="Notes" multiline placeholder="Context for the next person" />
         </div>
@@ -300,7 +464,44 @@ export function KitShowcase() {
               <Switch>Maintenance mode</Switch>
             </div>
           </Specimen>
+          <div {...stylex.props(styles.stack)}>
+            <TagGroup
+              label="Labels"
+              items={labels}
+              onRemove={(ids) => setLabels(labels.filter((label) => !ids.includes(label.id)))}
+              emptyLabel="No labels"
+            />
+            <TagGroup
+              label="Read-only tags"
+              items={[
+                { id: "pii", label: "Contains PII" },
+                { id: "export", label: "Exported" },
+              ]}
+            />
+          </div>
         </div>
+        <FileUpload
+          label="Source files"
+          description="CSV or XLSX, up to 10 MB each."
+          acceptedFileTypes={[
+            "text/csv",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          ]}
+          allowsMultiple
+          files={files}
+          onSelect={(selected) =>
+            setFiles([
+              ...files,
+              ...selected.map((file): UploadFile => ({
+                id: `${file.name}-${file.lastModified}`,
+                name: file.name,
+                size: file.size,
+                status: "queued",
+              })),
+            ])
+          }
+          onRemove={(id) => setFiles(files.filter((file) => file.id !== id))}
+        />
       </Section>
 
       <Section title="Data">
@@ -356,8 +557,28 @@ export function KitShowcase() {
           numericColumns={["volume"]}
           sorting={sorting}
           onSortingChange={setSorting}
-          stickyFirstColumn
+          pinnedColumns={{ start: ["name"] }}
+          rowAction={{ onAction: (row) => setPeekIndex(sampleRows.indexOf(row)) }}
           activeRowId={peekRow?.id}
+          selection={{
+            selectedIds,
+            onChange: setSelectedIds,
+            rowLabel: (row) => row.name,
+            canSelect: (row) => row.status !== "paused",
+            actions: (ids) => (
+              <>
+                <Button size="sm">
+                  <Pause aria-hidden width={14} height={14} />
+                  Pause
+                </Button>
+                <Button size="sm" onPress={() => setConfirmOpen(true)}>
+                  <Trash2 aria-hidden width={14} height={14} />
+                  Delete {ids.length} {ids.length === 1 ? "job" : "jobs"}
+                </Button>
+              </>
+            ),
+          }}
+          columnVisibility={{ hidden: hiddenColumns, onChange: setHiddenColumns }}
           toolbar={
             <Toolbar
               label="Filter jobs"
@@ -384,7 +605,6 @@ export function KitShowcase() {
                 ]}
                 style={styles.scope}
               />
-              <FilterChip label="Region" value="EU West" onRemove={() => undefined} />
               <SearchField
                 label="Search jobs"
                 hideLabel
@@ -393,11 +613,29 @@ export function KitShowcase() {
                 placeholder="Search jobs"
                 style={styles.toolbarSearch}
               />
+              <Filters
+                label="Job filters"
+                fields={jobFilterFields}
+                value={jobFilters}
+                onChange={setJobFilters}
+              />
             </Toolbar>
           }
           emptyState={<EmptyState title="No jobs" />}
         />
         <Pagination page={page} pageCount={4} onPageChange={setPage} />
+        <DataTable
+          caption="Nightly runs"
+          columns={runColumns}
+          data={sortRows(manyRows, runSorting)}
+          getRowId={(row) => row.id}
+          numericColumns={["volume"]}
+          sorting={runSorting}
+          onSortingChange={setRunSorting}
+          resizableColumns
+          virtualize={{ visibleRows: 10 }}
+          emptyState={<EmptyState title="No runs" />}
+        />
         <SettingsCard title="Organization">
           <SettingRow label="Name" description="Shown in the sidebar and in exports.">
             <TextField
@@ -443,6 +681,118 @@ export function KitShowcase() {
         />
       </Section>
 
+      <Section title="Progress and people">
+        <div {...stylex.props(styles.grid)}>
+          <Specimen label="Progress bar">
+            <div {...stylex.props(styles.stack, styles.wide)}>
+              <ProgressBar label="Importing rows" value={64} />
+              <ProgressBar label="Files" value={3} maxValue={12} valueLabel="3 of 12 files" />
+              <ProgressBar label="Preparing export" isIndeterminate />
+            </div>
+          </Specimen>
+          <Specimen label="Meter">
+            <div {...stylex.props(styles.stack, styles.wide)}>
+              <Meter
+                label="Storage"
+                value={42}
+                valueLabel="42 GB of 100 GB"
+                warningAt={75}
+                dangerAt={90}
+              />
+              <Meter label="API quota" value={81} warningAt={75} dangerAt={90} />
+              <Meter label="Disk" value={96} warningAt={75} dangerAt={90} />
+            </div>
+          </Specimen>
+          <Specimen label="Avatar">
+            <Avatar name="Ada Lovelace" size="sm" />
+            <Avatar name="Grace Hopper" />
+            <Avatar name="Katherine Johnson" size="lg" />
+            <AvatarGroup
+              label="Owners"
+              people={[
+                { name: "Ada Lovelace" },
+                { name: "Grace Hopper" },
+                { name: "Alan Turing" },
+                { name: "Edsger Dijkstra" },
+                { name: "Barbara Liskov" },
+                { name: "Donald Knuth" },
+              ]}
+            />
+          </Specimen>
+        </div>
+      </Section>
+
+      <Section title="Steps and history">
+        <Stepper
+          label="Import steps"
+          steps={[
+            { id: "source", label: "Source", description: "Upload files" },
+            { id: "mapping", label: "Mapping", description: "Match columns" },
+            { id: "review", label: "Review", description: "Check 1,284 rows" },
+            { id: "import", label: "Import" },
+          ]}
+          currentStep={importStep}
+          onStepPress={setImportStep}
+        />
+        <div {...stylex.props(styles.grid)}>
+          <Card title="Wizard, vertical">
+            <Stepper
+              label="Import steps, vertical"
+              orientation="vertical"
+              steps={[
+                { id: "source", label: "Source", description: "Upload files" },
+                { id: "mapping", label: "Mapping", description: "Match columns" },
+                { id: "review", label: "Review", description: "Check 1,284 rows" },
+                { id: "import", label: "Import" },
+              ]}
+              currentStep={importStep}
+              onStepPress={setImportStep}
+            />
+          </Card>
+          <Card title="Live run">
+            <Stepper
+              mode="status"
+              label="Live run stages"
+              orientation="vertical"
+              steps={[
+                {
+                  id: "install",
+                  label: "Install",
+                  description: "bun install",
+                  status: "success",
+                  duration: "11s",
+                },
+                {
+                  id: "build",
+                  label: "Build",
+                  description: "bun run build",
+                  status: "running",
+                  duration: "32s so far",
+                },
+                { id: "test", label: "Test", description: "bun run test", status: "pending" },
+              ]}
+            />
+          </Card>
+        </div>
+        <LogViewer
+          label="Build output"
+          lines={sampleLog}
+          emptyState={
+            <EmptyState
+              title="Waiting for a runner"
+              description="Build output appears when this run starts."
+            />
+          }
+          downloadName="run_0042.log"
+          visibleLines={12}
+          footnote="Sample output"
+        />
+      </Section>
+
+      <OperationsShowcase />
+
+      <WorkspaceShowcase />
+
       <Section title="Feedback">
         <div {...stylex.props(styles.stack)}>
           <Alert title="Sync is paused for maintenance">
@@ -454,7 +804,7 @@ export function KitShowcase() {
           <Alert
             intent="warning"
             title="Two jobs are slow"
-            action={<Button size="sm">View jobs</Button>}
+            actions={<Button size="sm">View jobs</Button>}
           >
             Their median run time doubled this week.
           </Alert>
@@ -495,6 +845,29 @@ export function KitShowcase() {
             Toast
           </Button>
         </Specimen>
+        <div {...stylex.props(styles.grid)}>
+          <Specimen label="Disclosure">
+            <div {...stylex.props(styles.stack, styles.wide)}>
+              <Disclosure title="Request payload" hint="2 KB">
+                <Code>job_7f3a · dry run off</Code>
+              </Disclosure>
+              <Disclosure title="Advanced settings" defaultExpanded>
+                Retries and timeouts use the workspace defaults.
+              </Disclosure>
+            </div>
+          </Specimen>
+          <Accordion defaultExpandedKeys={["schedule"]}>
+            <Disclosure id="schedule" title="Schedule">
+              Runs every day at 02:00 UTC.
+            </Disclosure>
+            <Disclosure id="retries" title="Retries" hint="3 attempts">
+              Failed runs retry after 5, 15, and 45 minutes.
+            </Disclosure>
+            <Disclosure id="alerts" title="Alerts">
+              Failures notify the finance channel.
+            </Disclosure>
+          </Accordion>
+        </div>
         <Tabs>
           <TabList aria-label="Job sections">
             <Tab id="runs">Runs</Tab>
@@ -634,15 +1007,7 @@ const styles = stylex.create({
   wide: { width: "100%" },
   skeletonWide: { width: "100%", height: size.controlMd },
   skeletonNarrow: { width: "60%" },
-  nameCell: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" },
-  rowLink: {
-    height: "auto",
-    paddingInline: 0,
-    fontSize: font.md,
-    color: color.text,
-    backgroundColor: { default: "transparent", ":hover": "transparent", ":active": "transparent" },
-    textDecoration: { default: "none", ":hover": "underline" },
-  },
+  rowName: { fontWeight: font.medium },
   scope: { width: "8rem" },
   toolbarSearch: { flex: "1", minWidth: "12rem" },
   settingField: { width: "14rem" },

@@ -1,6 +1,7 @@
+// Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface PageHeaderProps {
@@ -61,15 +62,93 @@ export function Section({
   );
 }
 
-/** Raised surface. Use only for distinct, comparable, or actionable groups. */
-export function Card({
-  children,
-  style,
-}: {
+export interface CardProps {
+  /** Names the group. With a title the card is a labelled section. */
+  readonly title?: string;
+  readonly description?: string;
+  /** Heading level of the title: 2 on a page, 3 inside a Section. */
+  readonly headingLevel?: 2 | 3;
+  /** Quiet header content at the end of the title row: a total, a link, or one button. */
+  readonly actions?: ReactNode;
+  /** Footer bar under a divider, such as a line count or a "View all" link. */
+  readonly footer?: ReactNode;
+  /**
+   * `default` pads the content. `sections` puts each child CardSection flush
+   * against the edges, divided by lines, for tables, steppers, and logs.
+   */
+  readonly layout?: "default" | "sections";
   readonly children: ReactNode;
   readonly style?: StyleXStyles;
-}) {
-  return <div {...stylex.props(styles.card, style)}>{children}</div>;
+}
+
+/**
+ * Raised surface for a distinct, comparable, or actionable group. Content sits
+ * directly on the card. Never nest a Card in a Card: divide a card with
+ * CardSection rows instead.
+ */
+export function Card({
+  title,
+  description,
+  headingLevel = 2,
+  actions,
+  footer,
+  layout = "default",
+  children,
+  style,
+}: CardProps) {
+  const headingId = useId();
+  const Heading = headingLevel === 2 ? "h2" : "h3";
+  const hasHeader = title !== undefined;
+  const Root = hasHeader ? "section" : "div";
+  return (
+    <Root aria-labelledby={hasHeader ? headingId : undefined} {...stylex.props(styles.card, style)}>
+      {hasHeader ? (
+        <header {...stylex.props(styles.cardHeader)}>
+          <div {...stylex.props(styles.cardHeading)}>
+            <Heading id={headingId} {...stylex.props(styles.cardTitle)}>
+              {title}
+            </Heading>
+            {description ? <p {...stylex.props(styles.cardDescription)}>{description}</p> : null}
+          </div>
+          {actions ? <div {...stylex.props(styles.cardActions)}>{actions}</div> : null}
+        </header>
+      ) : null}
+      {layout === "sections" ? (
+        children
+      ) : (
+        <div {...stylex.props(styles.cardBody, hasHeader && styles.cardBodyAfterHeader)}>
+          {children}
+        </div>
+      )}
+      {footer ? <footer {...stylex.props(styles.cardFooter)}>{footer}</footer> : null}
+    </Root>
+  );
+}
+
+export interface CardSectionProps {
+  /** `flush` removes the padding for content that has its own, such as a table or a log. */
+  readonly padding?: "default" | "flush";
+  /**
+   * `inset` sinks the section into the inset surface, for raw output such as
+   * logs or payloads. It is not a nested card: never use it for section content.
+   */
+  readonly tone?: "default" | "inset";
+  readonly children: ReactNode;
+}
+
+/** One divided row of a Card with `layout="sections"`. A line separates it from the row above. */
+export function CardSection({ padding = "default", tone = "default", children }: CardSectionProps) {
+  return (
+    <div
+      {...stylex.props(
+        styles.cardSection,
+        padding === "default" && styles.cardSectionPadded,
+        tone === "inset" && styles.cardSectionInset,
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 export interface StatDelta {
@@ -117,40 +196,98 @@ export function StatTile({ label, value, hint, delta, chart, footnote }: StatTil
   );
 }
 
+export type StatStripTone = "danger" | "warning" | "success" | "info" | "muted";
+
 export interface StatStripItem {
   readonly label: string;
   readonly value: ReactNode;
   /** Quiet context after the value, such as a unit or a count. */
   readonly hint?: string;
-  /** Colors the value when the number itself is a status, such as failures. */
-  readonly tone?: "danger" | "warning" | "success";
+  /** Colors the value when the value itself is a status, such as failures or "Succeeded". */
+  readonly tone?: StatStripTone;
+  /** Secondary line under the value, such as "All stages passed in 1m 56s". */
+  readonly detail?: ReactNode;
+}
+
+export interface StatStripProps {
+  readonly items: ReadonlyArray<StatStripItem>;
+  /**
+   * `metric` shows large numbers. `status` shows one status word per cell with
+   * a secondary line, such as CI, artifact, and traffic state.
+   */
+  readonly variant?: "metric" | "status";
+  /**
+   * `false` drops the border and surface so the strip sits directly in a
+   * CardSection with `padding="flush"`. Keep the default on a page.
+   */
+  readonly framed?: boolean;
 }
 
 /**
  * Compact row of key facts separated by dividers. Use it at the top of a
  * detail page or a peek sheet, where StatTile cards would be too heavy.
  */
-export function StatStrip({ items }: { readonly items: ReadonlyArray<StatStripItem> }) {
+export function StatStrip({ items, variant = "metric", framed = true }: StatStripProps) {
   return (
-    <dl {...stylex.props(styles.strip)}>
+    <dl {...stylex.props(styles.strip, framed && styles.stripFramed)}>
       {items.map((item) => (
         <div key={item.label} {...stylex.props(styles.stripItem)}>
           <dt {...stylex.props(styles.stripLabel)}>{item.label}</dt>
-          <dd {...stylex.props(styles.stripValue, item.tone && stripTones[item.tone])}>
+          <dd
+            {...stylex.props(
+              styles.stripValue,
+              variant === "status" && styles.stripValueStatus,
+              item.tone && stripTones[item.tone],
+            )}
+          >
             {item.value}
             {item.hint ? <span {...stylex.props(styles.stripHint)}>{item.hint}</span> : null}
           </dd>
+          {item.detail === undefined ? null : (
+            <dd {...stylex.props(styles.stripDetail)}>{item.detail}</dd>
+          )}
         </div>
       ))}
     </dl>
   );
 }
 
-export function DescriptionList({
-  items,
-}: {
-  readonly items: ReadonlyArray<{ readonly term: string; readonly detail: ReactNode }>;
-}) {
+export interface DescriptionItem {
+  readonly term: string;
+  readonly detail: ReactNode;
+  /** In the grid layout, `wide` spans two columns and `full` the whole row. */
+  readonly span?: "wide" | "full";
+}
+
+export interface DescriptionListProps {
+  readonly items: ReadonlyArray<DescriptionItem>;
+  /**
+   * `rows` puts each label left of its value, for detail pages and sheets.
+   * `grid` puts the label above the value in columns, for the key facts of a
+   * record in a card, such as status, environment, created, and duration.
+   */
+  readonly layout?: "rows" | "grid";
+}
+
+export function DescriptionList({ items, layout = "rows" }: DescriptionListProps) {
+  if (layout === "grid")
+    return (
+      <dl {...stylex.props(styles.dlGrid)}>
+        {items.map((item) => (
+          <div
+            key={item.term}
+            {...stylex.props(
+              styles.dlCell,
+              item.span === "wide" && styles.dlCellWide,
+              item.span === "full" && styles.dlCellFull,
+            )}
+          >
+            <dt {...stylex.props(styles.dtGrid)}>{item.term}</dt>
+            <dd {...stylex.props(styles.dd)}>{item.detail}</dd>
+          </div>
+        ))}
+      </dl>
+    );
   return (
     <dl {...stylex.props(styles.dl)}>
       {items.map((item) => (
@@ -294,12 +431,67 @@ const styles = stylex.create({
   sectionTitle: { fontSize: font.lg, fontWeight: font.semibold, lineHeight: font.leadingTight },
   sectionDescription: { fontSize: font.md, color: color.textMuted, marginTop: space.xs },
   card: {
+    display: "flex",
+    flexDirection: "column",
+    minWidth: 0,
+    overflow: "hidden",
     backgroundColor: color.raised,
     borderWidth: "1px",
     borderStyle: "solid",
     borderColor: color.border,
     borderRadius: radius.xl,
-    padding: space.lg,
+  },
+  cardHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: space.md,
+    paddingBlock: space.md,
+    paddingInline: space.lg,
+  },
+  cardHeading: { display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 },
+  cardTitle: {
+    margin: 0,
+    fontSize: font.md,
+    fontWeight: font.semibold,
+    lineHeight: font.leadingTight,
+  },
+  cardDescription: { margin: 0, fontSize: font.sm, color: color.textMuted },
+  cardActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: space.sm,
+    minHeight: "1.25rem",
+    fontSize: font.sm,
+    color: color.textMuted,
+    fontVariantNumeric: "tabular-nums",
+  },
+  cardBody: { padding: space.lg, minWidth: 0 },
+  cardBodyAfterHeader: { paddingTop: 0 },
+  cardSection: {
+    minWidth: 0,
+    borderTopWidth: { default: "1px", ":first-child": 0 },
+    borderTopStyle: "solid",
+    borderTopColor: color.borderSubtle,
+  },
+  cardSectionPadded: { paddingBlock: space.lg, paddingInline: space.lg },
+  cardSectionInset: { backgroundColor: color.inset },
+  cardFooter: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: space.sm,
+    minHeight: "2.5rem",
+    paddingBlock: space.sm,
+    paddingInline: space.lg,
+    borderTopWidth: "1px",
+    borderTopStyle: "solid",
+    borderTopColor: color.borderSubtle,
+    fontSize: font.sm,
+    color: color.textMuted,
+    fontVariantNumeric: "tabular-nums",
   },
   stat: {
     display: "flex",
@@ -333,13 +525,34 @@ const styles = stylex.create({
       [media.md]: "repeat(auto-fit, minmax(8rem, 1fr))",
     },
     margin: 0,
+    overflow: "hidden",
+  },
+  stripFramed: {
     backgroundColor: color.raised,
     borderWidth: "1px",
     borderStyle: "solid",
     borderColor: color.border,
     borderRadius: radius.lg,
-    overflow: "hidden",
   },
+  stripValueStatus: { fontSize: font.md, fontWeight: font.medium },
+  stripDetail: {
+    margin: 0,
+    fontSize: font.sm,
+    color: color.textMuted,
+    minWidth: 0,
+    overflowWrap: "anywhere",
+  },
+  dlGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 11rem), 1fr))",
+    columnGap: space.xl,
+    rowGap: space.lg,
+    margin: 0,
+  },
+  dlCell: { display: "flex", flexDirection: "column", gap: space.xs, minWidth: 0 },
+  dlCellWide: { gridColumn: { default: "1 / -1", [media.md]: "span 2" } },
+  dlCellFull: { gridColumn: "1 / -1" },
+  dtGrid: { fontSize: font.sm, color: color.textMuted },
   stripItem: {
     display: "flex",
     flexDirection: "column",
@@ -475,4 +688,6 @@ const stripTones = stylex.create({
   danger: { color: color.danger },
   warning: { color: color.warning },
   success: { color: color.success },
+  info: { color: color.info },
+  muted: { color: color.textMuted },
 });

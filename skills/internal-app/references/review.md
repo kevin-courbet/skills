@@ -52,10 +52,11 @@ Hierarchy and layout:
 - The page purpose and primary action are clear within seconds.
 - One primary button per view. Secondary actions are quiet.
 - Labels are quieter than values. Section titles are quieter than content.
-- Spacing shows grouping. Cards wrap only distinct or actionable groups.
-- Tables: text left, numbers right with tabular figures, sort state announced, names link to detail pages.
-- List filters sit in the table frame as a compact `Toolbar`. Each active filter shows a `FilterChip`.
-- Identifiers use `Code`; values people paste elsewhere have a `CopyButton`.
+- Spacing shows grouping. Cards wrap only distinct or actionable groups. No card, framed panel, or bordered box sits inside a card; `CardSection` lines divide it.
+- Tables: text left, numbers right with tabular figures, sort state announced, rows open detail pages with the keyboard and the mouse.
+- List filters sit in the table frame as a compact `Toolbar` with `Filters`. Each chip names its values in words.
+- Record IDs and hashes people paste elsewhere use `Identifier`; inline code uses `Code`.
+- Activity feeds do not color events as progress. Pipeline steps show their own status and duration.
 
 States and data:
 

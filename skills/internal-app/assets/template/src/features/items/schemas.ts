@@ -34,10 +34,16 @@ export type ItemSortField = typeof ItemSortField.Type;
 export const SortDirection = Schema.Literals(["asc", "desc"]);
 export type SortDirection = typeof SortDirection.Type;
 
-/** URL search state for the list route. Every field has a default so links stay short. */
+/**
+ * Query of the list server function. The list route builds it from its URL
+ * search: the filter params decode into `status`. Every field has a default so
+ * links stay short.
+ */
 export const ItemsQuery = Schema.Struct({
   q: Schema.optionalKey(Schema.String),
-  status: Schema.optionalKey(ItemStatus),
+  status: Schema.optionalKey(Schema.Array(ItemStatus)),
+  /** One owner, or every owner except it when `negate` is true. */
+  owner: Schema.optionalKey(Schema.Struct({ value: Schema.String, negate: Schema.Boolean })),
   sort: Schema.optionalKey(ItemSortField),
   dir: Schema.optionalKey(SortDirection),
   page: Schema.optionalKey(Schema.Number),

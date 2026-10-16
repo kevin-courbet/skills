@@ -16,6 +16,8 @@ export interface SegmentedControlProps<Value extends string> {
   readonly options: ReadonlyArray<SegmentOption<Value>>;
   readonly value: Value;
   readonly onChange: (value: Value) => void;
+  /** `sm` matches the 28px compact controls of a toolbar. */
+  readonly size?: "sm" | "md";
 }
 
 /** Switches between two to five views or modes of the same content. */
@@ -24,6 +26,7 @@ export function SegmentedControl<Value extends string>({
   options,
   value,
   onChange,
+  size: sizeKey = "md",
 }: SegmentedControlProps<Value>) {
   return (
     <ToggleButtonGroup
@@ -45,6 +48,7 @@ export function SegmentedControl<Value extends string>({
             id={option.id}
             {...renderStyles<{ isSelected: boolean; isFocusVisible: boolean }>((state) => [
               styles.segment,
+              sizeKey === "sm" && styles.segmentSm,
               state.isSelected && styles.selected,
               state.isFocusVisible && styles.focused,
             ])}
@@ -73,6 +77,7 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: space.xs,
+    whiteSpace: "nowrap",
     height: size.controlSm,
     paddingInline: space.md,
     borderStyle: "none",
@@ -85,6 +90,12 @@ const styles = stylex.create({
     outlineStyle: "none",
     transitionProperty: "background-color, color, box-shadow",
     transitionDuration: motion.fast,
+  },
+  // The group adds 2px padding and a 1px border on each side, so the whole control is 28px.
+  segmentSm: {
+    height: `calc(${size.controlSm} - 6px)`,
+    paddingInline: space.sm,
+    fontSize: font.sm,
   },
   selected: { backgroundColor: color.raised, color: color.text, boxShadow: shadow.sm },
   focused: {

@@ -1,9 +1,23 @@
 import * as stylex from "@stylexjs/stylex";
-import { Link, type LinkProps } from "@tanstack/react-router";
-import { ChevronDown, type LucideIcon, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { Link, type LinkProps, useNavigate } from "@tanstack/react-router";
+import {
+  ChevronDown,
+  type LucideIcon,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+} from "lucide-react";
+import { type ReactNode, useMemo, useState } from "react";
 import { Button as AriaButton, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Button } from "@/components/ui/button";
+import {
+  type CommandGroup,
+  CommandPalette,
+  CommandPaletteProvider,
+  useCommandPaletteShortcut,
+} from "@/components/ui/command-palette";
+import { Kbd } from "@/components/ui/layout";
 import { Sheet } from "@/components/ui/sheet";
 import { Toaster } from "@/components/ui/toaster";
 import {
@@ -45,6 +59,11 @@ export interface AppShellProps {
   readonly actions?: ReactNode;
   /** Quiet links at the bottom of the sidebar, such as help or system status. */
   readonly sidebarFooter?: ReactNode;
+  /**
+   * App-wide actions in the command palette, listed before the navigation
+   * items. Page-specific actions stay on their page.
+   */
+  readonly commands?: ReadonlyArray<CommandGroup>;
   readonly children: ReactNode;
 }
 
@@ -124,10 +143,28 @@ export function AppShell({
   nav,
   actions,
   sidebarFooter,
+  commands = [],
   children,
 }: AppShellProps) {
   const [isNavOpen, setNavOpen] = useState(false);
   const [isSidebarHidden, setSidebarHidden] = useState(false);
+  const [isPaletteOpen, setPaletteOpen] = useState(false);
+  const navigate = useNavigate();
+  const shortcut = useCommandPaletteShortcut();
+  const paletteControls = useMemo(() => ({ open: () => setPaletteOpen(true) }), []);
+  const paletteGroups: ReadonlyArray<CommandGroup> = [
+    ...commands,
+    ...nav.map((group) => ({
+      label: group.label,
+      commands: group.items.map((item) => ({
+        id: `nav:${group.label}:${item.label}`,
+        label: item.label,
+        icon: item.icon,
+        keywords: [group.label],
+        onAction: () => void navigate({ to: item.to, params: item.params }),
+      })),
+    })),
+  ];
   const footer = (
     <div {...stylex.props(styles.sidebarFooter)}>
       <div {...stylex.props(styles.sidebarFooterLinks)}>{sidebarFooter}</div>
@@ -180,14 +217,29 @@ export function AppShell({
               ) : null}
               <RouteBreadcrumbs />
             </div>
-            {actions ? <div {...stylex.props(styles.topbarActions)}>{actions}</div> : null}
+            <div {...stylex.props(styles.topbarActions)}>
+              <Button
+                intent="ghost"
+                size="sm"
+                aria-label="Search pages and actions"
+                aria-keyshortcuts="Meta+K Control+K"
+                onPress={() => setPaletteOpen(true)}
+              >
+                <Search aria-hidden {...stylex.props(styles.icon)} />
+                <span {...stylex.props(styles.searchLabel)}>Search</span>
+                <span {...stylex.props(styles.searchShortcut)}>
+                  <Kbd>{shortcut}</Kbd>
+                </span>
+              </Button>
+              {actions}
+            </div>
           </header>
           <main
             id={mainContentId}
             data-scroll-restoration-id={mainContentId}
             {...stylex.props(styles.main)}
           >
-            {children}
+            <CommandPaletteProvider value={paletteControls}>{children}</CommandPaletteProvider>
           </main>
         </div>
       </div>
@@ -197,6 +249,7 @@ export function AppShell({
           {footer}
         </div>
       </Sheet>
+      <CommandPalette groups={paletteGroups} isOpen={isPaletteOpen} onOpenChange={setPaletteOpen} />
       <Toaster />
     </div>
   );
@@ -354,6 +407,8 @@ const styles = stylex.create({
   desktopOnly: { display: { default: "none", [media.md]: "inline-flex" } },
   icon: { width: size.icon, height: size.icon },
   topbarActions: { display: "flex", alignItems: "center", gap: space.xs },
+  searchLabel: { display: { default: "none", [media.sm]: "inline" }, color: color.textMuted },
+  searchShortcut: { display: { default: "none", [media.md]: "inline-flex" } },
   // Positioned so visually hidden, absolutely positioned content stays inside the scroller.
   main: { position: "relative", flex: "1", minWidth: 0, minHeight: 0, overflowY: "auto" },
 });

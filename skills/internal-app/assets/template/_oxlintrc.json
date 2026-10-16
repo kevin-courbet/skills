@@ -12,6 +12,8 @@
     "oxc/no-barrel-file": "error",
     "import/no-namespace": "off",
     "react/rules-of-hooks": "error",
+    "react/incompatible-library": "off",
+    "jsx-a11y/no-autofocus": ["error", { "ignoreNonDOM": true }],
     "jsx-a11y/prefer-tag-over-role": "off",
     "jsx-a11y/no-noninteractive-tabindex": ["error", { "roles": ["region"] }]
   },

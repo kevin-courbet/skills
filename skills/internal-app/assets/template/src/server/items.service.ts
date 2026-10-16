@@ -36,7 +36,9 @@ export class ItemsService extends Context.Service<ItemsService, ItemsServiceShap
           const needle = query.q?.trim().toLowerCase();
           const filtered = all.filter(
             (item) =>
-              (query.status === undefined || item.status === query.status) &&
+              (query.status === undefined || query.status.includes(item.status)) &&
+              (query.owner === undefined ||
+                (item.owner === query.owner.value) !== query.owner.negate) &&
               (needle === undefined ||
                 needle === "" ||
                 item.name.toLowerCase().includes(needle) ||

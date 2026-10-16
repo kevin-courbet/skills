@@ -27,7 +27,7 @@ If `framework` fails, read "Apps on another framework" below before anything els
 
 1. Run the `bun add` and `bun add -d` commands that `doctor` printed. Keep the replaced libraries installed until step 7.
 2. Apply the scripts `doctor` printed to `package.json`.
-3. Copy `.oxlintrc.json` and `.oxfmtrc.json` from the template if they are missing (`doctor` prints the commands).
+3. Copy `.oxlintrc.json` and `.oxfmtrc.json` from the template if they are missing (`doctor` prints the commands). Compare an existing `.oxlintrc.json` with the template's `_oxlintrc.json` and take its rules.
 4. Update `vite.config.ts` to match `assets/template/vite.config.ts`: `stylex.vite({...})` first, with `unstable_moduleResolution` and `aliases` for `@/*`, then `tanstackStart`, `nitro`, and the React plugin. Keep app-specific options such as `server.port`.
 5. Make `tsconfig.json` strict with the `@/*` path and without `verbatimModuleSyntax`.
 6. Use TypeScript 7 for CLI validation. Remove `baseUrl`. If build tools need the TypeScript JavaScript API, use an explicit `typescript-js` alias.

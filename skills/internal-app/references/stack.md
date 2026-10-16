@@ -16,7 +16,7 @@ with them and prints the `bun add` commands for any gap.
 | SSR query bridge | `@tanstack/react-router-ssr-query` | `setupRouterSsrQueryIntegration` in `router.tsx`. |
 | Table | `@tanstack/react-table` v9 | `useTable({ features: tableFeatures({...}) })`. Not the v8 `useReactTable`. |
 | Form | `@tanstack/react-form` | Validators accept Standard Schema objects directly. |
-| Virtualizer | `@tanstack/react-virtual` | Lists above about 200 rows. |
+| Virtualizer | `@tanstack/react-virtual` | Lists above about 200 rows. The kit `DataTable` (`virtualize`) and `LogViewer` use it; pages rarely call it directly. |
 | Server runtime | `effect` 4 | `Context.Service`, `Layer`, `ManagedRuntime`, `Schema`, `Config`. |
 | Server bundle | `nitro` 3 beta | `nitro({ preset: "bun" })` from `nitro/vite`. Start with `bun .output/server/index.mjs`. |
 | React | `react`, `react-dom` 19 | |
@@ -38,7 +38,7 @@ with them and prints the `bun add` commands for any gap.
 
 | Role | Package | Notes |
 |---|---|---|
-| Lint | `oxlint` | `.oxlintrc.json`. `no-explicit-any`, `no-nested-ternary`, `no-console`, `no-barrel-file` are errors. |
+| Lint | `oxlint` | `.oxlintrc.json`. `no-explicit-any`, `no-nested-ternary`, `no-console`, `no-barrel-file` are errors. `react/incompatible-library` is off because the build does not use the React Compiler. `jsx-a11y/no-autofocus` ignores react-aria components, which manage focus in dialogs. |
 | Format | `oxfmt` | `.oxfmtrc.json`. Width 100, double quotes, trailing commas. |
 | Types | Go-native `typescript` 7 | `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals`. Remove `baseUrl` and use explicit relative `paths`. Keep `verbatimModuleSyntax` off. |
 | Tests | `vitest` 5 | Effect tests use explicit layers and `Effect.runPromise`. |
@@ -85,6 +85,7 @@ src/
     shell/                     kit. AppDocument, AppShell, NavLink, RouteBreadcrumbs, RouteError, ThemeSwitch.
     charts/                    kit. chartHost bridge, TrendChart, and Sparkline.
     kit/showcase.tsx           kit. Every primitive on one page for visual checks.
+    kit/showcase-operations.tsx kit. Filter, status, pipeline, activity, and card patterns for the showcase.
   features/<name>/             App.
     schemas.ts                 Effect Schema for entities, inputs, and search params. Client-safe.
     api.ts                     Server functions, query keys, queryOptions. The only data module routes import.
@@ -92,6 +93,7 @@ src/
     ui/                        Feature components that receive resolved data as props.
   lib/
     locale.ts                  App. appLocale, appTimeZone, and the formatters.
+    filter-params.ts           kit. Filter field types and the URL codec for the Filters chip bar.
     form.ts                    kit. fieldError for TanStack Form fields.
     rac.ts                     kit. renderStyles adapter for react-aria render props.
     router-defaults.tsx        kit. createQueryClient, routerDefaults, react-aria router bridge.

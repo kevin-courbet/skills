@@ -22,7 +22,8 @@ export interface DialogProps extends Pick<
   "isOpen" | "onOpenChange" | "defaultOpen" | "isDismissable" | "isKeyboardDismissDisabled"
 > {
   readonly title: string;
-  readonly description?: string;
+  /** One paragraph under the title. It can hold inline elements such as Code. */
+  readonly description?: ReactNode;
   readonly size?: DialogSize;
   /** Footer content, usually the primary and cancel buttons. */
   readonly actions?: (close: () => void) => ReactNode;

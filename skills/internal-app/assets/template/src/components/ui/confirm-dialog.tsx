@@ -1,32 +1,54 @@
 import * as stylex from "@stylexjs/stylex";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { failureMessage } from "@/lib/server-result";
-import { color, font } from "@/styles/tokens.stylex";
+import { color, font, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { Dialog } from "./dialog";
 
 export interface ConfirmDialogProps {
   readonly isOpen: boolean;
   readonly onOpenChange: (isOpen: boolean) => void;
-  /** Names the action and the object: "Delete Workspace 12?" */
+  /** Names the action and the object: "Roll back production to dpl_rxt8gA84n?" */
   readonly title: string;
-  /** States the consequence: "The item and its history are removed. This cannot be undone." */
-  readonly description: string;
-  /** The verb, repeated on the button: "Delete item". */
+  /**
+   * States the result in one or two sentences, with the exact objects:
+   * "app.example.com serves dpl_rxt8gA84n again. Automatic promotion pauses."
+   */
+  readonly description: ReactNode;
+  /**
+   * Each further effect as one short line, such as "1 staged deployment
+   * stays staged". Use it when the action has more than one effect.
+   */
+  readonly consequences?: ReadonlyArray<ReactNode>;
+  /** A choice the action needs, such as a RadioGroup of rollback targets. */
+  readonly children?: ReactNode;
+  /** The verb and the object, repeated on the button: "Roll back production". */
   readonly confirmLabel: string;
+  /**
+   * `danger` for destructive or irreversible actions, `primary` for
+   * high-impact actions that people can undo, such as a promotion.
+   */
   readonly intent?: "danger" | "primary";
+  /** Keeps the confirm button disabled until the choice in `children` is complete. */
+  readonly isConfirmDisabled?: boolean;
   /** Runs the action. A rejection keeps the dialog open and shows the failure. */
   readonly onConfirm: () => Promise<void>;
 }
 
-/** Confirmation for irreversible or high-impact actions. */
+/**
+ * Confirmation for irreversible or high-impact actions. The copy names the
+ * exact object and every effect; the confirm button repeats the verb.
+ */
 export function ConfirmDialog({
   isOpen,
   onOpenChange,
   title,
   description,
+  consequences = [],
+  children,
   confirmLabel,
   intent = "danger",
+  isConfirmDisabled = false,
   onConfirm,
 }: ConfirmDialogProps) {
   const [isPending, setPending] = useState(false);
@@ -45,6 +67,7 @@ export function ConfirmDialog({
     }
   }
 
+  const hasBody = consequences.length > 0 || children !== undefined || failure !== undefined;
   return (
     <Dialog
       isOpen={isOpen}
@@ -60,21 +83,48 @@ export function ConfirmDialog({
           <Button onPress={close} isDisabled={isPending}>
             Cancel
           </Button>
-          <Button intent={intent} onPress={() => void confirm()} isDisabled={isPending}>
+          <Button
+            intent={intent}
+            onPress={() => void confirm()}
+            isDisabled={isPending || isConfirmDisabled}
+          >
             {confirmLabel}
           </Button>
         </>
       )}
     >
-      {failure ? (
-        <p role="alert" {...stylex.props(styles.failure)}>
-          {failure}
-        </p>
+      {hasBody ? (
+        <div {...stylex.props(styles.body)}>
+          {consequences.length > 0 ? (
+            <ul {...stylex.props(styles.consequences)}>
+              {consequences.map((consequence, index) => (
+                <li key={index} {...stylex.props(styles.consequence)}>
+                  {consequence}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {children}
+          {failure ? (
+            <p role="alert" {...stylex.props(styles.failure)}>
+              {failure}
+            </p>
+          ) : null}
+        </div>
       ) : null}
     </Dialog>
   );
 }
 
 const styles = stylex.create({
-  failure: { fontSize: font.md, color: color.danger },
+  body: { display: "flex", flexDirection: "column", gap: space.md },
+  consequences: {
+    margin: 0,
+    paddingInlineStart: space.lg,
+    listStyleType: "disc",
+    fontSize: font.md,
+    color: color.text,
+  },
+  consequence: { paddingInlineStart: "2px", marginTop: { default: space.xs, ":first-child": 0 } },
+  failure: { margin: 0, fontSize: font.md, color: color.danger },
 });

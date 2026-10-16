@@ -63,6 +63,7 @@ export async function runServerFn<A, E extends WireError>(
 ```
 features/items/
   schemas.ts        Item, CreateItem, ItemsQuery, ItemsPage (Effect Schema, client-safe)
+  filters.ts        Filter fields, the route search schema, and the search-to-query mapping
   api.ts            createServerFn wrappers, query keys, queryOptions factories
   items.server.ts   Functions that build the Effect and call runServerFn
   ui/               Components that receive resolved data as props
@@ -94,11 +95,11 @@ export const itemsListQueryOptions = (query: ItemsQuery) =>
 
 ```ts
 export const Route = createFileRoute("/_app/items/")({
-  validateSearch: Schema.toStandardSchemaV1(ItemsQuery),
+  validateSearch: Schema.toStandardSchemaV1(ItemsSearch),
   search: { middlewares: [stripSearchParams(itemsQueryDefaults)] },
   loaderDeps: ({ search }) => search,
   loader: async ({ context, deps }) => {
-    await context.queryClient.ensureQueryData(itemsListQueryOptions(deps));
+    await context.queryClient.ensureQueryData(itemsListQueryOptions(itemsQueryFromSearch(deps)));
     return { now: Date.now() };
   },
   component: ItemsPage,
@@ -106,11 +107,12 @@ export const Route = createFileRoute("/_app/items/")({
 
 function ItemsPage() {
   const search = Route.useSearch();
-  const { data } = useSuspenseQuery(itemsListQueryOptions(search));
+  const { data } = useSuspenseQuery(itemsListQueryOptions(itemsQueryFromSearch(search)));
 }
 ```
 
 - Search params are schema-validated. Every field is `optionalKey` with a default in `itemsQueryDefaults`, and `stripSearchParams` keeps the URL clean.
+- Filter params come from `filterSearchFields` (see `components.md`, Filters in the URL). `itemsQueryFromSearch` in `features/items/filters.ts` turns the validated search into the server query.
 - The loader calls `ensureQueryData` with the same factory the component reads through `useSuspenseQuery`. SSR data never shows a loading state.
 - Return values that must be stable across SSR and hydration (for example a reference time for relative dates) from the loader.
 - Update search with `navigate({ search: (prev) => ({ ...prev, q }), replace: true })`. Reset paging when a filter changes.
