@@ -43,6 +43,7 @@
     "src/components/shell/route-error.tsx",
     "src/components/shell/theme-switch.tsx",
     "src/components/charts/chart-host.ts",
+    "src/components/charts/sparkline.tsx",
     "src/components/charts/trend-chart.tsx",
     "src/components/kit/showcase.tsx",
     "src/lib/form.ts",

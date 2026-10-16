@@ -15,7 +15,7 @@
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@internationalized/date": "^3.12.3",
-    "@kevin-courbet/aperture": "^0.5.0",
+    "@kevin-courbet/aperture": "^0.8.0",
     "@stylexjs/stylex": "^0.19.1",
     "@tanstack/react-form": "^1.33.5",
     "@tanstack/react-query": "^5.104.1",

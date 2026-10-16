@@ -83,7 +83,7 @@ src/
   components/
     ui/                        kit. Primitives on react-aria-components.
     shell/                     kit. AppDocument, AppShell, NavLink, RouteBreadcrumbs, RouteError, ThemeSwitch.
-    charts/                    kit. chartHost bridge and TrendChart.
+    charts/                    kit. chartHost bridge, TrendChart, and Sparkline.
     kit/showcase.tsx           kit. Every primitive on one page for visual checks.
   features/<name>/             App.
     schemas.ts                 Effect Schema for entities, inputs, and search params. Client-safe.

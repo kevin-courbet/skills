@@ -42,7 +42,7 @@ Rules that follow from the wiring:
 - `aliases` must mirror `tsconfig.json` paths, or imports of `@/styles/tokens.stylex` fail at compile time.
 - The kit `AppDocument` component (`src/components/shell/app-document.tsx`) imports `@/styles/app.css` as a side-effect import. TanStack attaches that CSS to the root route, and the StyleX plugin appends its output to the first CSS asset in production. Do not set `cssInjectionTarget`, and do not import `app.css` with `?url`.
 - In development the stylesheet is served from `/virtual:stylex.css`. `AppDocument` links it and loads `virtual:stylex:runtime` for hot reload.
-- `src/styles/app.css` imports Aperture CSS inside `@layer aperture`. StyleX emits its own layers after it, so StyleX host styles override Aperture defaults without specificity tricks.
+- Aperture puts every rule in the `aperture` cascade layer. `src/styles/app.css` imports it first, so the layer is declared before the reset and StyleX layers. StyleX host styles override Aperture defaults without specificity tricks.
 - `__root.tsx` renders `<AppDocument theme={theme}>`. It does not render `<html>`, `<head>`, or `<body>` itself.
 
 ## Token Files

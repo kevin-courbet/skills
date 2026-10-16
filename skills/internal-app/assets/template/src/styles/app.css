@@ -1,7 +1,11 @@
 @import "@fontsource-variable/geist/wght.css";
 @import "@fontsource-variable/geist-mono/wght.css";
-/* Aperture ships unlayered CSS. Putting it in a layer lets StyleX host styles win. */
-@import "@kevin-courbet/aperture/styles.css" layer(aperture);
+/*
+ * Aperture puts every rule in the `aperture` cascade layer. This import declares
+ * that layer before the reset and StyleX layers, so both override Aperture.
+ * Server HTML needs this import; the Aperture browser export loads the same layer.
+ */
+@import "@kevin-courbet/aperture/styles.css";
 
 @layer reset {
   *,

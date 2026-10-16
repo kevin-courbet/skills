@@ -14,6 +14,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { Sparkline } from "@/components/charts/sparkline";
+import { TrendChart } from "@/components/charts/trend-chart";
 import { Alert } from "@/components/ui/alert";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -75,6 +77,18 @@ const statusDisplay = {
   failed: { intent: "danger", label: "Failed" },
   paused: { intent: "warning", label: "Paused" },
 } as const;
+
+const sampleDay = (index: number) => `2026-10-${String(index + 1).padStart(2, "0")}`;
+const jobsPerDay = [96, 104, 99, 112, 108, 101, 94, 115, 121, 110, 108, 116].map(
+  (value, index) => ({
+    date: sampleDay(index),
+    value,
+  }),
+);
+const failuresPerDay = [3, 2, 4, 1, 2, 0, 1, 0, 1, 2, 0, 1].map((value, index) => ({
+  date: sampleDay(index),
+  value,
+}));
 
 const maxVolume = Math.max(...sampleRows.map((row) => row.volume));
 const totalVolume = sampleRows.reduce((sum, row) => sum + row.volume, 0);
@@ -295,6 +309,13 @@ export function KitShowcase() {
             label="Jobs"
             value="1,284"
             delta={{ value: "8.1%", direction: "up" }}
+            chart={
+              <Sparkline
+                label="Jobs per day"
+                description="Jobs per day for the last 12 days."
+                series={jobsPerDay}
+              />
+            }
             footnote="Measured · last 12 days"
           />
           <StatTile
@@ -302,6 +323,13 @@ export function KitShowcase() {
             value="12"
             delta={{ value: "3", direction: "down", tone: "good" }}
             hint="vs last week"
+            chart={
+              <Sparkline
+                label="Failures per day"
+                description="Failed jobs per day for the last 12 days."
+                series={failuresPerDay}
+              />
+            }
           />
           <StatTile label="Rows synced" value="26.4M" hint="last 30 days" />
         </div>
@@ -312,6 +340,13 @@ export function KitShowcase() {
             { label: "Failed steps", value: "2", tone: "danger" },
             { label: "Coverage", value: "100%" },
           ]}
+        />
+        <TrendChart
+          title="Jobs per day"
+          description="Completed jobs per day for the last 12 days."
+          unit="Jobs"
+          source="Job runner, sample data"
+          series={jobsPerDay}
         />
         <DataTable
           caption="Sample jobs"
