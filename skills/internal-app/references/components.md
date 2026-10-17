@@ -144,7 +144,7 @@ The template contains one working example of each:
 | Pattern | Template route | Structure |
 |---|---|---|
 | Overview | `_app/index.tsx` | `PageHeader`, `StatTile` grid with a source `footnote`, `TrendChart` in a `Section`. |
-| List | `_app/items/index.tsx` | `PageHeader` with one primary action. `DataTable` with a compact `Toolbar` in its frame (`SearchField`, `Filters`), a row link to the detail route, the name column pinned, `StatusDot` status, a summary footer, and the `pagination` footer. Search, filters, sort, and page live in the URL; `features/items/filters.ts` holds the filter fields and builds the server query from the search. |
+| List | `_app/items/index.tsx` | `PageHeader` with one primary action. A page `Toolbar` above the `DataTable` (`SearchField`, `Filters`), a row link to the detail route, the name column pinned, `StatusDot` status, a summary footer, and the `pagination` footer. Search, filters, sort, and page live in the URL; `features/items/filters.ts` holds the filter fields and builds the server query from the search. |
 | Detail | `_app/items/$itemId.tsx` | `Page width="reading"`, `PageHeader` with quiet actions, `DescriptionList` in a `Section`, `ConfirmDialog` for delete. |
 | Create | `features/items/ui/create-item-dialog.tsx` | `Dialog` with a TanStack Form; the footer submit button uses `form={formId}`. |
 | Settings | `_app/settings.tsx` | Reading-width page with `SettingsCard` and `SettingRow`. Identifiers use `Code` with a `CopyButton`. |
@@ -209,7 +209,9 @@ navigate({ search: (prev) => ({ ...prev, ...serializeFilters(itemFilterFields, n
 - Tables: text left, numbers right with tabular figures, sort state announced, rows open the detail route through `rowAction`.
 - Status uses `Badge` with text, or `StatusDot` in table cells and dense lists. Color only supports it.
 - Steps that run on their own use `Stepper mode="status"` on a detail page and `SegmentedProgress` in cards and rows. Activity and audit history use `Timeline`, which does not color items as progress.
-- List filters go in the `DataTable` frame as a compact `Toolbar` with `Filters`. Keep the search field first.
+- Place a list's search and filters by what they act on. Keep the search field first either way.
+  - **Above the table, on the page,** when the toolbar holds only a search and `Filters` and the table is the page's one subject. A separate row reads as the page's controls at a glance.
+  - **In the `DataTable` frame** (`toolbar` with `Toolbar density="compact"`) when the bar holds more controls, such as a scope `Select`, view actions, or the column menu, or when the page has several tables or several search fields and the controls must show which table they act on.
 - Row selection is page state, not URL state. Ids on other pages stay selected; the bulk bar counts all of them. Bulk buttons name the count ("Delete 3 items"), and a destructive bulk action opens a `ConfirmDialog`.
 - Keep hidden columns in a search param when people share the view, or in page state otherwise.
 - Moves in `Kanban`, `SortableList`, `Tree`, and `Gantt` are optimistic: apply the new value at once, persist it with a mutation, and on failure restore the previous value and show an error toast. Every drag has a keyboard path; never add a drag-only control.

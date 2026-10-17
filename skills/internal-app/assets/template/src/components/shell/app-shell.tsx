@@ -221,19 +221,21 @@ export function AppShell({
               <RouteBreadcrumbs />
             </div>
             <div {...stylex.props(styles.topbarActions)}>
-              <Button
-                intent="ghost"
-                size="sm"
+              {/* Drawn as a field, not a ghost button, so the palette reads as search at a glance. */}
+              <AriaButton
                 aria-label="Search pages and actions"
                 aria-keyshortcuts="Meta+K Control+K"
                 onPress={() => setPaletteOpen(true)}
+                {...stylex.props(styles.searchField)}
               >
                 <Search aria-hidden {...stylex.props(styles.icon)} />
-                <span {...stylex.props(styles.searchLabel)}>Search</span>
-                <span {...stylex.props(styles.searchShortcut)}>
-                  <Kbd>{shortcut}</Kbd>
+                <span {...stylex.props(styles.searchPlaceholder)}>Search…</span>
+                <span {...stylex.props(styles.searchKeys)}>
+                  {shortcut.split(" ").map((key) => (
+                    <Kbd key={key}>{key}</Kbd>
+                  ))}
                 </span>
-              </Button>
+              </AriaButton>
               {actions}
               <ThemeSwitch />
             </div>
@@ -410,9 +412,38 @@ const styles = stylex.create({
   mobileOnly: { display: { default: "inline-flex", [media.md]: "none" } },
   desktopOnly: { display: { default: "none", [media.md]: "inline-flex" } },
   icon: { width: size.icon, height: size.icon },
-  topbarActions: { display: "flex", alignItems: "center", gap: space.xs },
-  searchLabel: { display: { default: "none", [media.sm]: "inline" }, color: color.textMuted },
-  searchShortcut: { display: { default: "none", [media.md]: "inline-flex" } },
+  topbarActions: { display: "flex", alignItems: "center", gap: space.sm },
+  searchField: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: { default: "center", [media.sm]: "flex-start" },
+    gap: space.sm,
+    width: { default: size.controlMd, [media.sm]: "14rem", [media.lg]: "18rem" },
+    height: size.controlMd,
+    paddingInline: { default: 0, [media.sm]: space.sm },
+    paddingInlineEnd: { default: 0, [media.sm]: space.xs },
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: { default: color.border, ":hover": color.borderStrong },
+    borderRadius: radius.md,
+    backgroundColor: color.raised,
+    color: color.textMuted,
+    fontFamily: "inherit",
+    fontSize: font.md,
+    cursor: "pointer",
+    transitionProperty: "border-color",
+    transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    outlineStyle: { default: "none", ":focus-visible": "solid" },
+    outlineWidth: "2px",
+    outlineColor: color.focus,
+    outlineOffset: "1px",
+  },
+  searchPlaceholder: {
+    display: { default: "none", [media.sm]: "inline" },
+    flex: "1",
+    textAlign: "start",
+  },
+  searchKeys: { display: { default: "none", [media.md]: "inline-flex" }, gap: "2px" },
   // Positioned so visually hidden, absolutely positioned content stays inside the scroller.
   main: { position: "relative", flex: "1", minWidth: 0, minHeight: 0, overflowY: "auto" },
 });

@@ -22,7 +22,7 @@ import {
 import { CreateItemDialog } from "@/features/items/ui/create-item-dialog";
 import { parseFilters, serializeFilters } from "@/lib/filter-params";
 import { formatCurrency, formatInteger, formatRelative } from "@/lib/locale";
-import { color, font } from "@/styles/tokens.stylex";
+import { color, font, space } from "@/styles/tokens.stylex";
 
 export const Route = createFileRoute("/_app/items/")({
   validateSearch: Schema.toStandardSchemaV1(ItemsSearch),
@@ -110,100 +110,100 @@ function ItemsPage() {
         description={`${formatInteger(data.total)} items`}
         actions={<CreateItemDialog />}
       />
-      <DataTable
-        caption="Items"
-        columns={columns}
-        data={data.items}
-        getRowId={(item) => item.id}
-        numericColumns={["amount"]}
-        pinnedColumns={{ start: ["name"] }}
-        rowAction={{ link: (item) => ({ to: "/items/$itemId", params: { itemId: item.id } }) }}
-        toolbar={
-          <Toolbar
-            label="Filter items"
-            density="compact"
-            actions={isFetching ? <span {...stylex.props(styles.muted)}>Updating</span> : null}
-          >
-            <SearchField
-              label="Search"
-              hideLabel
-              size="sm"
-              focusShortcut
-              placeholder="Search by name or owner"
-              value={search.q ?? ""}
-              onChange={(q) =>
-                void navigate({
-                  search: (prev) => ({ ...prev, q: q === "" ? undefined : q, page: undefined }),
-                  replace: true,
-                })
-              }
-              style={styles.search}
-            />
-            <Filters
-              label="Item filters"
-              fields={itemFilterFields}
-              value={filters}
-              onChange={(next) =>
-                void navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    ...serializeFilters(itemFilterFields, next),
-                    page: undefined,
-                  }),
-                  replace: true,
-                })
-              }
-            />
-          </Toolbar>
-        }
-        sorting={sorting}
-        onSortingChange={(next) => {
-          const first = next[0];
-          if (first === undefined) return;
-          const id = first.id;
-          if (!isSortField(id)) return;
-          const nextDir = first.desc ? "desc" : "asc";
-          void navigate({
-            search: (prev) => ({ ...prev, sort: id, dir: nextDir, page: undefined }),
-            replace: true,
-          });
-        }}
-        pagination={{
-          page,
-          pageSize: data.pageSize,
-          total: data.total,
-          onPageChange: (next) =>
+      <div {...stylex.props(styles.list)}>
+        <Toolbar
+          label="Filter items"
+          actions={isFetching ? <span {...stylex.props(styles.muted)}>Updating</span> : null}
+        >
+          <SearchField
+            label="Search"
+            hideLabel
+            focusShortcut
+            placeholder="Search by name or owner"
+            value={search.q ?? ""}
+            onChange={(q) =>
+              void navigate({
+                search: (prev) => ({ ...prev, q: q === "" ? undefined : q, page: undefined }),
+                replace: true,
+              })
+            }
+            style={styles.search}
+          />
+          <Filters
+            label="Item filters"
+            fields={itemFilterFields}
+            value={filters}
+            onChange={(next) =>
+              void navigate({
+                search: (prev) => ({
+                  ...prev,
+                  ...serializeFilters(itemFilterFields, next),
+                  page: undefined,
+                }),
+                replace: true,
+              })
+            }
+          />
+        </Toolbar>
+        <DataTable
+          caption="Items"
+          columns={columns}
+          data={data.items}
+          getRowId={(item) => item.id}
+          numericColumns={["amount"]}
+          pinnedColumns={{ start: ["name"] }}
+          rowAction={{ link: (item) => ({ to: "/items/$itemId", params: { itemId: item.id } }) }}
+          sorting={sorting}
+          onSortingChange={(next) => {
+            const first = next[0];
+            if (first === undefined) return;
+            const id = first.id;
+            if (!isSortField(id)) return;
+            const nextDir = first.desc ? "desc" : "asc";
             void navigate({
-              search: (prev) => ({ ...prev, page: next === 1 ? undefined : next }),
-            }),
-        }}
-        emptyState={
-          hasFilters ? (
-            <EmptyState
-              icon={SearchX}
-              title="No items match"
-              description="Change the search or the filters."
-              action={
-                <Button onPress={() => void navigate({ search: {}, replace: true })}>
-                  Clear filters
-                </Button>
-              }
-            />
-          ) : (
-            <EmptyState
-              icon={Package}
-              title="No items yet"
-              description="Create the first item to start."
-              action={<CreateItemDialog />}
-            />
-          )
-        }
-      />
+              search: (prev) => ({ ...prev, sort: id, dir: nextDir, page: undefined }),
+              replace: true,
+            });
+          }}
+          pagination={{
+            page,
+            pageSize: data.pageSize,
+            total: data.total,
+            onPageChange: (next) =>
+              void navigate({
+                search: (prev) => ({ ...prev, page: next === 1 ? undefined : next }),
+              }),
+          }}
+          emptyState={
+            hasFilters ? (
+              <EmptyState
+                icon={SearchX}
+                title="No items match"
+                description="Change the search or the filters."
+                action={
+                  <Button onPress={() => void navigate({ search: {}, replace: true })}>
+                    Clear filters
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                icon={Package}
+                title="No items yet"
+                description="Create the first item to start."
+                action={<CreateItemDialog />}
+              />
+            )
+          }
+        />
+      </div>
     </Page>
   );
 }
 
 const styles = stylex.create({
+  // One search and the filters for the page's only table: they sit on the page, apart from the data.
+  list: { display: "flex", flexDirection: "column", gap: space.md, minWidth: 0 },
   search: { flex: "1", minWidth: "12rem", maxWidth: "20rem" },
   name: { fontWeight: font.medium },
   muted: { color: color.textMuted, fontSize: font.sm },
