@@ -1057,18 +1057,20 @@ const styles = stylex.create({
     clipPath: "inset(50%)",
     whiteSpace: "nowrap",
   },
-  thead: { position: "sticky", top: 0, zIndex: 2, backgroundColor: color.raised },
+  // The header sits on its own band with full-strength text so the grid reads as a
+  // table at a glance, not as a list of loose rows.
+  thead: { position: "sticky", top: 0, zIndex: 2, backgroundColor: color.subtle },
   th: {
     paddingInline: space.md,
     textAlign: "start",
-    fontSize: font.sm,
+    fontSize: font.md,
     fontWeight: font.medium,
-    color: color.textMuted,
+    color: color.text,
     whiteSpace: "nowrap",
-    backgroundColor: color.raised,
+    backgroundColor: color.subtle,
     borderBottomWidth: "1px",
     borderBottomStyle: "solid",
-    borderBottomColor: color.borderSubtle,
+    borderBottomColor: color.border,
   },
   thResizable: { position: "relative", overflow: "hidden", textOverflow: "ellipsis" },
   columnWidth: (width: number) => ({ width }),
@@ -1283,8 +1285,8 @@ const densities = stylex.create({
 });
 
 const densitiesHead = stylex.create({
-  default: { height: "2.25rem" },
-  compact: { height: size.controlMd },
+  default: { height: "2.5rem" },
+  compact: { height: size.controlLg },
 });
 
 const skeletonWidths = stylex.create({

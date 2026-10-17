@@ -63,6 +63,11 @@ Semantic color roles (every component uses these names and nothing else):
 | Status | `success`, `successMuted`, `successBorder` and the same triple for `warning`, `danger`, `info` |
 | Overlay | `backdrop` behind dialogs and sheets |
 
+Surface order, from recessed to raised: `page`, `inset`, `frame`, `raised`, `subtle`, `overlay`.
+The content panel (`page`) is the deepest surface so cards on `raised` stand clearly off it.
+The sidebar (`frame`) sits lighter than the panel so navigation reads as its own plane.
+Keep these gaps when you tune the palette; equal values make the app look washed out.
+
 Other groups: `shadow` (`sm`, `md`, `lg`, and `frame` for the content panel), `font` (families, sizes `xs` to
 `xxxl`, weights, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
 `size` (control heights, icon sizes, sidebar, top bar, frame gap, content widths),

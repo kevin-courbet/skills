@@ -63,9 +63,14 @@ export function Section({
 }
 
 export interface CardProps {
-  /** Names the group. With a title the card is a labelled section. */
-  readonly title?: string;
-  readonly description?: string;
+  /**
+   * Names the group. With a title the card is a labelled section. A card that
+   * stands for one object, such as a pull request, may lead with its icon and
+   * end with a quiet identifier or a status badge.
+   */
+  readonly title?: ReactNode;
+  /** Secondary line under the title. It may hold icons and inline metadata. */
+  readonly description?: ReactNode;
   /** Heading level of the title: 2 on a page, 3 inside a Section. */
   readonly headingLevel?: 2 | 3;
   /** Quiet header content at the end of the title row: a total, a link, or one button. */
@@ -108,7 +113,9 @@ export function Card({
             <Heading id={headingId} {...stylex.props(styles.cardTitle)}>
               {title}
             </Heading>
-            {description ? <p {...stylex.props(styles.cardDescription)}>{description}</p> : null}
+            {description ? (
+              <div {...stylex.props(styles.cardDescription)}>{description}</div>
+            ) : null}
           </div>
           {actions ? <div {...stylex.props(styles.cardActions)}>{actions}</div> : null}
         </header>
@@ -457,7 +464,7 @@ const styles = stylex.create({
     fontWeight: font.semibold,
     lineHeight: font.leadingTight,
   },
-  cardDescription: { margin: 0, fontSize: font.sm, color: color.textMuted },
+  cardDescription: { margin: 0, minWidth: 0, fontSize: font.sm, color: color.textMuted },
   cardActions: {
     display: "flex",
     alignItems: "center",

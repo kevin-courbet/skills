@@ -57,7 +57,10 @@ export interface AppShellProps {
   readonly nav: ReadonlyArray<NavGroup>;
   /** Global actions at the end of the top bar, such as a user menu. */
   readonly actions?: ReactNode;
-  /** Quiet links at the bottom of the sidebar, such as help or system status. */
+  /**
+   * Quiet controls at the bottom of the sidebar, such as help, system status, or a
+   * switcher for review data. Keep the page area for the page's own content.
+   */
   readonly sidebarFooter?: ReactNode;
   /**
    * App-wide actions in the command palette, listed before the navigation
@@ -133,7 +136,7 @@ function Brand({
 }
 
 /**
- * Sidebar on the frame color and the page in a raised panel next to it. The
+ * Sidebar on the lighter frame color and the page in a recessed panel next to it. The
  * panel holds the top bar with breadcrumbs and scrolls on its own. Below the
  * md breakpoint the sidebar moves into a sheet opened from the top bar.
  */
@@ -165,12 +168,12 @@ export function AppShell({
       })),
     })),
   ];
-  const footer = (
-    <div {...stylex.props(styles.sidebarFooter)}>
-      <div {...stylex.props(styles.sidebarFooterLinks)}>{sidebarFooter}</div>
-      <ThemeSwitch />
-    </div>
-  );
+  const footer =
+    sidebarFooter === undefined ? null : (
+      <div {...stylex.props(styles.sidebarFooter)}>
+        <div {...stylex.props(styles.sidebarFooterLinks)}>{sidebarFooter}</div>
+      </div>
+    );
   return (
     <div {...stylex.props(styles.root, isSidebarHidden && styles.rootSidebarHidden)}>
       <aside {...stylex.props(styles.sidebar, isSidebarHidden && styles.sidebarHidden)}>
@@ -232,6 +235,7 @@ export function AppShell({
                 </span>
               </Button>
               {actions}
+              <ThemeSwitch />
             </div>
           </header>
           <main

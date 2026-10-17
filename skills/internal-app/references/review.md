@@ -28,7 +28,7 @@ Start the built server (`bun run start`) and inspect it with a real browser.
 Use the `agent-browser` skill (`ab chrome --url ...`, `ab snapshot`,
 `ab screenshot`). Capture:
 
-1. Each changed page in the light theme and the dark theme. Switch with the theme menu in the sidebar footer or set the `theme` cookie to `light` or `dark`.
+1. Each changed page in the light theme and the dark theme. Switch with the theme menu at the end of the top bar or set the `theme` cookie to `light` or `dark`.
 2. Every empty, loading, and error state the page can show.
 3. Each dialog, sheet, menu, and popover the page opens, and one invalid form field.
 4. The page at 400 px and at 1440 px wide. At 400 px, the navigation opens from the menu button in the top bar.
