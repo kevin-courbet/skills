@@ -47,8 +47,11 @@ export interface LogViewerProps {
   readonly downloadName?: string;
   /** Keeps the newest line in view while lines stream in, unless people scroll up. */
   readonly follow?: boolean;
-  /** Lines visible before the output scrolls. */
-  readonly visibleLines?: number;
+  /**
+   * Most lines in view before the output scrolls. Shorter output takes only
+   * the height of its lines.
+   */
+  readonly maxVisibleLines?: number;
   /** Source qualifier after the line count, such as "Runner logs · retained 30 days". */
   readonly footnote?: string;
   /** Content at the end of the footer, such as the run and attempt in a Code. */
@@ -81,7 +84,7 @@ export function LogViewer({
   filters,
   downloadName,
   follow = false,
-  visibleLines = 24,
+  maxVisibleLines = 24,
   footnote,
   footerEnd,
   variant = "standalone",
@@ -109,7 +112,7 @@ export function LogViewer({
     getScrollElement: () => scrollerRef.current,
     estimateSize: () => lineHeightPx,
     overscan: 20,
-    initialRect: { width: 0, height: visibleLines * lineHeightPx },
+    initialRect: { width: 0, height: Math.min(maxVisibleLines, lines.length) * lineHeightPx },
   });
   const digits = Math.max(3, String(lines.length).length);
   const sourceWidth = Math.max(0, ...lines.map((line) => line.source?.length ?? 0));
@@ -213,7 +216,7 @@ export function LogViewer({
           {...stylex.props(
             isEmbedded ? styles.embeddedOutput : styles.frame,
             styles.scroller,
-            styles.scrollerHeight(visibleLines),
+            styles.scrollerHeight(maxVisibleLines),
           )}
         >
           <div {...stylex.props(styles.canvas(virtualizer.getTotalSize()))}>
@@ -379,7 +382,8 @@ const styles = stylex.create({
     outlineColor: color.focus,
     outlineOffset: "-2px",
   },
-  scrollerHeight: (lines: number) => ({ height: `${lines * lineHeightPx + 16}px` }),
+  // The canvas sets the height of short output; long output stops here and scrolls.
+  scrollerHeight: (lines: number) => ({ maxHeight: `${lines * lineHeightPx + 16}px` }),
   canvas: (height: number) => ({
     position: "relative",
     height: `${height + 16}px`,

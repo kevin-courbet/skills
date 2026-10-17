@@ -27,19 +27,19 @@ ReUI-authored parts of `registry/bases/base/ui`).
 | Autocomplete | Covered | `combo-box.tsx`, `command-palette.tsx` | ComboBox filters long lists; the command palette searches pages and actions. |
 | Badge | Ported (phase 1) | `badge.tsx` | Status labels. |
 | Cascader | Ported (phase 1) | `cascader.tsx` | Choices from a tree, such as region and city. |
-| Code Block | Ported | `code-block.tsx` | Config, payloads, queries, diffs, and diagnostics with copy and wrap. A small built-in highlighter replaces Shiki. |
+| Code Block | Ported | `code-block.tsx` | Config, payloads, queries, diffs, and diagnostics with copy and wrap. A small built-in highlighter replaces Shiki and covers TS, TSX, JS, JSX, JSON, shell, Bash, SQL, YAML, CSS, HTML, Python, Go, Rust, TOML, Dockerfile, Markdown, and diff with no bundle cost. |
 | Color Picker | Skipped | — | Kit colors come from tokens. Free colors in app data break the token rule; pick an `intent` from a Select. |
 | Data Grid | Ported (phase 1) | `data-table.tsx` | Tables with selection, pinning, resizing, and virtualization. |
 | Date Selector | Covered | `date-picker.tsx`, `date-range-picker.tsx`, `filters.tsx` | Dates, ranges with presets, and date filters. |
 | Emoji Picker | Skipped | — | Internal tools do not need emoji input. |
-| Event Calendar | Ported | `event-calendar.tsx` | On-call shifts, maintenance windows, and jobs in month, week, and agenda views. Recurrence, resources, and drag to reschedule are not ported. |
+| Event Calendar | Ported | `event-calendar.tsx` | On-call shifts, maintenance windows, and jobs in month, week, day, and agenda views. Daily, weekly, and monthly recurrence; resource rows in the week view and resource columns in the day view; drag to reschedule and resize, each with an Alt and arrow key path. |
 | File Type | Ported | `file-type-icon.tsx` | File family icons for uploads, trees, and attachments, drawn with lucide instead of brand artwork. |
 | Filters | Ported (phase 1) | `filters.tsx`, `filter-params.ts` | List filters in the URL. |
 | Frame | Ported (phase 1) | `layout.tsx` (`Card`, `CardSection`) | Cards divided into sections. |
-| Gantt | Ported | `gantt.tsx` | Plans with progress, milestones, dependencies, and keyboard and pointer rescheduling. Recurrence and resource capacity views are not ported. |
+| Gantt | Ported | `gantt.tsx` | Plans with progress, milestones, routed dependencies, keyboard and pointer rescheduling, row reordering by grip or Alt with Up and Down, and a load lane per assignee and day. Recurring tasks are left out: plans in internal tools are one-off. |
 | Icon Stack | Skipped | — | A decorative isometric illustration; `IconTile` covers empty states. |
 | Icon Tile | Ported | `icon-tile.tsx` | Media for list rows and empty states. |
-| Kanban | Ported | `kanban.tsx` | Stage boards, such as incidents, with keyboard drag and drop. Column reordering is not ported: stages are fixed. |
+| Kanban | Ported | `kanban.tsx` | Stage boards, such as incidents, with keyboard drag and drop for cards and for columns. |
 | Number Field | Ported | `number-field.tsx` | Stepper buttons and units on the existing field. |
 | Phone Input | Skipped | — | Correct formatting needs a phone number library. Use `TextField` with `type="tel"`. |
 | Rating | Skipped | — | Star ratings are a consumer pattern. Use `RadioGroup` or `Select` for a score. |
@@ -47,7 +47,7 @@ ReUI-authored parts of `registry/bases/base/ui`).
 | Signature Pad | Skipped | — | Internal tools do not collect signatures. |
 | Sortable | Ported | `sortable-list.tsx` | Priority orders, column orders, and widget grids with keyboard drag and drop. |
 | Stepper | Ported (phase 1) | `stepper.tsx` | Wizards and pipeline status. |
-| Time Picker | Ported | `time-field.tsx` | Times of day with a time zone label. The column popover is not ported: typed segments are faster and accessible. |
+| Time Picker | Ported | `time-field.tsx` | Times of day with typed segments, a time zone label, and a popover with hour and minute columns stepped by `minuteStep`. |
 | Timeline | Ported (phase 1) | `timeline.tsx` | Activity and audit feeds. |
 | Trace | Ported | `trace.tsx` | Run steps that open to their output, and a span waterfall for distributed traces. |
 | Tree | Ported | `tree.tsx` | Folders, categories, and permissions with cascading checkboxes and drag and drop. |

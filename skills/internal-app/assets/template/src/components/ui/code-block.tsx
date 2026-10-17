@@ -9,7 +9,26 @@ import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { CopyButton } from "./copy-button";
 import { field } from "./field";
 
-export type CodeLanguage = "ts" | "tsx" | "js" | "json" | "sh" | "sql" | "yaml" | "diff" | "text";
+export type CodeLanguage =
+  | "ts"
+  | "tsx"
+  | "js"
+  | "jsx"
+  | "json"
+  | "sh"
+  | "bash"
+  | "sql"
+  | "yaml"
+  | "css"
+  | "html"
+  | "python"
+  | "go"
+  | "rust"
+  | "toml"
+  | "dockerfile"
+  | "markdown"
+  | "diff"
+  | "text";
 
 /** Line numbers and inclusive ranges, 1-based: `[3, [7, 9]]`. */
 export type CodeLineSpec = ReadonlyArray<number | readonly [number, number]>;
@@ -198,10 +217,20 @@ const languageLabel: Record<Exclude<CodeLanguage, "text" | "diff">, string> = {
   ts: "TypeScript",
   tsx: "TSX",
   js: "JavaScript",
+  jsx: "JSX",
   json: "JSON",
   sh: "Shell",
+  bash: "Bash",
   sql: "SQL",
   yaml: "YAML",
+  css: "CSS",
+  html: "HTML",
+  python: "Python",
+  go: "Go",
+  rust: "Rust",
+  toml: "TOML",
+  dockerfile: "Dockerfile",
+  markdown: "Markdown",
 };
 
 type LineKind = "added" | "removed" | "highlight" | "hunk";
@@ -238,6 +267,8 @@ type TokenKind =
   | "key"
   | "function"
   | "variable"
+  | "type"
+  | "tag"
   | "punctuation";
 
 interface Token {
@@ -250,66 +281,237 @@ interface Grammar {
   readonly kinds: ReadonlyArray<TokenKind>;
 }
 
-const jsKeywords =
-  "abstract|as|async|await|break|case|catch|class|const|continue|default|delete|do|else|enum|export|extends|false|finally|for|from|function|if|implements|import|in|instanceof|interface|let|new|null|of|private|protected|public|readonly|return|satisfies|static|super|switch|this|throw|true|try|type|typeof|undefined|var|void|while|yield";
-
-const sqlKeywords =
-  "add|all|alter|and|as|asc|begin|between|by|case|commit|create|delete|desc|distinct|drop|else|end|exists|explain|false|from|group|having|if|in|index|inner|insert|into|is|join|left|like|limit|not|null|offset|on|or|order|outer|primary|references|returning|right|rollback|select|set|table|then|true|union|unique|update|using|values|when|where|with";
-
-const shKeywords =
-  "case|do|done|elif|else|esac|export|fi|for|function|if|in|local|return|then|until|while";
+type Rule = readonly [TokenKind, string];
 
 /**
- * One alternation per grammar, tried in order at each position. The capture
- * group that matched names the token kind; unmatched text stays plain.
+ * Joins ordered rules into one sticky alternation. At each position the first
+ * rule that matches wins and its kind colors the text; unmatched text stays
+ * plain. Each rule becomes one capture group, so a rule source may only use
+ * non-capturing groups and lookarounds.
  */
-const grammars: Record<"ts" | "json" | "sh" | "sql" | "yaml", Grammar> = {
-  ts: {
-    pattern: new RegExp(
-      `(\\/\\*[\\s\\S]*?\\*\\/|\\/\\/[^\\n]*)|("(?:\\\\.|[^"\\\\\\n])*"|'(?:\\\\.|[^'\\\\\\n])*'|\`(?:\\\\.|[^\`\\\\])*\`)|(\\b\\d[\\d_]*(?:\\.\\d+)?\\b)|\\b(${jsKeywords})\\b|([A-Za-z_$][\\w$]*)(?=\\s*\\()|([{}()[\\];,.<>=:+\\-*/!?&|])`,
-      "gy",
-    ),
-    kinds: ["comment", "string", "number", "keyword", "function", "punctuation"],
-  },
-  json: {
-    pattern:
-      /("(?:\\.|[^"\\\n])*")(?=\s*:)|("(?:\\.|[^"\\\n])*")|(-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|\b(true|false|null)\b|([{}[\],:])/gy,
-    kinds: ["key", "string", "number", "keyword", "punctuation"],
-  },
-  sh: {
-    pattern: new RegExp(
-      `(#[^\\n]*)|("(?:\\\\.|[^"\\\\])*"|'[^']*')|(\\$\\{?[\\w@#?*!-]+\\}?)|(\\s--?[\\w-]+)|\\b(${shKeywords})\\b|([|&;<>()])`,
-      "gy",
-    ),
-    kinds: ["comment", "string", "variable", "key", "keyword", "punctuation"],
-  },
-  sql: {
-    pattern: new RegExp(
-      `(--[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)|('(?:''|[^'])*')|(\\b\\d+(?:\\.\\d+)?\\b)|\\b(${sqlKeywords})\\b|([A-Za-z_][\\w]*)(?=\\s*\\()|([(),;.*=<>])`,
-      "giy",
-    ),
-    kinds: ["comment", "string", "number", "keyword", "function", "punctuation"],
-  },
-  yaml: {
-    pattern:
-      /(#[^\n]*)|^(\s*-?\s*[\w.-]+)(?=\s*:)|("(?:\\.|[^"\\\n])*"|'[^'\n]*')|(\b\d+(?:\.\d+)?\b)|\b(true|false|null|yes|no)\b|([:\-|>[\]{},])/gmy,
-    kinds: ["comment", "key", "string", "number", "keyword", "punctuation"],
-  },
+function grammar(rules: ReadonlyArray<Rule>, flags: "" | "i" | "m" | "im" = ""): Grammar {
+  return {
+    pattern: new RegExp(rules.map(([, source]) => `(${source})`).join("|"), `${flags}gy`),
+    kinds: rules.map(([kind]) => kind),
+  };
+}
+
+const words = (list: string) => String.raw`\b(?:${list})\b`;
+
+const jsKeywords =
+  "abstract|as|async|await|break|case|catch|class|const|continue|debugger|declare|default|delete|do|else|enum|export|extends|false|finally|for|from|function|if|implements|import|in|infer|instanceof|interface|is|keyof|let|namespace|new|null|of|private|protected|public|readonly|return|satisfies|static|super|switch|this|throw|true|try|type|typeof|undefined|var|void|while|yield";
+
+const sqlKeywords =
+  "add|all|alter|and|as|asc|begin|between|by|case|cascade|check|column|commit|constraint|create|cross|default|delete|desc|distinct|drop|else|end|exists|explain|false|foreign|from|full|grant|group|having|if|in|index|inner|insert|interval|into|is|join|key|left|like|limit|not|null|offset|on|or|order|outer|over|partition|primary|references|returning|revoke|right|rollback|select|set|table|then|to|true|truncate|union|unique|update|using|values|view|when|where|window|with";
+
+const shKeywords =
+  "case|do|done|elif|else|esac|export|fi|for|function|if|in|local|readonly|return|select|shift|source|then|trap|unset|until|while";
+
+const pythonKeywords =
+  "False|None|True|and|as|assert|async|await|break|case|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|match|nonlocal|not|or|pass|raise|return|try|while|with|yield";
+
+const goKeywords =
+  "break|case|chan|const|continue|default|defer|else|fallthrough|false|for|func|go|goto|if|import|interface|iota|map|nil|package|range|return|select|struct|switch|true|type|var";
+
+const goTypes =
+  "any|bool|byte|comparable|complex64|complex128|error|float32|float64|int|int8|int16|int32|int64|rune|string|uint|uint8|uint16|uint32|uint64|uintptr";
+
+const rustKeywords =
+  "as|async|await|break|const|continue|crate|dyn|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|unsafe|use|where|while";
+
+const dockerInstructions =
+  "ADD|ARG|CMD|COPY|ENTRYPOINT|ENV|EXPOSE|FROM|HEALTHCHECK|LABEL|MAINTAINER|ONBUILD|RUN|SHELL|STOPSIGNAL|USER|VOLUME|WORKDIR";
+
+const cComment = String.raw`\/\*[\s\S]*?\*\/|\/\/[^\n]*`;
+const quoted = String.raw`"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'`;
+const backtick = "`(?:\\\\.|[^`\\\\])*`";
+const decimal = String.raw`\b\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?\b`;
+const radix = String.raw`\b0[xXbBoO][\da-fA-F_]+\b`;
+
+const jsRules: ReadonlyArray<Rule> = [
+  ["comment", cComment],
+  ["string", `${quoted}|${backtick}`],
+  ["number", String.raw`${radix}n?|${decimal}n?`],
+  ["keyword", words(jsKeywords)],
+  ["function", String.raw`[A-Za-z_$][\w$]*(?=\s*\()`],
+  ["type", String.raw`\b[A-Z][\w$]*`],
+  ["punctuation", String.raw`[{}()[\];,.<>=:+\-*/%!?&|^~]`],
+];
+
+// A JSX tag starts after whitespace, a bracket, or an operator, so `Array<string>` stays a generic.
+const jsxRules: ReadonlyArray<Rule> = [
+  ["comment", cComment],
+  ["string", `${quoted}|${backtick}`],
+  ["tag", String.raw`(?<=^|[\s(>{=,?:&|])<\/?[A-Za-z][\w.:-]*`],
+  ["key", String.raw`\b[A-Za-z][\w-]*(?==[{"'])`],
+  ...jsRules.slice(2),
+];
+
+const shellRules: ReadonlyArray<Rule> = [
+  ["comment", String.raw`(?<=^|\s)#[^\n]*`],
+  ["string", String.raw`"(?:\\.|[^"\\])*"|'[^']*'`],
+  ["variable", String.raw`\$\{[^}\n]*\}|\$[\w@#?*!$-]+|\$\(`],
+  ["key", String.raw`(?<=\s)--?[\w-]+(?:=\S*)?`],
+  ["keyword", words(shKeywords)],
+  ["punctuation", String.raw`[|&;<>()]`],
+];
+
+const grammars: Record<Exclude<CodeLanguage, "text" | "diff">, Grammar> = {
+  ts: grammar(jsRules),
+  js: grammar(jsRules),
+  tsx: grammar(jsxRules),
+  jsx: grammar(jsxRules),
+  json: grammar([
+    ["key", String.raw`"(?:\\.|[^"\\\n])*"(?=\s*:)`],
+    ["string", String.raw`"(?:\\.|[^"\\\n])*"`],
+    ["number", String.raw`-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b`],
+    ["keyword", words("true|false|null")],
+    ["punctuation", String.raw`[{}[\],:]`],
+  ]),
+  sh: grammar(shellRules),
+  bash: grammar(shellRules),
+  sql: grammar(
+    [
+      ["comment", String.raw`--[^\n]*|\/\*[\s\S]*?\*\/`],
+      ["string", String.raw`'(?:''|[^'])*'`],
+      ["variable", String.raw`"(?:""|[^"])*"|\$\d+|(?<!:):[A-Za-z_]\w*`],
+      ["number", String.raw`\b\d+(?:\.\d+)?\b`],
+      ["keyword", words(sqlKeywords)],
+      ["function", String.raw`[A-Za-z_]\w*(?=\s*\()`],
+      ["punctuation", String.raw`[(),;.*=<>!+\-/|:]`],
+    ],
+    "i",
+  ),
+  yaml: grammar(
+    [
+      ["comment", String.raw`#[^\n]*`],
+      ["key", String.raw`^\s*-?\s*[\w./-]+(?=\s*:(?:\s|$))`],
+      ["string", String.raw`"(?:\\.|[^"\\\n])*"|'[^'\n]*'`],
+      ["variable", String.raw`[&*][\w-]+|!!\w+`],
+      ["number", String.raw`\b\d+(?:\.\d+)?\b`],
+      ["keyword", words("true|false|null|yes|no|on|off")],
+      ["punctuation", String.raw`[:\-|>[\]{},]`],
+    ],
+    "m",
+  ),
+  css: grammar([
+    ["comment", String.raw`\/\*[\s\S]*?\*\/`],
+    ["string", quoted],
+    ["keyword", String.raw`@[\w-]+|!important\b`],
+    ["key", String.raw`--[\w-]+|[a-zA-Z-]+(?=\s*:[^;{}]*[;}])`],
+    ["number", String.raw`#[\da-fA-F]{3,8}\b|-?(?:\d*\.)?\d+(?:%|[a-zA-Z]+)?`],
+    ["function", String.raw`[\w-]+(?=\()`],
+    ["type", String.raw`[.#][\w-]+|::?[\w-]+`],
+    ["punctuation", String.raw`[{}();:,>+~*[\]=]`],
+  ]),
+  html: grammar([
+    ["comment", String.raw`<!--[\s\S]*?-->`],
+    ["keyword", String.raw`<![A-Za-z][^>]*>`],
+    ["tag", String.raw`<\/?[A-Za-z][\w:-]*`],
+    ["key", String.raw`[\w:@.-]+(?==)`],
+    ["string", quoted],
+    ["number", String.raw`&#?\w+;`],
+    ["punctuation", String.raw`\/?>|=`],
+  ]),
+  python: grammar([
+    ["comment", String.raw`#[^\n]*`],
+    [
+      "string",
+      String.raw`[rRbBfFuU]{0,2}(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')`,
+    ],
+    ["function", String.raw`@[\w.]+|[A-Za-z_]\w*(?=\s*\()`],
+    ["number", String.raw`${radix}|${decimal}j?`],
+    ["keyword", words(pythonKeywords)],
+    ["variable", words("self|cls")],
+    ["type", String.raw`\b[A-Z]\w*`],
+    ["punctuation", String.raw`[{}()[\];,.:=<>+\-*/%!&|^~@]`],
+  ]),
+  go: grammar([
+    ["comment", cComment],
+    ["string", String.raw`"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])'|` + "`[^`]*`"],
+    ["number", `${radix}|${decimal}`],
+    ["keyword", words(goKeywords)],
+    ["type", words(goTypes)],
+    ["function", String.raw`[A-Za-z_]\w*(?=\s*\()`],
+    ["punctuation", String.raw`[{}()[\];,.:=<>+\-*/%!&|^~]`],
+  ]),
+  rust: grammar([
+    ["comment", cComment],
+    ["key", String.raw`#!?\[[^\]\n]*\]`],
+    ["string", String.raw`b?r#*"[\s\S]*?"#*|b?"(?:\\.|[^"\\])*"|b?'(?:\\.|[^'\\\n])'`],
+    ["variable", String.raw`'[A-Za-z_]\w*`],
+    [
+      "number",
+      String.raw`\b(?:0[xXbBoO][\da-fA-F_]+|\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?)(?:[iuf](?:8|16|32|64|128|size))?\b`,
+    ],
+    ["keyword", words(rustKeywords)],
+    ["function", String.raw`[A-Za-z_]\w*!|[A-Za-z_]\w*(?=\s*(?:::<[^>\n]*>)?\()`],
+    [
+      "type",
+      String.raw`${words("bool|char|f32|f64|i8|i16|i32|i64|i128|isize|str|u8|u16|u32|u64|u128|usize")}|\b[A-Z]\w*`,
+    ],
+    ["punctuation", String.raw`[{}()[\];,.:=<>+\-*/%!&|^~?]`],
+  ]),
+  toml: grammar(
+    [
+      ["comment", String.raw`#[^\n]*`],
+      ["keyword", String.raw`^\s*\[\[?[^\]\n]+\]\]?`],
+      ["string", String.raw`"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'[^'\n]*'`],
+      ["key", String.raw`[\w.-]+(?=\s*=)`],
+      [
+        "number",
+        String.raw`\b\d{4}-\d{2}-\d{2}(?:[T ][\d:.]+(?:Z|[+-]\d{2}:\d{2})?)?|[+-]?\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?\b`,
+      ],
+      ["keyword", words("true|false|inf|nan")],
+      ["punctuation", String.raw`[=[\]{},.]`],
+    ],
+    "m",
+  ),
+  dockerfile: grammar(
+    [
+      ["comment", String.raw`^\s*#[^\n]*`],
+      ["keyword", String.raw`^\s*(?:${dockerInstructions})\b|\bAS\b`],
+      ["string", String.raw`"(?:\\.|[^"\\\n])*"|'[^'\n]*'`],
+      ["variable", String.raw`\$\{[^}\n]*\}|\$\w+`],
+      ["key", String.raw`--[\w-]+`],
+      ["punctuation", String.raw`[[\],=&|;\\]`],
+    ],
+    "im",
+  ),
+  markdown: grammar(
+    [
+      [
+        "string",
+        String.raw`^(?:` +
+          "```|~~~" +
+          String.raw`)[^\n]*\n[\s\S]*?^(?:` +
+          "```|~~~" +
+          String.raw`)[^\n]*$|` +
+          "`[^`\\n]+`",
+      ],
+      ["keyword", String.raw`^#{1,6}\s[^\n]*|^(?:-{3,}|\*{3,}|_{3,})[ \t]*$`],
+      ["comment", String.raw`^[ \t]*>[^\n]*|<!--[\s\S]*?-->`],
+      ["punctuation", String.raw`^[ \t]*(?:[-*+]|\d+[.)])(?=[ \t])`],
+      ["key", String.raw`\*\*[^*\n]+\*\*|__[^_\n]+__`],
+      ["variable", String.raw`(?<![\w*])\*[^*\s][^*\n]*\*|(?<!\w)_[^_\s][^_\n]*_(?!\w)`],
+      ["function", String.raw`!?\[[^\]\n]*\]\([^)\n]*\)|<https?:\/\/[^>\s]+>`],
+    ],
+    "m",
+  ),
 };
 
 function grammarFor(language: CodeLanguage): Grammar | undefined {
   if (language === "text" || language === "diff") return undefined;
-  if (language === "tsx" || language === "js") return grammars.ts;
   return grammars[language];
 }
 
 /** Splits code into lines of colored tokens. Unknown text stays plain. */
 function tokenize(code: string, language: CodeLanguage): ReadonlyArray<ReadonlyArray<Token>> {
-  const grammar = grammarFor(language);
+  const rules = grammarFor(language);
   const tokens: Array<Token> = [];
-  if (grammar === undefined) tokens.push({ kind: "plain", text: code });
+  if (rules === undefined) tokens.push({ kind: "plain", text: code });
   else {
-    const pattern = new RegExp(grammar.pattern.source, grammar.pattern.flags);
+    const pattern = new RegExp(rules.pattern.source, rules.pattern.flags);
     let plain = "";
     let at = 0;
     while (at < code.length) {
@@ -323,7 +525,7 @@ function tokenize(code: string, language: CodeLanguage): ReadonlyArray<ReadonlyA
       if (plain !== "") tokens.push({ kind: "plain", text: plain });
       plain = "";
       const group = match.slice(1).findIndex((value) => value !== undefined);
-      tokens.push({ kind: grammar.kinds[group] ?? "plain", text: match[0] });
+      tokens.push({ kind: rules.kinds[group] ?? "plain", text: match[0] });
       at += match[0].length;
     }
     if (plain !== "") tokens.push({ kind: "plain", text: plain });
@@ -514,5 +716,7 @@ const tokenColors = stylex.create({
   key: { color: color.info },
   function: { color: color.info },
   variable: { color: color.info },
+  type: { color: color.warning },
+  tag: { color: color.accentText, fontWeight: font.medium },
   punctuation: { color: color.textMuted },
 });

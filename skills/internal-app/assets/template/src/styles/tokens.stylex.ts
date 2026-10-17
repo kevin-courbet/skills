@@ -119,6 +119,17 @@ export const media = stylex.defineConsts({
   forcedColors: "@media (forced-colors: active)",
 });
 
+/**
+ * Container-query keys at the `media` breakpoints. They resolve against the
+ * nearest ancestor with `containerType: "inline-size"`, such as the DataTable
+ * scroller, so a component adapts to its own width, not to the window.
+ */
+export const container = stylex.defineConsts({
+  belowSm: "@container (max-width: 639.98px)",
+  belowMd: "@container (max-width: 767.98px)",
+  belowLg: "@container (max-width: 1023.98px)",
+});
+
 export const layer = stylex.defineConsts({
   sticky: "20",
   dropdown: "50",

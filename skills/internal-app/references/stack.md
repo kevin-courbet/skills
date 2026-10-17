@@ -73,10 +73,11 @@ Kit files are marked **kit**. Everything else is app-owned.
 
 ```
 internal-app.kit.json          Kit lock written by `sync`. Commit it.
+public/favicon.svg             App. The tab icon. The root route links it; replace it with the app's own.
 src/
   router.tsx                   App. Spreads routerDefaults; wires the SSR query bridge.
   routes/
-    __root.tsx                 App. Theme choice in beforeLoad; renders AppDocument.
+    __root.tsx                 App. Theme choice in beforeLoad; renders AppDocument; links the icon.
     _app.tsx                   App. Navigation config, ChartProvider, AppShell.
     _app/...                   App. Pages. Set staticData.crumb for breadcrumbs.
   styles/                      kit. palette.stylex.ts, tokens.stylex.ts, themes.ts, app.css

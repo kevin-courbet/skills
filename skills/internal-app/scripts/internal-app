@@ -571,6 +571,17 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
       : { id: "root-route", status: "fail", message: "Root route does not use AppDocument and getThemeChoice.", fix: "Replace its document markup as in assets/template/src/routes/__root.tsx (references/upgrade.md, step 4)." },
   );
 
+  add(
+    root !== undefined && /rel:\s*["']icon["']/.test(root)
+      ? { id: "app-icon", status: "pass", message: "Root route links an app icon." }
+      : {
+          id: "app-icon",
+          status: "warn",
+          message: "Root route links no icon, so browsers request /favicon.ico and log a 404 on every page.",
+          fix: "Add public/favicon.svg and links: [{ rel: \"icon\", type: \"image/svg+xml\", href: \"/favicon.svg\" }] to the root route head, as in assets/template/src/routes/__root.tsx.",
+        },
+  );
+
   const router = fileText(join(appDir, "src/router.tsx"));
   add(
     router !== undefined && router.includes("routerDefaults") && router.includes("setupRouterSsrQueryIntegration")

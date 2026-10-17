@@ -5,8 +5,14 @@ import { type ReactNode, useId } from "react";
 import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface PageHeaderProps {
-  readonly title: string;
-  readonly description?: string;
+  /**
+   * The page name, inside the page's only `<h1>`. A detail page may lead with
+   * the record `Identifier size="lg"` and follow it with a status `Badge` or
+   * `StatusDot`; the parts wrap as one heading line.
+   */
+  readonly title: ReactNode;
+  /** Secondary line under the title. Inline content flows as text: links, `Code`, and a `Kbd`. */
+  readonly description?: ReactNode;
   readonly actions?: ReactNode;
 }
 
@@ -16,7 +22,9 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
     <header {...stylex.props(styles.pageHeader)}>
       <div {...stylex.props(styles.pageHeading)}>
         <h1 {...stylex.props(styles.pageTitle)}>{title}</h1>
-        {description ? <p {...stylex.props(styles.pageDescription)}>{description}</p> : null}
+        {description === undefined ? null : (
+          <div {...stylex.props(styles.pageDescription)}>{description}</div>
+        )}
       </div>
       {actions ? <div {...stylex.props(styles.pageActions)}>{actions}</div> : null}
     </header>
@@ -419,14 +427,28 @@ const styles = stylex.create({
     gap: space.lg,
     flexWrap: "wrap",
   },
-  pageHeading: { display: "flex", flexDirection: "column", gap: space.xs, minWidth: 0 },
+  pageHeading: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space.xs,
+    minWidth: 0,
+    maxWidth: "100%",
+  },
   pageTitle: {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    columnGap: space.md,
+    rowGap: space.xs,
+    minWidth: 0,
+    margin: 0,
     fontSize: font.xxl,
     fontWeight: font.semibold,
     lineHeight: font.leadingTight,
     letterSpacing: font.trackingTight,
+    overflowWrap: "anywhere",
   },
-  pageDescription: { fontSize: font.md, color: color.textMuted, maxWidth: "64ch" },
+  pageDescription: { minWidth: 0, maxWidth: "64ch", fontSize: font.md, color: color.textMuted },
   pageActions: { display: "flex", alignItems: "center", gap: space.sm, flexShrink: 0 },
   section: { display: "flex", flexDirection: "column", gap: space.md },
   sectionHeader: {

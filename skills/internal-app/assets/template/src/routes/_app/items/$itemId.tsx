@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge, type BadgeIntent } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Identifier } from "@/components/ui/identifier";
 import { DescriptionList, Page, PageHeader, Section } from "@/components/ui/layout";
 import { deleteItemFn, itemKeys, itemQueryOptions } from "@/features/items/api";
 import type { ItemStatus } from "@/features/items/schemas";
@@ -57,8 +58,19 @@ function ItemPage() {
   return (
     <Page width="reading">
       <PageHeader
-        title={item.name}
-        description={`Owned by ${item.owner}`}
+        title={
+          <>
+            {item.name}{" "}
+            <Badge intent={statusIntent[item.status]} size="lg">
+              {statusLabel[item.status]}
+            </Badge>
+          </>
+        }
+        description={
+          <>
+            Owned by {item.owner} · <Identifier value={item.id} label="item ID" size="sm" muted />
+          </>
+        }
         actions={
           <Button onPress={() => setConfirmOpen(true)}>
             <Trash2 aria-hidden width={16} height={16} />
@@ -69,14 +81,9 @@ function ItemPage() {
       <Section title="Details">
         <DescriptionList
           items={[
-            {
-              term: "Status",
-              detail: <Badge intent={statusIntent[item.status]}>{statusLabel[item.status]}</Badge>,
-            },
             { term: "Owner", detail: item.owner },
             { term: "Amount", detail: formatCurrency(item.amount) },
             { term: "Last updated", detail: formatDateTime(item.updatedAt) },
-            { term: "Identifier", detail: item.id },
           ]}
         />
       </Section>

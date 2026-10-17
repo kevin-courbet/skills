@@ -10,7 +10,7 @@ import {
   parseDate,
   startOfWeek,
 } from "@internationalized/date";
-import { ChevronRight, Diamond } from "lucide-react";
+import { ChevronRight, Diamond, GripVertical } from "lucide-react";
 import {
   type KeyboardEvent,
   type PointerEvent,
@@ -43,7 +43,9 @@ export interface GanttTask {
   /** Percent done, 0 to 100. */
   readonly progress?: number;
   readonly intent?: BadgeIntent;
-  /** Quiet text after the bar, such as the owner. */
+  /** Who does the task. The load lane counts tasks per assignee and day. */
+  readonly assignee?: string;
+  /** Quiet text after the bar. It defaults to the assignee. */
   readonly meta?: string;
   /** A one-day gate, drawn as a diamond at `start`. */
   readonly milestone?: boolean;
@@ -56,6 +58,19 @@ export interface GanttTask {
 export interface GanttChange {
   readonly start: string;
   readonly end: string;
+}
+
+/** A task moved among its siblings. `parentId` is null for top-level tasks. */
+export interface GanttMove {
+  readonly taskId: string;
+  readonly parentId: string | null;
+  readonly fromIndex: number;
+  readonly toIndex: number;
+}
+
+export interface GanttLoad {
+  /** Tasks one assignee can carry on a day. Days above it show as a warning. */
+  readonly limit: number;
 }
 
 export interface GanttProps {
@@ -77,6 +92,17 @@ export interface GanttProps {
    * change and update `tasks`.
    */
   readonly onTaskChange?: (task: GanttTask, change: GanttChange) => void;
+  /**
+   * Makes the task order changeable among siblings: drag a row by its grip,
+   * or press Alt with Up or Down on the selected task. Receives the tasks in
+   * their new order and the move; apply it optimistically and persist it.
+   */
+  readonly onReorder?: (tasks: ReadonlyArray<GanttTask>, move: GanttMove) => void;
+  /**
+   * Adds a load lane under the tasks: one row per assignee with the number of
+   * their tasks on each day. Groups and milestones do not count.
+   */
+  readonly load?: GanttLoad;
 }
 
 interface Row {
@@ -109,6 +135,8 @@ export function Gantt({
   onSelectionChange,
   onTaskAction,
   onTaskChange,
+  onReorder,
+  load,
 }: GanttProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<Key>>(
     new Set(defaultExpandedIds ?? groupIds(tasks)),
@@ -125,6 +153,18 @@ export function Gantt({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const todayRef = useRef<HTMLSpanElement>(null);
   const nameHeaderRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [rowDrop, setRowDrop] = useState<{ id: string; toIndex: number } | null>(null);
+  const focusAfterMove = useRef<string | null>(null);
+
+  // A moved row re-renders in its new place; keep the keyboard on it.
+  useEffect(() => {
+    const id = focusAfterMove.current;
+    if (id === null) return;
+    focusAfterMove.current = null;
+    const row = bodyRef.current?.querySelector<HTMLElement>(`[data-key="${CSS.escape(id)}"]`);
+    if (row !== null && row !== undefined && document.activeElement !== row) row.focus();
+  });
 
   // Opens the chart with today in view; the plan usually starts earlier.
   useEffect(() => {
@@ -190,15 +230,45 @@ export function Gantt({
   const dayWidth = dayWidths[scale];
   const offset = (date: CalendarDate) => date.compare(first);
   const visible = visibleRows(tasks, expanded);
+  const visibleCount = visible.length;
   const indexOf = new Map(visible.map((task, index) => [task.id, index]));
+  const dropLine = rowDropLine(rowDrop, tasks, visible, indexOf);
 
   const commit = (task: GanttTask, start: CalendarDate, end: CalendarDate) => {
     onTaskChange?.(task, { start: start.toString(), end: end.toString() });
     setAnnouncement(`${task.title}: ${rangeLabel(start, end)}`);
   };
 
+  const reorder = (taskId: string, toIndex: number) => {
+    const place = siblingsOf(tasks, taskId, null);
+    if (onReorder === undefined || place === undefined) return;
+    const fromIndex = place.siblings.findIndex((task) => task.id === taskId);
+    const target = Math.min(place.siblings.length - 1, Math.max(0, toIndex));
+    if (target === fromIndex) return;
+    const task = place.siblings[fromIndex];
+    if (task === undefined) return;
+    focusAfterMove.current = taskId;
+    setAnnouncement(`${task.title}: position ${target + 1} of ${place.siblings.length}`);
+    onReorder(moveTask(tasks, place.parentId, fromIndex, target), {
+      taskId,
+      parentId: place.parentId,
+      fromIndex,
+      toIndex: target,
+    });
+  };
+
   const onKeyDownCapture = (event: KeyboardEvent) => {
-    if (onTaskChange === undefined || selected === null || !event.altKey) return;
+    if (selected === null || !event.altKey) return;
+    if (onReorder !== undefined && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+      event.preventDefault();
+      event.stopPropagation();
+      const place = siblingsOf(tasks, selected, null);
+      if (place === undefined) return;
+      const index = place.siblings.findIndex((task) => task.id === selected);
+      reorder(selected, index + (event.key === "ArrowDown" ? 1 : -1));
+      return;
+    }
+    if (onTaskChange === undefined) return;
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     const row = rows.get(selected);
     if (row === undefined || row.isGroup) return;
@@ -242,6 +312,43 @@ export function Gantt({
       setPreview(null);
       if (!isSameDay(next.start, row.start) || !isSameDay(next.end, row.end))
         commit(row.task, next.start, next.end);
+    };
+    target.addEventListener("pointermove", onMove);
+    target.addEventListener("pointerup", onUp);
+    target.addEventListener("pointercancel", onUp);
+  };
+
+  /**
+   * Drags a row by its grip. The row lands before the sibling whose middle the
+   * pointer is above; a line shows the place while the pointer moves.
+   */
+  const startRowDrag = (event: PointerEvent<HTMLElement>, taskId: string) => {
+    const body = bodyRef.current;
+    const place = siblingsOf(tasks, taskId, null);
+    if (onReorder === undefined || body === null || place === undefined || event.button !== 0)
+      return;
+    event.preventDefault();
+    event.stopPropagation();
+    const target = event.currentTarget;
+    target.setPointerCapture(event.pointerId);
+    const rowPx = body.getBoundingClientRect().height / Math.max(1, visibleCount);
+    const fromIndex = place.siblings.findIndex((task) => task.id === taskId);
+    let toIndex = fromIndex;
+    const onMove = (moveEvent: globalThis.PointerEvent) => {
+      const pointerRow = (moveEvent.clientY - body.getBoundingClientRect().top) / rowPx;
+      toIndex = place.siblings.filter((sibling, index) => {
+        if (index === fromIndex) return false;
+        const at = indexOf.get(sibling.id);
+        return at !== undefined && pointerRow > at + 0.5;
+      }).length;
+      setRowDrop({ id: taskId, toIndex });
+    };
+    const onUp = () => {
+      target.removeEventListener("pointermove", onMove);
+      target.removeEventListener("pointerup", onUp);
+      target.removeEventListener("pointercancel", onUp);
+      setRowDrop(null);
+      reorder(taskId, toIndex);
     };
     target.addEventListener("pointermove", onMove);
     target.addEventListener("pointerup", onUp);
@@ -297,7 +404,7 @@ export function Gantt({
               ) : null}
             </div>
           </div>
-          <div {...stylex.props(styles.body)}>
+          <div ref={bodyRef} {...stylex.props(styles.body)}>
             <svg
               aria-hidden
               {...stylex.props(
@@ -377,6 +484,18 @@ export function Gantt({
                               styles.indent(level),
                             )}
                           >
+                            {onReorder === undefined ? null : (
+                              <span
+                                aria-hidden
+                                onPointerDown={(event) => startRowDrag(event, task.id)}
+                                {...stylex.props(
+                                  styles.rowGrip,
+                                  rowDrop?.id === task.id && styles.rowGripActive,
+                                )}
+                              >
+                                <GripVertical {...stylex.props(styles.rowGripIcon)} />
+                              </span>
+                            )}
                             {hasChildItems ? (
                               <Button slot="chevron" {...stylex.props(styles.chevronButton)}>
                                 <ChevronRight
@@ -466,14 +585,18 @@ export function Gantt({
                   )
                     return null;
                   const unit = dayWidth * 16;
-                  const x1 = (offset(source.end) + 1) * unit;
-                  const y1 = (fromIndex + 0.5) * rowHeight * 16;
-                  const x2 = offset(target.start) * unit;
-                  const y2 = (toIndex + 0.5) * rowHeight * 16;
+                  const rowPx = rowHeight * 16;
                   return (
                     <path
                       key={`${sourceId}-${task.id}`}
-                      d={dependencyPath(x1, y1, x2, y2, (rowHeight * 16) / 2)}
+                      d={dependencyPath(
+                        exitPoint(source, offset, unit),
+                        (fromIndex + 0.5) * rowPx,
+                        entryPoint(target, offset, unit),
+                        (toIndex + 0.5) * rowPx,
+                        rowPx / 2,
+                        barHalfHeight(source),
+                      )}
                       markerEnd={`url(#${markerId})`}
                       vectorEffect="non-scaling-stroke"
                       {...stylex.props(styles.arrow)}
@@ -482,13 +605,24 @@ export function Gantt({
                 }),
               )}
             </svg>
+            {dropLine === undefined ? null : (
+              <span aria-hidden {...stylex.props(styles.rowDrop, styles.rowDropAt(dropLine))} />
+            )}
           </div>
+          {load === undefined ? null : (
+            <LoadLane
+              rows={[...rows.values()]}
+              load={load}
+              dayList={dayList}
+              dayWidth={dayWidth}
+              timelineWidth={timelineWidth}
+            />
+          )}
         </div>
       </div>
-      {onTaskChange === undefined ? null : (
+      {onTaskChange === undefined && onReorder === undefined ? null : (
         <p {...stylex.props(styles.hint)}>
-          Drag a bar or its edges to change dates. With a task selected, Alt and the arrow keys move
-          it, and Alt, Shift, and the arrow keys change its end.
+          {hintText(onTaskChange !== undefined, onReorder !== undefined)}
         </p>
       )}
       <span aria-live="polite" {...stylex.props(styles.srOnly)}>
@@ -559,23 +693,221 @@ function TaskBar({
           </>
         ) : null}
       </span>
-      {row.task.meta === undefined ? null : (
-        <span {...stylex.props(styles.barMeta, styles.after(left + width))}>{row.task.meta}</span>
+      {labelOf(row.task) === undefined ? null : (
+        <span {...stylex.props(styles.barMeta, styles.after(left + width))}>
+          {labelOf(row.task)}
+        </span>
       )}
     </>
   );
 }
 
+/** Pixels a dependency line keeps from the end of its source bar. */
+const exitInset = 6;
+const turn = 8;
+
+function labelOf(task: GanttTask): string | undefined {
+  return task.meta ?? task.assignee;
+}
+
+/** The x where a dependency leaves its source: just inside the bar end, so the line clears the label after the bar. */
+function exitPoint(row: Row, offset: (date: CalendarDate) => number, unit: number): number {
+  if (row.task.milestone === true) return (offset(row.start) + 0.5) * unit;
+  const left = offset(row.start) * unit + 2;
+  const right = (offset(row.end) + 1) * unit - 2;
+  return Math.max(left + 2, right - exitInset);
+}
+
+/** The x where a dependency reaches its target: the bar start, or the left tip of a milestone. */
+function entryPoint(row: Row, offset: (date: CalendarDate) => number, unit: number): number {
+  if (row.task.milestone === true) return (offset(row.start) + 0.5) * unit - 7;
+  return offset(row.start) * unit + 1;
+}
+
+function barHalfHeight(row: Row): number {
+  if (row.task.milestone === true) return 8;
+  return row.isGroup ? 3 : 9;
+}
+
 /**
- * Elbow from the end of a task to the start of the next one. When the next
- * task starts before there is room for a turn, the line runs between the
- * rows back to a point just before the target.
+ * Line from a task to a task that waits for it. It leaves the source bar
+ * through its bottom (or top) edge near the end, drops to the target row, and
+ * enters the target from the left. Labels after the bars stay clear. When the
+ * target starts before the exit, the line runs along the row border back to
+ * a turn before the target.
  */
-function dependencyPath(x1: number, y1: number, x2: number, y2: number, halfRow: number): string {
-  const turn = 8;
-  if (x2 - x1 >= turn * 2) return `M${x1},${y1} H${x1 + turn} V${y2} H${x2 - 1}`;
-  const between = y2 > y1 ? y2 - halfRow : y2 + halfRow;
-  return `M${x1},${y1} H${x1 + turn} V${between} H${x2 - turn} V${y2} H${x2 - 1}`;
+function dependencyPath(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  halfRow: number,
+  halfBar: number,
+): string {
+  const down = y2 > y1;
+  const exitY = down ? y1 + halfBar : y1 - halfBar;
+  if (x2 - x1 >= turn) return `M${x1},${exitY} V${y2} H${x2}`;
+  const between = down ? y2 - halfRow : y2 + halfRow;
+  return `M${x1},${exitY} V${between} H${x2 - turn} V${y2} H${x2}`;
+}
+
+function hintText(canChangeDates: boolean, canReorder: boolean): string {
+  const parts = [
+    canChangeDates
+      ? "Drag a bar or its edges to change dates. With a task selected, Alt and Left or Right move it, and Alt, Shift, and Left or Right change its end."
+      : undefined,
+    canReorder
+      ? "Drag a row by its grip to change the order, or press Alt and Up or Down on the selected task."
+      : undefined,
+  ];
+  return parts.filter((part) => part !== undefined).join(" ");
+}
+
+/** The siblings of a task and their parent, or undefined when the id is not in the tree. */
+function siblingsOf(
+  tasks: ReadonlyArray<GanttTask>,
+  id: string,
+  parentId: string | null,
+): { readonly siblings: ReadonlyArray<GanttTask>; readonly parentId: string | null } | undefined {
+  if (tasks.some((task) => task.id === id)) return { siblings: tasks, parentId };
+  for (const task of tasks) {
+    const found = task.children === undefined ? undefined : siblingsOf(task.children, id, task.id);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
+function moveTask(
+  tasks: ReadonlyArray<GanttTask>,
+  parentId: string | null,
+  fromIndex: number,
+  toIndex: number,
+): ReadonlyArray<GanttTask> {
+  const move = (list: ReadonlyArray<GanttTask>) => {
+    const next = [...list];
+    const [task] = next.splice(fromIndex, 1);
+    if (task === undefined) throw new Error("Gantt: the moved task is missing.");
+    next.splice(toIndex, 0, task);
+    return next;
+  };
+  if (parentId === null) return move(tasks);
+  return tasks.map((task) => {
+    if (task.id === parentId && task.children !== undefined)
+      return { ...task, children: move(task.children) };
+    if (task.children === undefined) return task;
+    return { ...task, children: moveTask(task.children, parentId, fromIndex, toIndex) };
+  });
+}
+
+function subtreeRows(task: GanttTask, indexOf: ReadonlyMap<string, number>): number {
+  return (task.children ?? []).reduce(
+    (sum, child) => sum + (indexOf.has(child.id) ? subtreeRows(child, indexOf) : 0),
+    1,
+  );
+}
+
+/** The row border, in rows from the top, where a dragged row would land. */
+function rowDropLine(
+  drop: { readonly id: string; readonly toIndex: number } | null,
+  tasks: ReadonlyArray<GanttTask>,
+  visible: ReadonlyArray<GanttTask>,
+  indexOf: ReadonlyMap<string, number>,
+): number | undefined {
+  if (drop === null) return undefined;
+  const place = siblingsOf(tasks, drop.id, null);
+  if (place === undefined) return undefined;
+  const others = place.siblings.filter((task) => task.id !== drop.id);
+  const before = others[drop.toIndex];
+  if (before !== undefined) return indexOf.get(before.id);
+  const last = others[others.length - 1];
+  if (last === undefined) return undefined;
+  const at = indexOf.get(last.id);
+  return at === undefined ? visible.length : at + subtreeRows(last, indexOf);
+}
+
+/**
+ * One row per assignee with the number of their tasks on each day. The cells
+ * are drawn for scanning; each row also says in words which days go over the
+ * limit, so the warning does not depend on color.
+ */
+function LoadLane({
+  rows,
+  load,
+  dayList,
+  dayWidth,
+  timelineWidth,
+}: {
+  readonly rows: ReadonlyArray<Row>;
+  readonly load: GanttLoad;
+  readonly dayList: ReadonlyArray<CalendarDate>;
+  readonly dayWidth: number;
+  readonly timelineWidth: string;
+}) {
+  const work = rows.filter(
+    (row) => !row.isGroup && row.task.milestone !== true && row.task.assignee !== undefined,
+  );
+  const assignees = [...new Set(work.map((row) => row.task.assignee ?? ""))].toSorted((a, b) =>
+    a.localeCompare(b, appLocale),
+  );
+  if (assignees.length === 0) return null;
+  return (
+    <div role="list" aria-label="Load per assignee" {...stylex.props(styles.load)}>
+      <div aria-hidden {...stylex.props(styles.loadHeader)}>
+        <div {...stylex.props(styles.loadHeaderName)}>Load</div>
+        <div {...stylex.props(styles.width(timelineWidth))} />
+      </div>
+      {assignees.map((assignee) => {
+        const counts = dayList.map(
+          (day) =>
+            work.filter(
+              (row) =>
+                row.task.assignee === assignee &&
+                row.start.compare(day) <= 0 &&
+                row.end.compare(day) >= 0,
+            ).length,
+        );
+        const over = dayList.filter((_, index) => (counts[index] ?? 0) > load.limit);
+        return (
+          <div role="listitem" key={assignee} {...stylex.props(styles.loadRow)}>
+            <div {...stylex.props(styles.loadName)}>
+              <span {...stylex.props(styles.name)}>{assignee}</span>
+              <span {...stylex.props(styles.srOnly)}>
+                {over.length === 0
+                  ? `, within the limit of ${load.limit} every day`
+                  : `, over the limit of ${load.limit} on ${dayRuns(over)}`}
+              </span>
+            </div>
+            <div aria-hidden {...stylex.props(styles.loadDays, styles.width(timelineWidth))}>
+              {counts.map((count, index) => (
+                <span
+                  key={dayList[index]?.toString() ?? index}
+                  {...stylex.props(
+                    styles.loadDay,
+                    styles.width(`calc(${dayWidth}rem - 2px)`),
+                    count > 0 && styles.loadDayBusy,
+                    count > load.limit && styles.loadDayOver,
+                  )}
+                >
+                  {count > 0 && dayWidth >= 1.5 ? count : null}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Joins days into runs, such as "19 Oct – 21 Oct, 27 Oct". */
+function dayRuns(days: ReadonlyArray<CalendarDate>): string {
+  const runs: Array<{ start: CalendarDate; end: CalendarDate }> = [];
+  for (const day of days) {
+    const last = runs[runs.length - 1];
+    if (last !== undefined && last.end.add({ days: 1 }).compare(day) === 0) last.end = day;
+    else runs.push({ start: day, end: day });
+  }
+  return runs.map((run) => rangeLabel(run.start, run.end)).join(", ");
 }
 
 function span(start: CalendarDate, end: CalendarDate): number {
@@ -619,7 +951,7 @@ function taskLabel(row: Row): string {
     row.task.milestone === true ? "milestone" : undefined,
     rangeLabel(row.start, row.end),
     row.task.milestone === true ? undefined : `${Math.round(row.progress)}% done`,
-    row.task.meta,
+    labelOf(row.task),
   ]
     .filter((part) => part !== undefined)
     .join(", ");
@@ -711,7 +1043,7 @@ const styles = stylex.create({
   body: { position: "relative" },
   layer: { position: "absolute", top: 0, overflow: "visible", pointerEvents: "none" },
   layerBack: { zIndex: 0 },
-  layerFront: { zIndex: 2 },
+  layerFront: { zIndex: 1 },
   layerLeft: { left: { default: nameWidthNarrow, [media.md]: nameWidth } },
   layerHeight: (rows: number) => ({ height: `${rows}rem` }),
   weekend: { fill: color.subtle },
@@ -830,16 +1162,22 @@ const styles = stylex.create({
   },
   handleStart: { left: 0 },
   handleEnd: { right: 0 },
+  // Lines leave and enter bars away from their own labels. A line that crosses the label of a
+  // row in between passes behind it: the label stacks above the dependency layer on the row surface.
   barMeta: {
     position: "absolute",
+    zIndex: 2,
     top: "50%",
     transform: "translateY(-50%)",
+    paddingInline: "0.125rem",
+    borderRadius: radius.sm,
+    backgroundColor: color.raised,
     fontSize: font.xs,
     color: color.textMuted,
     whiteSpace: "nowrap",
     pointerEvents: "none",
   },
-  after: (share: number) => ({ left: `calc(${share * 100}% + 0.375rem)` }),
+  after: (share: number) => ({ left: `calc(${share * 100}% + 0.25rem)` }),
   groupBar: {
     position: "absolute",
     top: "50%",
@@ -861,6 +1199,89 @@ const styles = stylex.create({
   },
   at: (share: number) => ({ left: `${share * 100}%` }),
   hint: { margin: 0, fontSize: font.sm, color: color.textMuted },
+  rowGrip: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "1rem",
+    height: "1.5rem",
+    flexShrink: 0,
+    marginInlineStart: "-0.375rem",
+    borderRadius: radius.sm,
+    color: { default: color.textFaint, ":hover": color.textMuted },
+    cursor: "grab",
+    touchAction: "none",
+  },
+  rowGripActive: { color: color.accentText, cursor: "grabbing" },
+  rowGripIcon: { width: size.iconSm, height: size.iconSm },
+  rowDrop: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    zIndex: 4,
+    height: "2px",
+    marginTop: "-1px",
+    backgroundColor: color.accent,
+    pointerEvents: "none",
+  },
+  rowDropAt: (rows: number) => ({ top: `${rows * rowHeight}rem` }),
+  load: {
+    display: "flex",
+    flexDirection: "column",
+    borderTopWidth: "1px",
+    borderTopStyle: "solid",
+    borderTopColor: color.border,
+  },
+  loadHeader: { display: "flex", fontSize: font.xs, color: color.textMuted },
+  loadHeaderName: {
+    position: "sticky",
+    left: 0,
+    zIndex: 1,
+    flexShrink: 0,
+    width: { default: nameWidthNarrow, [media.md]: nameWidth },
+    paddingInline: space.md,
+    paddingBlock: space.xs,
+    backgroundColor: color.raised,
+    borderInlineEndWidth: "1px",
+    borderInlineEndStyle: "solid",
+    borderInlineEndColor: color.border,
+    fontWeight: font.medium,
+  },
+  loadRow: { display: "flex", height: "1.75rem" },
+  loadName: {
+    position: "sticky",
+    left: 0,
+    zIndex: 1,
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+    width: { default: nameWidthNarrow, [media.md]: nameWidth },
+    paddingInline: space.md,
+    backgroundColor: color.raised,
+    borderInlineEndWidth: "1px",
+    borderInlineEndStyle: "solid",
+    borderInlineEndColor: color.border,
+    fontSize: font.sm,
+    color: color.textMuted,
+  },
+  loadDays: { display: "flex", flexShrink: 0, alignItems: "stretch", paddingBlock: "3px" },
+  loadDay: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    marginInline: "1px",
+    borderRadius: "2px",
+    fontSize: font.xs,
+    fontWeight: font.medium,
+    fontVariantNumeric: "tabular-nums",
+  },
+  loadDayBusy: { backgroundColor: color.accentMuted, color: color.accentText },
+  loadDayOver: {
+    backgroundColor: color.warningMuted,
+    color: color.warning,
+    boxShadow: `inset 0 0 0 1px ${color.warningBorder}`,
+  },
   srOnly: {
     position: "absolute",
     width: "1px",

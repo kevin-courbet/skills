@@ -216,7 +216,14 @@ export function ControlsShowcase() {
               showStepper
             />
             <NumberField label="Timeout" defaultValue={30} unit="seconds" minValue={1} />
-            <TimeField label="Daily run time" value={runAt} onChange={setRunAt} zoneLabel="UTC" />
+            <TimeField
+              label="Daily run time"
+              description="Pick from the clock button in steps of 15 minutes, or type any time."
+              value={runAt}
+              onChange={setRunAt}
+              minuteStep={15}
+              zoneLabel="UTC"
+            />
             <TimeField
               label="Window start"
               value="22:30"

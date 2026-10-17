@@ -16,6 +16,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Internal app" },
     ],
+    // Browsers request /favicon.ico on every load unless the page names an icon.
+    links: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
   }),
   shellComponent: RootDocument,
   component: Outlet,

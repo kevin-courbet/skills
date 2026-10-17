@@ -71,7 +71,9 @@ Keep these gaps when you tune the palette; equal values make the app look washed
 Other groups: `shadow` (`sm`, `md`, `lg`, and `frame` for the content panel), `font` (families, sizes `xs` to
 `xxxl`, weights, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
 `size` (control heights, icon sizes, sidebar, top bar, frame gap, content widths),
-`media` (breakpoints, reduced motion, forced colors), `layer` (z-index), and
+`media` (breakpoints, reduced motion, forced colors), `container` (`belowSm`,
+`belowMd`, `belowLg` container queries that resolve against the nearest
+`containerType: "inline-size"` ancestor, such as the DataTable scroller), `layer` (z-index), and
 `motion` (durations, `ease` for state changes and exits, `easeOut` for enter motion).
 
 Density defaults:

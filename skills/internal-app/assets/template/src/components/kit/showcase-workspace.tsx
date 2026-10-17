@@ -32,9 +32,11 @@ import { type ReactNode, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeIntent } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CodeBlock } from "@/components/ui/code-block";
+import { CodeBlock, type CodeLanguage } from "@/components/ui/code-block";
 import {
   type CalendarEvent,
+  type CalendarEventChange,
+  type CalendarResource,
   type CalendarView,
   EventCalendar,
 } from "@/components/ui/event-calendar";
@@ -45,6 +47,7 @@ import { Card, Code, Section } from "@/components/ui/layout";
 import { ResizablePanels } from "@/components/ui/resizable-panels";
 import { Scrollspy } from "@/components/ui/scrollspy";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Select } from "@/components/ui/select";
 import { SortableList } from "@/components/ui/sortable-list";
 import { toast } from "@/components/ui/toaster";
 import { SpanWaterfall, Trace, type TraceSpan, type TraceStep } from "@/components/ui/trace";
@@ -397,15 +400,17 @@ function SortableShowcase() {
 
 function KanbanShowcase() {
   const [incidents, setIncidents] = useState(initialIncidents);
+  const [stages, setStages] = useState(incidentColumns);
   return (
     <div id="kit-kanban">
       <Section
         title="Kanban"
-        description="Drag a card, or focus its grip and press Enter, then Tab to a place and press Enter."
+        description="Drag a card, or focus its grip and press Enter, then Tab to a place and press Enter. Move a column by the grip in its header, or focus that grip, press Enter, and use Left and Right."
       >
         <Kanban
           label="Incident board"
-          columns={incidentColumns}
+          columns={stages}
+          onColumnsChange={(next) => setStages(next)}
           value={incidents}
           onChange={(next) => setIncidents(next)}
           getItemId={(incident) => incident.id}
@@ -650,18 +655,29 @@ const scheduleEvents: ReadonlyArray<CalendarEvent> = [
   {
     id: "payroll-1",
     title: "Payroll export",
-    start: "2026-10-01T02:00:00Z",
-    end: "2026-10-01T02:30:00Z",
+    start: "2026-09-01T02:00:00Z",
+    end: "2026-09-01T02:30:00Z",
     intent: "info",
     meta: "payroll-export",
+    recurrence: { frequency: "monthly", count: 12 },
   },
   {
     id: "payroll-15",
     title: "Payroll export",
-    start: "2026-10-15T02:00:00Z",
-    end: "2026-10-15T02:30:00Z",
+    start: "2026-09-15T02:00:00Z",
+    end: "2026-09-15T02:30:00Z",
     intent: "info",
     meta: "payroll-export",
+    recurrence: { frequency: "monthly", count: 12 },
+  },
+  {
+    id: "restore-test",
+    title: "Backup restore test",
+    start: "2026-10-06T07:00:00Z",
+    end: "2026-10-06T08:00:00Z",
+    intent: "success",
+    meta: "Every other Tuesday",
+    recurrence: { frequency: "weekly", interval: 2, until: "2026-12-31" },
   },
   {
     id: "pg-upgrade",
@@ -674,9 +690,10 @@ const scheduleEvents: ReadonlyArray<CalendarEvent> = [
   {
     id: "standup",
     title: "Ops standup",
-    start: "2026-10-16T09:00:00Z",
-    end: "2026-10-16T09:30:00Z",
+    start: "2026-10-05T09:00:00Z",
+    end: "2026-10-05T09:15:00Z",
     intent: "neutral",
+    recurrence: { frequency: "weekly", weekdays: ["mon", "wed", "fri"] },
   },
   {
     id: "review",
@@ -733,18 +750,98 @@ const scheduleEvents: ReadonlyArray<CalendarEvent> = [
   },
 ];
 
+const onCallPeople: ReadonlyArray<CalendarResource> = [
+  { id: "ada", title: "Ada Lovelace", meta: "Platform" },
+  { id: "grace", title: "Grace Hopper", meta: "Payments" },
+  { id: "alan", title: "Alan Turing", meta: "Data" },
+];
+
+const onCallEvents: ReadonlyArray<CalendarEvent> = [
+  {
+    id: "rota-ada",
+    title: "Primary on call",
+    start: "2026-10-12",
+    end: "2026-10-15",
+    allDay: true,
+    intent: "accent",
+    resourceId: "ada",
+  },
+  {
+    id: "rota-grace",
+    title: "Primary on call",
+    start: "2026-10-15",
+    end: "2026-10-19",
+    allDay: true,
+    intent: "accent",
+    resourceId: "grace",
+  },
+  {
+    id: "rota-alan",
+    title: "Secondary on call",
+    start: "2026-10-12",
+    end: "2026-10-19",
+    allDay: true,
+    intent: "neutral",
+    resourceId: "alan",
+  },
+  {
+    id: "handover",
+    title: "Handover",
+    start: "2026-10-15T08:30:00Z",
+    end: "2026-10-15T09:00:00Z",
+    intent: "info",
+    resourceId: "ada",
+  },
+  {
+    id: "pg-window",
+    title: "Postgres failover drill",
+    start: "2026-10-16T13:00:00Z",
+    end: "2026-10-16T15:00:00Z",
+    intent: "warning",
+    resourceId: "grace",
+  },
+  {
+    id: "etl-review",
+    title: "ETL review",
+    start: "2026-10-16T10:00:00Z",
+    end: "2026-10-16T11:00:00Z",
+    intent: "neutral",
+    resourceId: "alan",
+  },
+  {
+    id: "alan-sync",
+    title: "Pipeline sync",
+    start: "2026-10-12T15:00:00Z",
+    end: "2026-10-12T15:30:00Z",
+    intent: "neutral",
+    resourceId: "alan",
+    recurrence: { frequency: "daily", count: 5 },
+  },
+];
+
+function applyChange(
+  events: ReadonlyArray<CalendarEvent>,
+  id: string,
+  change: CalendarEventChange,
+): ReadonlyArray<CalendarEvent> {
+  return events.map((event) => (event.id === id ? { ...event, ...change } : event));
+}
+
 function EventCalendarShowcase() {
   const [view, setView] = useState<CalendarView>("month");
   const [date, setDate] = useState("2026-10-16");
+  const [events, setEvents] = useState(scheduleEvents);
+  const [rota, setRota] = useState(onCallEvents);
+  const [rotaView, setRotaView] = useState<CalendarView>("week");
   return (
-    <div id="kit-event-calendar">
+    <div id="kit-event-calendar" {...stylex.props(styles.sections)}>
       <Section
         title="Event calendar"
-        description="On-call shifts, maintenance windows, and jobs in month, week, and agenda views."
+        description="Maintenance windows and jobs with recurring series. Drag an event or its lower edge, or focus it and use Alt with the arrow keys."
       >
         <EventCalendar
           label="Operations schedule"
-          events={scheduleEvents}
+          events={events}
           today="2026-10-16"
           now="2026-10-16T10:30:00Z"
           view={view}
@@ -752,7 +849,29 @@ function EventCalendarShowcase() {
           date={date}
           onDateChange={setDate}
           onEventAction={(event) => toast(`Opened ${event.title}`)}
+          onEventChange={(event, change) => setEvents(applyChange(events, event.id, change))}
           onDayAction={(day) => toast(`New event on ${day}`)}
+        />
+      </Section>
+      <Section
+        title="Resource calendar"
+        description="An on-call rota: one row per person in the week view and one column per person in the day view. Move a shift to another person with Alt and Up or Down."
+      >
+        <EventCalendar
+          label="On-call rota"
+          events={rota}
+          resources={onCallPeople}
+          views={["week", "day"]}
+          view={rotaView}
+          onViewChange={setRotaView}
+          today="2026-10-16"
+          now="2026-10-16T10:30:00Z"
+          defaultDate="2026-10-16"
+          onEventAction={(event) => toast(`Opened ${event.title}`)}
+          onEventChange={(event, change) => setRota(applyChange(rota, event.id, change))}
+          onDayAction={(day, resourceId) =>
+            toast(`New event on ${day}${resourceId === undefined ? "" : ` for ${resourceId}`}`)
+          }
         />
       </Section>
     </div>
@@ -771,7 +890,7 @@ const migrationPlan: ReadonlyArray<GanttTask> = [
         end: "2026-10-09",
         progress: 100,
         intent: "success",
-        meta: "Ada",
+        assignee: "Ada",
       },
       {
         id: "runbook",
@@ -779,7 +898,7 @@ const migrationPlan: ReadonlyArray<GanttTask> = [
         start: "2026-10-08",
         end: "2026-10-14",
         progress: 80,
-        meta: "Grace",
+        assignee: "Grace",
         dependsOn: ["audit"],
       },
     ],
@@ -794,7 +913,7 @@ const migrationPlan: ReadonlyArray<GanttTask> = [
         start: "2026-10-15",
         end: "2026-10-21",
         progress: 40,
-        meta: "Alan",
+        assignee: "Alan",
         dependsOn: ["runbook"],
       },
       {
@@ -804,7 +923,7 @@ const migrationPlan: ReadonlyArray<GanttTask> = [
         end: "2026-10-27",
         progress: 10,
         intent: "warning",
-        meta: "Katherine",
+        assignee: "Alan",
         dependsOn: ["dual-write"],
       },
       {
@@ -824,7 +943,7 @@ const migrationPlan: ReadonlyArray<GanttTask> = [
     end: "2026-11-04",
     progress: 0,
     intent: "neutral",
-    meta: "Edsger",
+    assignee: "Edsger",
     dependsOn: ["cutover"],
   },
 ];
@@ -848,7 +967,7 @@ function GanttShowcase() {
     <div id="kit-gantt">
       <Section
         title="Gantt"
-        description="Tasks on a time line with progress, milestones, and dependencies."
+        description="Tasks on a time line with progress, milestones, dependencies, and the load of each assignee. Drag a row by its grip, or press Alt and Up or Down, to change the order."
         actions={
           <SegmentedControl
             size="sm"
@@ -868,6 +987,8 @@ function GanttShowcase() {
           today="2026-10-16"
           scale={scale}
           onTaskChange={(task, change) => setPlan(rescheduleTask(plan, task.id, change))}
+          onReorder={(next) => setPlan(next)}
+          load={{ limit: 1 }}
           onTaskAction={(task) => toast(`Opened ${task.title}`)}
         />
       </Section>
@@ -968,7 +1089,243 @@ function ResizableShowcase() {
   );
 }
 
+type SampleLanguage = Exclude<CodeLanguage, "text">;
+
+const sampleLanguages: ReadonlyArray<SampleLanguage> = [
+  "tsx",
+  "jsx",
+  "ts",
+  "js",
+  "json",
+  "sh",
+  "bash",
+  "sql",
+  "yaml",
+  "css",
+  "html",
+  "python",
+  "go",
+  "rust",
+  "toml",
+  "dockerfile",
+  "markdown",
+  "diff",
+];
+
+const codeSamples: Record<
+  SampleLanguage,
+  { readonly label: string; readonly title: string; readonly code: string }
+> = {
+  tsx: {
+    label: "TSX",
+    title: "run-row.tsx",
+    code: `export function RunRow({ run }: { readonly run: Run }) {
+  const [isOpen, setOpen] = useState<boolean>(false);
+  return (
+    <Item title={run.name} onAction={() => setOpen(true)}>
+      <StatusDot intent="success">Ready</StatusDot>
+    </Item>
+  );
+}`,
+  },
+  jsx: {
+    label: "JSX",
+    title: "banner.jsx",
+    code: `// Shown while the sync is paused.
+export const Banner = ({ until }) => (
+  <p role="status" data-state="paused">
+    Sync resumes at {until.toLocaleTimeString()}.
+  </p>
+);`,
+  },
+  ts: {
+    label: "TypeScript",
+    title: "retry.ts",
+    code: `type Backoff = "linear" | "exponential";
+
+export async function retry<T>(task: () => Promise<T>, attempts = 5): Promise<T> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await task();
+    } catch (error) {
+      if (attempt >= attempts) throw error;
+      await sleep(2 ** attempt * 100);
+    }
+  }
+}`,
+  },
+  js: {
+    label: "JavaScript",
+    title: "metrics.js",
+    code: `const buckets = [0.05, 0.1, 0.5, 1, 5];
+export function observe(histogram, seconds) {
+  const index = buckets.findIndex((limit) => seconds <= limit);
+  histogram[index === -1 ? buckets.length : index] += 1;
+  return \`observed \${seconds}s\`;
+}`,
+  },
+  json: {
+    label: "JSON",
+    title: "feature-flags.json",
+    code: `{
+  "ledger.dualWrite": { "enabled": true, "rollout": 0.25 },
+  "payroll.newExport": { "enabled": false, "owners": ["finance"] },
+  "search.reindex": null
+}`,
+  },
+  sh: {
+    label: "Shell",
+    title: "deploy.sh",
+    code: `#!/bin/sh
+set -eu
+# Promote the staged build
+export RELEASE="\${1:-latest}"
+bun run build --mode production && rsync -a .output/ "deploy@$HOST:/srv/$RELEASE"`,
+  },
+  bash: {
+    label: "Bash",
+    title: "rotate-logs.bash",
+    code: `for file in /var/log/app/*.log; do
+  if [[ -s "$file" ]]; then
+    gzip --best "$file"   # keeps 30 days
+  fi
+done
+echo "rotated $(ls /var/log/app | wc -l) files"`,
+  },
+  sql: {
+    label: "SQL",
+    title: "failed-payments.sql",
+    code: `-- Failed payments in the last week
+SELECT customer_id, COUNT(*) AS failures, MAX(created_at)
+FROM payments
+WHERE status = 'failed' AND created_at > now() - interval '7 days'
+GROUP BY customer_id
+HAVING COUNT(*) > 2;`,
+  },
+  yaml: {
+    label: "YAML",
+    title: "ci.yaml",
+    code: `name: ci
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: bun test --coverage  # fails under 80%
+        timeout-minutes: 10`,
+  },
+  css: {
+    label: "CSS",
+    title: "print.css",
+    code: `@media print {
+  .sidebar, .top-bar { display: none !important; }
+  :root { --page-width: 210mm; }
+  table th::after { content: attr(data-unit); color: var(--muted); }
+  main { width: calc(var(--page-width) - 2rem); }
+}`,
+  },
+  html: {
+    label: "HTML",
+    title: "maintenance.html",
+    code: `<!DOCTYPE html>
+<html lang="en">
+  <!-- Served while the app is down -->
+  <body class="maintenance">
+    <h1>Back at 06:00 UTC</h1>
+    <a href="https://status.example.com">Status page</a> &middot; ops
+  </body>
+</html>`,
+  },
+  python: {
+    label: "Python",
+    title: "reconcile.py",
+    code: `@dataclass
+class Batch:
+    id: str
+    total: Decimal
+
+def reconcile(batches: list[Batch], ledger) -> int:
+    """Count the batches the ledger misses."""
+    return sum(1 for batch in batches if batch.id not in ledger)  # O(n)`,
+  },
+  go: {
+    label: "Go",
+    title: "health.go",
+    code: `package health
+
+func Check(ctx context.Context, db *sql.DB) error {
+	if err := db.PingContext(ctx); err != nil {
+		return fmt.Errorf("database: %w", err)
+	}
+	return nil // healthy
+}`,
+  },
+  rust: {
+    label: "Rust",
+    title: "limits.rs",
+    code: `#[derive(Debug, Clone)]
+pub struct Limit<'a> { name: &'a str, max: u32 }
+
+impl Limit<'_> {
+    pub fn allows(&self, used: u32) -> bool {
+        println!("{} uses {used}", self.name);
+        used <= self.max
+    }
+}`,
+  },
+  toml: {
+    label: "TOML",
+    title: "worker.toml",
+    code: `# Billing worker
+[worker]
+name = "billing"
+replicas = 3
+start = 2026-10-12T02:00:00Z
+
+[[queues]]
+id = 'invoices'
+retry = { attempts = 5, backoff = "exponential" }`,
+  },
+  dockerfile: {
+    label: "Dockerfile",
+    title: "Dockerfile",
+    code: `FROM oven/bun:1.3 AS build
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+ENV NODE_ENV=production PORT=\${PORT:-3000}
+CMD ["bun", ".output/server/index.mjs"]`,
+  },
+  markdown: {
+    label: "Markdown",
+    title: "RUNBOOK.md",
+    code: `## Restore a backup
+
+1. Pause the **billing worker** in [the console](https://ops.example.com).
+2. Run \`bun run restore --at 02:00\`.
+
+> Restores take about *20 minutes*.
+
+\`\`\`sh
+bun run restore --dry-run
+\`\`\``,
+  },
+  diff: {
+    label: "Diff",
+    title: "cache-key.diff",
+    code: `@@ -1,4 +1,5 @@
+ export function getCacheKey(request: Request) {
+   const url = new URL(request.url);
+-  return url.href;
++  url.searchParams.sort();
++  return url.toString();
+ }`,
+  },
+};
+
 function CodeBlockShowcase() {
+  const [language, setLanguage] = useState<SampleLanguage>("tsx");
+  const sample = codeSamples[language];
   return (
     <div id="kit-code-block">
       <Section
@@ -1020,6 +1377,16 @@ function CodeBlockShowcase() {
               code={'bun run db:migrate --env production # needs "DATABASE_URL"'}
             />
           </div>
+        </div>
+        <div {...stylex.props(styles.stack)}>
+          <Select
+            label="Language"
+            value={language}
+            onChange={setLanguage}
+            options={sampleLanguages.map((id) => ({ id, label: codeSamples[id].label }))}
+            style={styles.languageSelect}
+          />
+          <CodeBlock title={sample.title} language={language} code={sample.code} />
         </div>
       </Section>
     </div>
@@ -1104,6 +1471,8 @@ const styles = stylex.create({
   },
   cardAge: { color: color.textMuted, fontVariantNumeric: "tabular-nums" },
   stack: { display: "flex", flexDirection: "column", gap: space.sm, minWidth: 0 },
+  languageSelect: { maxWidth: "16rem" },
+  sections: { display: "flex", flexDirection: "column", gap: space.xxxl },
   spyBar: {
     position: "sticky",
     top: 0,

@@ -727,7 +727,7 @@ export function OperationsShowcase() {
                 )
               }
               lines={stageLog}
-              visibleLines={10}
+              maxVisibleLines={10}
               emptyState={
                 <EmptyState
                   title="This stage has not started"
@@ -764,7 +764,7 @@ export function OperationsShowcase() {
 
       <Section
         title="Data grid"
-        description="Rows open with Enter on the row header or a click anywhere on the row."
+        description="Rows open with Enter on the row header or a click anywhere on the row. On a narrow frame the source and created columns leave the table."
       >
         <DataTable
           caption="Deployments"
@@ -777,6 +777,7 @@ export function OperationsShowcase() {
           isLoading={isLoading}
           loadingRows={4}
           pinnedColumns={{ start: ["name"], end: ["actions"] }}
+          responsiveColumns={{ source: { hideBelow: "lg" }, created: { hideBelow: "md" } }}
           rowAction={{ onAction: (run) => toast(`Open ${run.name}`) }}
           expansion={{
             expandedIds: expanded,

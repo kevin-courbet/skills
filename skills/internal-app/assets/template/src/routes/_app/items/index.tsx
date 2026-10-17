@@ -152,6 +152,10 @@ function ItemsPage() {
           getRowId={(item) => item.id}
           numericColumns={["amount"]}
           pinnedColumns={{ start: ["name"] }}
+          responsiveColumns={{
+            owner: { hideBelow: "md", stack: true },
+            updatedAt: { hideBelow: "sm" },
+          }}
           rowAction={{ link: (item) => ({ to: "/items/$itemId", params: { itemId: item.id } }) }}
           sorting={sorting}
           onSortingChange={(next) => {

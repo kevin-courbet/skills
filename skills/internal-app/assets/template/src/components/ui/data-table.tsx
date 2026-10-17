@@ -33,7 +33,7 @@ import {
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { Button as AriaButton } from "react-aria-components";
 import { appLocale } from "@/lib/locale";
-import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+import { color, container, font, motion, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
 import { Skeleton } from "./feedback";
@@ -68,6 +68,24 @@ export interface DataTableColumnVisibility {
   /** Ids of hidden columns. Columns with `enableHiding: false` always show. */
   readonly hidden: ReadonlyArray<string>;
   readonly onChange: (hidden: ReadonlyArray<string>) => void;
+}
+
+/** Table frame widths, at the `media` breakpoints: `sm` 640px, `md` 768px, `lg` 1024px. */
+export type DataTableBreakpoint = "sm" | "md" | "lg";
+
+/**
+ * How a column gives way when the table frame is narrow, such as on a phone.
+ * The frame width decides, not the window width, so a table in a side panel
+ * adapts too.
+ */
+export interface DataTableResponsiveColumn {
+  /** The column leaves the table while the frame is narrower than this breakpoint. */
+  readonly hideBelow: DataTableBreakpoint;
+  /**
+   * Shows the cell under the row header while the column is hidden, so the
+   * value stays in the row without its own column. Use it for short values.
+   */
+  readonly stack?: boolean;
 }
 
 export interface DataTableVirtualization {
@@ -162,6 +180,12 @@ export interface DataTableProps<TData extends RowData> {
   readonly loadingRows?: number;
   /** Adds a footer bar in the frame with the row range, page buttons, and rows per page. */
   readonly pagination?: DataTablePagination;
+  /**
+   * Columns that leave the table, or move under the row header, when the
+   * frame is narrow. Keep the row header and the status in view at 375px and
+   * hide secondary facts, such as the source or the author.
+   */
+  readonly responsiveColumns?: Readonly<Record<string, DataTableResponsiveColumn>>;
 }
 
 const selectColumnId = "__select";
@@ -202,6 +226,7 @@ export function DataTable<TData extends RowData>({
   isLoading = false,
   loadingRows = 5,
   pagination,
+  responsiveColumns = {},
 }: DataTableProps<TData>) {
   if (virtualize !== undefined && expansion !== undefined)
     throw new Error("DataTable cannot expand rows while it virtualizes them.");
@@ -282,6 +307,13 @@ export function DataTable<TData extends RowData>({
     endIds,
     (id) => table.getColumn(id)?.getSize() ?? columnSizeDefaults.size,
   );
+  for (const id of Object.keys(responsiveColumns)) {
+    if (!columns.some((column) => columnId(column) === id))
+      throw new Error(`DataTable makes the unknown column "${id}" responsive.`);
+    if (id === headerColumnId)
+      throw new Error(`DataTable cannot hide the row header column "${id}" on narrow frames.`);
+  }
+  const stackedIds = visibleIds.filter((id) => responsiveColumns[id]?.stack === true);
   const hasFooter = columns.some((column) => column.footer !== undefined);
   const selectedCount = selection?.selectedIds.length ?? 0;
   const hasToolbarRow =
@@ -293,7 +325,9 @@ export function DataTable<TData extends RowData>({
   const cellStyles = (id: string) => {
     const startIndex = startIds.indexOf(id);
     const endIndex = endIds.indexOf(id);
+    const responsive = responsiveColumns[id];
     return [
+      responsive !== undefined && hideBelow[responsive.hideBelow],
       numericColumns.includes(id) && styles.numeric,
       utilityColumns.includes(id) && styles.utilityCell,
       startIndex !== -1 && styles.sticky,
@@ -326,6 +360,9 @@ export function DataTable<TData extends RowData>({
               <RowActionControl action={rowAction} row={row.original}>
                 {content}
               </RowActionControl>
+            )}
+            {stackedIds.length === 0 ? null : (
+              <StackedCells row={row} ids={stackedIds} responsive={responsiveColumns} />
             )}
           </th>
         );
@@ -613,6 +650,31 @@ function useRowClick(bodyRef: RefObject<HTMLTableSectionElement | null>, isEnabl
     body.addEventListener("click", onClick);
     return () => body.removeEventListener("click", onClick);
   }, [bodyRef, isEnabled]);
+}
+
+/**
+ * The cells of stacked columns, repeated under the row header. Each shows only
+ * while its own column is hidden, so the value appears once at every width.
+ */
+function StackedCells<TData extends RowData>({
+  row,
+  ids,
+  responsive,
+}: {
+  readonly row: Row<DataTableFeatures, TData>;
+  readonly ids: ReadonlyArray<string>;
+  readonly responsive: Readonly<Record<string, DataTableResponsiveColumn>>;
+}) {
+  return ids.map((id) => {
+    const cell = row.getVisibleCells().find((candidate) => candidate.column.id === id);
+    const breakpoint = responsive[id]?.hideBelow;
+    if (cell === undefined || breakpoint === undefined) return null;
+    return (
+      <div key={id} {...stylex.props(styles.stacked, showBelow[breakpoint])}>
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </div>
+    );
+  });
 }
 
 function RowActionControl<TData extends RowData>({
@@ -1061,7 +1123,7 @@ const styles = stylex.create({
   // table at a glance, not as a list of loose rows.
   thead: { position: "sticky", top: 0, zIndex: 2, backgroundColor: color.subtle },
   th: {
-    paddingInline: space.md,
+    paddingInline: { default: space.md, [container.belowSm]: space.sm },
     textAlign: "start",
     fontSize: font.md,
     fontWeight: font.medium,
@@ -1129,15 +1191,23 @@ const styles = stylex.create({
   trAction: { cursor: "pointer" },
   trExpanded: { borderBottomColor: "transparent" },
   trSelected: { backgroundColor: { default: color.selected, ":hover": color.selected } },
+  // In a narrow frame cell text wraps and the padding tightens, so the columns that stay fit
+  // the frame instead of pushing the last ones out of view.
   td: {
-    paddingInline: space.md,
+    paddingInline: { default: space.md, [container.belowSm]: space.sm },
     verticalAlign: "middle",
-    whiteSpace: "nowrap",
+    whiteSpace: { default: "nowrap", [container.belowSm]: "normal" },
     textAlign: "start",
     fontWeight: font.regular,
   },
   tdClipped: { overflow: "hidden", textOverflow: "ellipsis" },
   rowHeader: { color: color.text },
+  stacked: {
+    marginTop: "2px",
+    fontSize: font.sm,
+    fontWeight: font.regular,
+    color: color.textMuted,
+  },
   rowControl: {
     color: "inherit",
     textDecoration: { default: "none", ":hover": "underline" },
@@ -1277,6 +1347,18 @@ const styles = stylex.create({
     borderRadius: radius.full,
     backgroundColor: color.accent,
   }),
+});
+
+const hideBelow = stylex.create({
+  sm: { display: { default: null, [container.belowSm]: "none" } },
+  md: { display: { default: null, [container.belowMd]: "none" } },
+  lg: { display: { default: null, [container.belowLg]: "none" } },
+});
+
+const showBelow = stylex.create({
+  sm: { display: { default: "none", [container.belowSm]: "block" } },
+  md: { display: { default: "none", [container.belowMd]: "block" } },
+  lg: { display: { default: "none", [container.belowLg]: "block" } },
 });
 
 const densities = stylex.create({

@@ -325,8 +325,20 @@ export function KitShowcase() {
   return (
     <div {...stylex.props(styles.root)}>
       <PageHeader
-        title="Design kit"
-        description="Every primitive of the internal-app kit in its main states."
+        title={
+          <>
+            Design kit{" "}
+            <Badge intent="info" size="lg" shape="pill">
+              Showcase
+            </Badge>
+          </>
+        }
+        description={
+          <>
+            Every primitive of the internal-app kit in its main states. Run{" "}
+            <Code>internal-app sync --write</Code> in an app to update its copy.
+          </>
+        }
         actions={
           <>
             <Button>Secondary</Button>
@@ -558,6 +570,7 @@ export function KitShowcase() {
           sorting={sorting}
           onSortingChange={setSorting}
           pinnedColumns={{ start: ["name"] }}
+          responsiveColumns={{ region: { hideBelow: "sm", stack: true } }}
           rowAction={{ onAction: (row) => setPeekIndex(sampleRows.indexOf(row)) }}
           activeRowId={peekRow?.id}
           selection={{
@@ -784,7 +797,7 @@ export function KitShowcase() {
             />
           }
           downloadName="run_0042.log"
-          visibleLines={12}
+          maxVisibleLines={12}
           footnote="Sample output"
         />
       </Section>

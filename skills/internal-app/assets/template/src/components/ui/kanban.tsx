@@ -1,7 +1,15 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
 import * as stylex from "@stylexjs/stylex";
-import { GripVertical, type LucideIcon } from "lucide-react";
-import { type ReactNode, useId } from "react";
+import { GripHorizontal, GripVertical, type LucideIcon } from "lucide-react";
+import {
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import {
   Button,
   type DropItem,
@@ -34,6 +42,12 @@ export interface KanbanMove {
   readonly index: number;
 }
 
+export interface KanbanColumnMove {
+  readonly columnId: string;
+  readonly fromIndex: number;
+  readonly toIndex: number;
+}
+
 export interface KanbanProps<Item> {
   /** Names the board, such as "Incident board". */
   readonly label: string;
@@ -56,6 +70,20 @@ export interface KanbanProps<Item> {
   readonly columnActions?: (column: KanbanColumn) => ReactNode;
   /** Text in a column without items. */
   readonly emptyLabel?: string;
+  /**
+   * Makes the column order changeable: drag a column by the grip in its
+   * header, or focus the grip, press Enter, move with Left and Right, and
+   * press Enter. Receives the columns in their new order and the move; apply
+   * it optimistically and persist it. Without it the column order is fixed.
+   */
+  readonly onColumnsChange?: (columns: ReadonlyArray<KanbanColumn>, move: KanbanColumnMove) => void;
+}
+
+/** A column on the move: its id and the index it would take if dropped now. */
+interface ColumnDrag {
+  readonly columnId: string;
+  readonly toIndex: number;
+  readonly mode: "pointer" | "keyboard";
 }
 
 /**
@@ -75,8 +103,122 @@ export function Kanban<Item extends object>({
   onItemAction,
   columnActions,
   emptyLabel = "No items",
+  onColumnsChange,
 }: KanbanProps<Item>) {
   const dragType = `application/x-kanban-${useId()}`;
+  const boardRef = useRef<HTMLDivElement>(null);
+  const gripRefs = useRef(new Map<string, HTMLButtonElement>());
+  const [columnDrag, setColumnDrag] = useState<ColumnDrag | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const focusAfterMove = useRef<string | null>(null);
+
+  // A moved column re-renders in its new place; keep the keyboard on its grip.
+  useEffect(() => {
+    const id = focusAfterMove.current;
+    if (id === null) return;
+    focusAfterMove.current = null;
+    const grip = gripRefs.current.get(id);
+    if (grip !== undefined && document.activeElement !== grip) grip.focus();
+  });
+
+  const titleOf = (id: string) => columns.find((column) => column.id === id)?.title ?? id;
+  const position = (index: number) => `position ${index + 1} of ${columns.length}`;
+
+  const commitColumn = (columnId: string, toIndex: number) => {
+    setColumnDrag(null);
+    const fromIndex = columns.findIndex((column) => column.id === columnId);
+    if (fromIndex === -1) throw new Error(`Kanban: no column ${columnId}.`);
+    if (onColumnsChange === undefined || fromIndex === toIndex) return;
+    const next = columns.filter((column) => column.id !== columnId);
+    const moved = columns[fromIndex];
+    if (moved === undefined) return;
+    next.splice(toIndex, 0, moved);
+    focusAfterMove.current = columnId;
+    setAnnouncement(`Moved ${moved.title} column to ${position(toIndex)}.`);
+    onColumnsChange(next, { columnId, fromIndex, toIndex });
+  };
+
+  const onGripPress = (columnId: string, pointerType: string) => {
+    // A pointer moves a column by dragging; a press from the keyboard or a screen reader picks it up.
+    if (pointerType === "mouse" || pointerType === "touch" || pointerType === "pen") return;
+    if (columnDrag?.columnId === columnId && columnDrag.mode === "keyboard") {
+      commitColumn(columnId, columnDrag.toIndex);
+      return;
+    }
+    const fromIndex = columns.findIndex((column) => column.id === columnId);
+    setColumnDrag({ columnId, toIndex: fromIndex, mode: "keyboard" });
+    setAnnouncement(
+      `Picked up ${titleOf(columnId)} column, ${position(fromIndex)}. Press Left or Right to move it, Enter to drop it, or Escape to cancel.`,
+    );
+  };
+
+  const onGripKeyDown = (event: KeyboardEvent, columnId: string) => {
+    if (columnDrag === null || columnDrag.columnId !== columnId || columnDrag.mode !== "keyboard")
+      return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setColumnDrag(null);
+      setAnnouncement(`${titleOf(columnId)} column stays at its place.`);
+      return;
+    }
+    const delta = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
+    if (delta === undefined) return;
+    event.preventDefault();
+    const toIndex = Math.min(columns.length - 1, Math.max(0, columnDrag.toIndex + delta));
+    setColumnDrag({ ...columnDrag, toIndex });
+    setAnnouncement(`${titleOf(columnId)} column, ${position(toIndex)}.`);
+  };
+
+  const onGripPointerDown = (event: PointerEvent<HTMLElement>, columnId: string) => {
+    const board = boardRef.current;
+    if (event.button !== 0 || board === null || onColumnsChange === undefined) return;
+    const lanes = Array.from(board.querySelectorAll<HTMLElement>("[data-kanban-column]"));
+    const originX = event.clientX;
+    let toIndex = columns.findIndex((column) => column.id === columnId);
+    let isDragging = false;
+    const onMove = (moveEvent: globalThis.PointerEvent) => {
+      if (!isDragging && Math.abs(moveEvent.clientX - originX) < 4) return;
+      isDragging = true;
+      moveEvent.preventDefault();
+      const bounds = board.getBoundingClientRect();
+      if (moveEvent.clientX < bounds.left + 40) board.scrollLeft -= 16;
+      else if (moveEvent.clientX > bounds.right - 40) board.scrollLeft += 16;
+      // The column lands after every other column whose middle the pointer passed.
+      toIndex = lanes
+        .filter((lane) => lane.dataset.kanbanColumn !== columnId)
+        .filter((lane) => {
+          const rect = lane.getBoundingClientRect();
+          return moveEvent.clientX > rect.left + rect.width / 2;
+        }).length;
+      setColumnDrag({ columnId, toIndex, mode: "pointer" });
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      if (isDragging) commitColumn(columnId, toIndex);
+    };
+    const onCancel = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      setColumnDrag(null);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
+  };
+
+  const fromIndex =
+    columnDrag === null ? -1 : columns.findIndex((column) => column.id === columnDrag.columnId);
+  // The drop line sits on the side of the column that the moving one lands next to. The board
+  // clips what lies outside it while it scrolls sideways, so the outer lines sit inside the edge.
+  const dropSide = (index: number): DropSide | undefined => {
+    if (columnDrag === null || columnDrag.toIndex !== index || index === fromIndex)
+      return undefined;
+    if (index < fromIndex) return index === 0 ? "firstEdge" : "start";
+    return index === columns.length - 1 ? "lastEdge" : "end";
+  };
 
   const columnOf = (itemId: string): string => {
     for (const column of columns) {
@@ -111,11 +253,31 @@ export function Kanban<Item extends object>({
   };
 
   return (
-    <div role="group" aria-label={label} {...stylex.props(styles.board)}>
-      {columns.map((column) => (
+    <div ref={boardRef} role="group" aria-label={label} {...stylex.props(styles.board)}>
+      {columns.map((column, index) => (
         <KanbanLane
           key={column.id}
           column={column}
+          gripRef={(element) => {
+            if (element === null) gripRefs.current.delete(column.id);
+            else gripRefs.current.set(column.id, element);
+          }}
+          reorder={
+            onColumnsChange === undefined
+              ? undefined
+              : {
+                  isMoving: columnDrag?.columnId === column.id,
+                  isPickedUp: columnDrag?.columnId === column.id && columnDrag.mode === "keyboard",
+                  dropSide: dropSide(index),
+                  onPress: (pointerType) => onGripPress(column.id, pointerType),
+                  onKeyDown: (event) => onGripKeyDown(event, column.id),
+                  onBlur: () => {
+                    if (columnDrag?.columnId === column.id && columnDrag.mode === "keyboard")
+                      setColumnDrag(null);
+                  },
+                  onPointerDown: (event) => onGripPointerDown(event, column.id),
+                }
+          }
           items={value[column.id] ?? []}
           dragType={dragType}
           move={move}
@@ -127,12 +289,30 @@ export function Kanban<Item extends object>({
           emptyLabel={emptyLabel}
         />
       ))}
+      <span aria-live="assertive" {...stylex.props(field.hiddenLabel)}>
+        {announcement}
+      </span>
     </div>
   );
 }
 
+/** Where the drop line sits: in the gap before or after a column, or inside an edge of the board. */
+type DropSide = "start" | "end" | "firstEdge" | "lastEdge";
+
+interface LaneReorder {
+  readonly isMoving: boolean;
+  readonly isPickedUp: boolean;
+  readonly dropSide: DropSide | undefined;
+  readonly onPress: (pointerType: string) => void;
+  readonly onKeyDown: (event: KeyboardEvent) => void;
+  readonly onBlur: () => void;
+  readonly onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+}
+
 interface KanbanLaneProps<Item> {
   readonly column: KanbanColumn;
+  readonly reorder: LaneReorder | undefined;
+  readonly gripRef: (element: HTMLButtonElement | null) => void;
   readonly items: ReadonlyArray<Item>;
   readonly dragType: string;
   readonly move: (ids: ReadonlyArray<string>, toColumn: string, target: DropTarget | "end") => void;
@@ -146,6 +326,8 @@ interface KanbanLaneProps<Item> {
 
 function KanbanLane<Item extends object>({
   column,
+  reorder,
+  gripRef,
   items,
   dragType,
   move,
@@ -191,8 +373,37 @@ function KanbanLane<Item extends object>({
   const isOverLimit = column.limit !== undefined && items.length > column.limit;
 
   return (
-    <section aria-labelledby={headingId} {...stylex.props(styles.lane)}>
+    <section
+      aria-labelledby={headingId}
+      data-kanban-column={column.id}
+      {...stylex.props(styles.lane, reorder?.isMoving === true && styles.laneMoving)}
+    >
+      {reorder?.dropSide === undefined ? null : (
+        <span aria-hidden {...stylex.props(styles.columnDrop, dropSides[reorder.dropSide])} />
+      )}
       <header {...stylex.props(styles.laneHeader)}>
+        {reorder === undefined ? null : (
+          <span
+            onPointerDownCapture={reorder.onPointerDown}
+            {...stylex.props(styles.columnGripWrap)}
+          >
+            <Button
+              ref={gripRef}
+              aria-label={`Move ${column.title} column`}
+              aria-pressed={reorder.isPickedUp}
+              onPress={(event) => reorder.onPress(event.pointerType)}
+              onKeyDown={reorder.onKeyDown}
+              onBlur={reorder.onBlur}
+              {...renderStyles<{ isFocusVisible: boolean }>((state) => [
+                styles.columnGrip,
+                reorder.isPickedUp && styles.columnGripActive,
+                state.isFocusVisible && styles.columnGripFocused,
+              ])}
+            >
+              <GripHorizontal aria-hidden {...stylex.props(styles.gripIcon)} />
+            </Button>
+          </span>
+        )}
         {Icon === undefined ? null : <Icon aria-hidden {...stylex.props(styles.laneIcon)} />}
         <h3 id={headingId} {...stylex.props(styles.laneTitle)}>
           {column.title}
@@ -262,6 +473,7 @@ const styles = stylex.create({
     paddingBottom: space.xs,
   },
   lane: {
+    position: "relative",
     display: "flex",
     flexDirection: "column",
     minWidth: 0,
@@ -271,6 +483,35 @@ const styles = stylex.create({
     borderRadius: radius.xl,
     scrollSnapAlign: "start",
   },
+  laneMoving: { opacity: "0.55" },
+  // The line sits in the middle of the gap between two columns.
+  columnDrop: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: "2px",
+    borderRadius: radius.full,
+    backgroundColor: color.accent,
+    pointerEvents: "none",
+  },
+  columnGripWrap: { display: "inline-flex", marginInlineStart: `calc(-1 * ${space.xs})` },
+  columnGrip: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "1.5rem",
+    height: "1.5rem",
+    padding: 0,
+    borderStyle: "none",
+    borderRadius: radius.sm,
+    backgroundColor: { default: "transparent", ":hover": color.raised },
+    color: { default: color.textFaint, ":hover": color.textMuted },
+    cursor: "grab",
+    touchAction: "none",
+    outlineStyle: "none",
+  },
+  columnGripActive: { backgroundColor: color.selected, color: color.accentText },
+  columnGripFocused: { outlineStyle: "solid", outlineWidth: "2px", outlineColor: color.focus },
   laneHeader: {
     display: "flex",
     alignItems: "center",
@@ -373,4 +614,11 @@ const styles = stylex.create({
     outlineColor: color.focus,
   },
   gripIcon: { width: size.iconSm, height: size.iconSm },
+});
+
+const dropSides = stylex.create({
+  start: { insetInlineStart: `calc(-1 * ${space.md} / 2 - 1px)` },
+  end: { insetInlineEnd: `calc(-1 * ${space.md} / 2 - 1px)` },
+  firstEdge: { insetInlineStart: 0 },
+  lastEdge: { insetInlineEnd: 0 },
 });
