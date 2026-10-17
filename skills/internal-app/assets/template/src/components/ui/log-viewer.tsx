@@ -3,7 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDownToLine, Download } from "lucide-react";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { appLocale, appTimeZone } from "@/lib/locale";
-import { color, font, radius, size, space } from "@/styles/tokens.stylex";
+import { color, container, font, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { EmptyState } from "./feedback";
 import { field } from "./field";
@@ -219,7 +219,7 @@ export function LogViewer({
             styles.scrollerHeight(maxVisibleLines),
           )}
         >
-          <div {...stylex.props(styles.canvas(virtualizer.getTotalSize()))}>
+          <div {...stylex.props(styles.canvas(virtualizer.getTotalSize()), styles.canvasWidth)}>
             {virtualizer.getVirtualItems().map((item) => {
               const match = matches[item.index];
               if (match === undefined) return null;
@@ -375,8 +375,10 @@ const styles = stylex.create({
   },
   embeddedOutput: { position: "relative", backgroundColor: color.inset },
   embeddedEmpty: { backgroundColor: color.inset },
+  // The scroller is the width container, so narrow placements drop the time column and wrap.
   scroller: {
     overflow: "auto",
+    containerType: "inline-size",
     outlineStyle: { default: "none", ":focus-visible": "solid" },
     outlineWidth: "2px",
     outlineColor: color.focus,
@@ -387,8 +389,8 @@ const styles = stylex.create({
   canvas: (height: number) => ({
     position: "relative",
     height: `${height + 16}px`,
-    minWidth: "32rem",
   }),
+  canvasWidth: { minWidth: { default: "32rem", [container.belowSm]: 0 } },
   line: {
     position: "absolute",
     top: space.sm,
@@ -396,8 +398,8 @@ const styles = stylex.create({
     right: 0,
     display: "flex",
     alignItems: "baseline",
-    gap: space.md,
-    paddingInline: space.md,
+    gap: { default: space.md, [container.belowSm]: space.sm },
+    paddingInline: { default: space.md, [container.belowSm]: space.sm },
     fontFamily: font.mono,
     fontSize: font.sm,
     lineHeight: "1.8",
@@ -416,6 +418,7 @@ const styles = stylex.create({
   },
   chWidth: (chars: number) => ({ minWidth: `${chars}ch` }),
   time: {
+    display: { default: "inline", [container.belowSm]: "none" },
     flexShrink: 0,
     color: color.textMuted,
     userSelect: "none",
