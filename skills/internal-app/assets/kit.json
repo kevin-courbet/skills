@@ -2,6 +2,7 @@
   "description": "Files owned by the internal-app skill. `internal-app sync` installs and updates them; apps must not edit them.",
   "files": [
     "src/styles/app.css",
+    "src/styles/category.ts",
     "src/styles/palette.stylex.ts",
     "src/styles/themes.ts",
     "src/styles/tokens.stylex.ts",
@@ -56,6 +57,7 @@
     "src/components/ui/slider.tsx",
     "src/components/ui/sortable-list.tsx",
     "src/components/ui/stepper.tsx",
+    "src/components/ui/surface-button.tsx",
     "src/components/ui/switch.tsx",
     "src/components/ui/tabs.tsx",
     "src/components/ui/tag-group.tsx",

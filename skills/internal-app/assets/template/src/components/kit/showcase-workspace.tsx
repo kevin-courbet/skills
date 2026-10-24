@@ -1409,6 +1409,7 @@ const workspaceSections = [
   { id: "kit-items", label: "Items" },
   { id: "kit-inputs", label: "Inputs" },
   { id: "kit-menus", label: "Menus" },
+  { id: "kit-surfaces", label: "Surfaces" },
 ] as const;
 
 export function WorkspaceShowcase() {

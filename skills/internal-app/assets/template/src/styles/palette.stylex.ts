@@ -29,6 +29,7 @@ export const lightPalette = stylex.defineConsts({
   borderStrong: "oklch(0.74 0.012 260)",
   accent: "oklch(0.52 0.2 262)",
   accentHover: "oklch(0.46 0.2 262)",
+  accentStrong: "oklch(0.42 0.2 262)",
   accentText: "oklch(0.45 0.19 262)",
   accentMuted: "oklch(0.95 0.03 262)",
   accentBorder: "oklch(0.86 0.07 262)",
@@ -51,6 +52,7 @@ export const lightPalette = stylex.defineConsts({
   shadowSm: "0 1px 2px oklch(0 0 0 / 0.06)",
   shadowMd: "0 2px 6px -1px oklch(0 0 0 / 0.1), 0 1px 2px oklch(0 0 0 / 0.06)",
   shadowLg: "0 12px 32px -8px oklch(0 0 0 / 0.18), 0 2px 6px oklch(0 0 0 / 0.08)",
+  shadowXl: "0 28px 64px -18px oklch(0 0 0 / 0.3), 0 4px 12px oklch(0 0 0 / 0.08)",
   shadowFrame: "0 1px 2px oklch(0 0 0 / 0.05)",
 });
 
@@ -73,6 +75,7 @@ export const darkPalette = stylex.defineConsts({
   borderStrong: "oklch(0.42 0.007 260)",
   accent: "oklch(0.7 0.15 262)",
   accentHover: "oklch(0.76 0.14 262)",
+  accentStrong: "oklch(0.56 0.17 262)",
   accentText: "oklch(0.8 0.11 262)",
   accentMuted: "oklch(0.27 0.06 262)",
   accentBorder: "oklch(0.35 0.08 262)",
@@ -97,5 +100,6 @@ export const darkPalette = stylex.defineConsts({
   // Several soft layers keep dark overlays separated without a hard halo.
   shadowLg:
     "0 4px 40px oklch(0 0 0 / 0.1), 0 3px 20px oklch(0 0 0 / 0.125), 0 3px 12px oklch(0 0 0 / 0.125), 0 2px 8px oklch(0 0 0 / 0.125), 0 1px 1px oklch(0 0 0 / 0.125)",
+  shadowXl: "0 32px 72px -18px oklch(0 0 0 / 0.6), 0 6px 16px oklch(0 0 0 / 0.35)",
   shadowFrame: "0 0.5px 1px 1px oklch(0 0 0 / 0.3)",
 });

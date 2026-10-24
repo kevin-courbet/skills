@@ -80,7 +80,7 @@ src/
     __root.tsx                 App. Theme choice in beforeLoad; renders AppDocument; links the icon.
     _app.tsx                   App. Navigation config, ChartProvider, AppShell.
     _app/...                   App. Pages. Set staticData.crumb for breadcrumbs.
-  styles/                      kit. palette.stylex.ts, tokens.stylex.ts, themes.ts, app.css
+  styles/                      kit. palette.stylex.ts, tokens.stylex.ts, themes.ts, category.ts, app.css
   components/
     ui/                        kit. Primitives on react-aria-components.
     shell/                     kit. AppDocument, AppShell, NavLink, RouteBreadcrumbs, RouteError, ThemeSwitch.

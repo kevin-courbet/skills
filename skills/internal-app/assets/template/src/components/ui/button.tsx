@@ -152,7 +152,7 @@ const intents = stylex.create({
     backgroundColor: {
       default: color.accent,
       ":hover": color.accentHover,
-      ":active": color.accentHover,
+      ":active": color.accentStrong,
     },
     borderColor: "transparent",
     color: color.onAccent,

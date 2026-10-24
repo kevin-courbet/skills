@@ -34,8 +34,10 @@ import { Switch } from "@/components/ui/switch";
 import { TextField } from "@/components/ui/text-field";
 import { TimeField } from "@/components/ui/time-field";
 import { toast } from "@/components/ui/toaster";
+import { SurfaceButton } from "@/components/ui/surface-button";
 import { ToggleGroup } from "@/components/ui/toggle-group";
-import { color, font, media, size, space } from "@/styles/tokens.stylex";
+import { categoryColor } from "@/styles/category";
+import { color, font, media, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
 
 const weekdays = [
   { id: "mon", label: "Mon" },
@@ -379,9 +381,92 @@ export function ControlsShowcase() {
           </div>
         </Section>
       </div>
+
+      <div id="kit-surfaces">
+        <Section
+          title="Surfaces and categories"
+          description="Custom surfaces that act as one control, category colors from a hue, and display numerals."
+        >
+          <div {...stylex.props(styles.grid)}>
+            <Card
+              title="Service map"
+              description="Click a tile; drag handlers on the map still see its events"
+            >
+              <div {...stylex.props(styles.tiles)}>
+                {categories.map((category) => (
+                  <SurfaceButton
+                    key={category.name}
+                    onClick={() => toast(`Opened ${category.name}`)}
+                    style={[
+                      styles.tile,
+                      styles.tileEdge(categoryColor(category.hue, "line")),
+                      category.name === lifted && styles.tileLifted,
+                    ]}
+                  >
+                    <span
+                      {...stylex.props(
+                        styles.tileProject,
+                        styles.ink(categoryColor(category.hue, "text")),
+                      )}
+                    >
+                      {category.project}
+                    </span>
+                    <span {...stylex.props(styles.tileName)}>{category.name}</span>
+                  </SurfaceButton>
+                ))}
+              </div>
+            </Card>
+            <Card
+              title="Categories"
+              description="Text, surface, and line roles share lightness and chroma"
+            >
+              <ul {...stylex.props(styles.swatches)}>
+                {categories.map((category) => (
+                  <li
+                    key={category.name}
+                    {...stylex.props(
+                      styles.swatch,
+                      styles.wash(categoryColor(category.hue, "surface")),
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      {...stylex.props(
+                        styles.dot,
+                        styles.fill(categoryColor(category.hue, "line")),
+                      )}
+                    />
+                    <span {...stylex.props(styles.ink(categoryColor(category.hue, "text")))}>
+                      {category.project}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div {...stylex.props(styles.numerals)}>
+                <Specimen label="font.displayLg">
+                  <span {...stylex.props(styles.displayLg)}>1,284</span>
+                </Specimen>
+                <Specimen label="font.display">
+                  <span {...stylex.props(styles.display)}>98.2%</span>
+                </Specimen>
+              </div>
+            </Card>
+          </div>
+        </Section>
+      </div>
     </>
   );
 }
+
+const categories = [
+  { name: "Checkout", project: "Payments", hue: 28 },
+  { name: "Search index", project: "Catalog", hue: 178 },
+  { name: "Ledger sync", project: "Finance", hue: 305 },
+  { name: "Mail relay", project: "Messaging", hue: 85 },
+] as const;
+
+/** The showcase lifts one tile to show shadow.xl, the elevation of an item being dragged. */
+const lifted = "Ledger sync";
 
 const styles = stylex.create({
   pair: {
@@ -424,4 +509,66 @@ const styles = stylex.create({
   previewName: { fontWeight: font.semibold },
   muted: { fontSize: font.sm, color: color.textMuted },
   icon: { width: size.icon, height: size.icon },
+  tiles: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: space.md },
+  tile: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: space.xs,
+    padding: space.md,
+    borderRadius: radius.xl,
+    backgroundColor: color.raised,
+    boxShadow: shadow.md,
+    transitionProperty: "box-shadow, translate",
+    transitionDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
+    transitionTimingFunction: motion.ease,
+  },
+  tileEdge: (line: string) => ({
+    borderTopStyle: "solid",
+    borderTopWidth: "2px",
+    borderTopColor: line,
+  }),
+  tileLifted: { translate: "0 -4px", boxShadow: shadow.xl },
+  tileProject: {
+    fontFamily: font.mono,
+    fontSize: font.xs,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+  },
+  tileName: { fontSize: font.lg, fontWeight: font.semibold },
+  swatches: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: space.sm,
+    margin: 0,
+    padding: 0,
+    listStyle: "none",
+  },
+  swatch: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space.xs,
+    paddingBlock: space.xs,
+    paddingInline: space.sm,
+    borderRadius: radius.full,
+    fontSize: font.sm,
+    fontWeight: font.medium,
+  },
+  dot: { width: "8px", height: "8px", borderRadius: radius.full },
+  ink: (value: string) => ({ color: value }),
+  wash: (value: string) => ({ backgroundColor: value }),
+  fill: (value: string) => ({ backgroundColor: value }),
+  numerals: { display: "flex", gap: space.xxl, marginTop: space.lg },
+  displayLg: {
+    fontSize: font.displayLg,
+    fontWeight: font.semibold,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.1,
+  },
+  display: {
+    fontSize: font.display,
+    fontWeight: font.semibold,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.1,
+  },
 });

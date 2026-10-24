@@ -23,6 +23,7 @@ export const color = stylex.defineVars({
   borderStrong: { default: lightPalette.borderStrong, [DARK]: darkPalette.borderStrong },
   accent: { default: lightPalette.accent, [DARK]: darkPalette.accent },
   accentHover: { default: lightPalette.accentHover, [DARK]: darkPalette.accentHover },
+  accentStrong: { default: lightPalette.accentStrong, [DARK]: darkPalette.accentStrong },
   accentText: { default: lightPalette.accentText, [DARK]: darkPalette.accentText },
   accentMuted: { default: lightPalette.accentMuted, [DARK]: darkPalette.accentMuted },
   accentBorder: { default: lightPalette.accentBorder, [DARK]: darkPalette.accentBorder },
@@ -48,6 +49,8 @@ export const shadow = stylex.defineVars({
   sm: { default: lightPalette.shadowSm, [DARK]: darkPalette.shadowSm },
   md: { default: lightPalette.shadowMd, [DARK]: darkPalette.shadowMd },
   lg: { default: lightPalette.shadowLg, [DARK]: darkPalette.shadowLg },
+  /** Floating surfaces above the page, such as an item being dragged or a docked panel. */
+  xl: { default: lightPalette.shadowXl, [DARK]: darkPalette.shadowXl },
   frame: { default: lightPalette.shadowFrame, [DARK]: darkPalette.shadowFrame },
 });
 
@@ -61,6 +64,9 @@ export const font = stylex.defineVars({
   xl: "1rem",
   xxl: "1.25rem",
   xxxl: "1.5rem",
+  /** Large numerals and labels read from a distance, such as a stat value or a zoomed-out canvas. */
+  display: "1.75rem",
+  displayLg: "2rem",
   regular: "400",
   medium: "500",
   semibold: "600",

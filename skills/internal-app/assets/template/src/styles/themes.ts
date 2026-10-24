@@ -25,6 +25,7 @@ const lightColor = stylex.createTheme(color, {
   borderStrong: lightPalette.borderStrong,
   accent: lightPalette.accent,
   accentHover: lightPalette.accentHover,
+  accentStrong: lightPalette.accentStrong,
   accentText: lightPalette.accentText,
   accentMuted: lightPalette.accentMuted,
   accentBorder: lightPalette.accentBorder,
@@ -50,6 +51,7 @@ const lightShadow = stylex.createTheme(shadow, {
   sm: lightPalette.shadowSm,
   md: lightPalette.shadowMd,
   lg: lightPalette.shadowLg,
+  xl: lightPalette.shadowXl,
   frame: lightPalette.shadowFrame,
 });
 
@@ -74,6 +76,7 @@ const darkColor = stylex.createTheme(color, {
   borderStrong: darkPalette.borderStrong,
   accent: darkPalette.accent,
   accentHover: darkPalette.accentHover,
+  accentStrong: darkPalette.accentStrong,
   accentText: darkPalette.accentText,
   accentMuted: darkPalette.accentMuted,
   accentBorder: darkPalette.accentBorder,
@@ -99,6 +102,7 @@ const darkShadow = stylex.createTheme(shadow, {
   sm: darkPalette.shadowSm,
   md: darkPalette.shadowMd,
   lg: darkPalette.shadowLg,
+  xl: darkPalette.shadowXl,
   frame: darkPalette.shadowFrame,
 });
 

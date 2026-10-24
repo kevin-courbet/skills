@@ -59,7 +59,7 @@ Semantic color roles (every component uses these names and nothing else):
 | Surfaces | `page` (the content panel), `subtle`, `raised`, `overlay`, `inset` |
 | Text | `text`, `textMuted`, `textFaint`, `textInverse` |
 | Borders | `borderSubtle`, `border`, `borderStrong` |
-| Accent | `accent`, `accentHover`, `accentText`, `accentMuted`, `accentBorder`, `onAccent`, `selected`, `focus` |
+| Accent | `accent`, `accentHover`, `accentStrong` for pressed and high-emphasis fills, `accentText`, `accentMuted`, `accentBorder`, `onAccent`, `selected`, `focus` |
 | Status | `success`, `successMuted`, `successBorder` and the same triple for `warning`, `danger`, `info` |
 | Overlay | `backdrop` behind dialogs and sheets |
 
@@ -68,8 +68,9 @@ The content panel (`page`) is the deepest surface so cards on `raised` stand cle
 The sidebar (`frame`) sits lighter than the panel so navigation reads as its own plane.
 Keep these gaps when you tune the palette; equal values make the app look washed out.
 
-Other groups: `shadow` (`sm`, `md`, `lg`, and `frame` for the content panel), `font` (families, sizes `xs` to
-`xxxl`, weights, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
+Other groups: `shadow` (`sm`, `md`, `lg`, `xl` for a floating surface such as a dragged item or a docked panel, and
+`frame` for the content panel), `font` (families, sizes `xs` to `xxxl`, `display` and `displayLg` for large numerals
+and labels that people read from a distance, weights, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
 `size` (control heights, icon sizes, sidebar, top bar, frame gap, content widths),
 `media` (breakpoints, reduced motion, forced colors), `container` (`belowSm`,
 `belowMd`, `belowLg` container queries that resolve against the nearest
@@ -93,6 +94,24 @@ Density defaults:
 
 Change a density value in the token file of this skill, never in a component
 and never in an app's copy of a kit file.
+
+### Category Colors
+
+`src/styles/category.ts` gives colors to categories that a hue identifies, such
+as projects, teams, or tags. `categoryColor(hue, role)` returns the `text`,
+`surface`, or `line` color for a hue from 0 to 360. All categories use the same
+lightness and chroma for a role, so only the hue makes them different and no
+category is more prominent than another. The value contains `light-dark()`, so
+it follows `color-scheme`, which AppDocument and the explicit themes set. Apply
+it through a style function:
+
+```ts
+const styles = stylex.create({ ink: (value: string) => ({ color: value }) });
+<span {...stylex.props(styles.ink(categoryColor(project.hue, "text")))} />
+```
+
+Store the hue with the record. Do not use category colors for status; use the
+status roles.
 
 ## Themes
 
