@@ -29,6 +29,12 @@ Resolve all paths relative to this skill directory. Use the support directory pr
 - Respect the existing product design system unless the user requests a new direction.
 - Treat bundled palettes and external icon libraries as starting resources, not automatic design decisions.
 
+## User Design Preference
+
+- Do not use decorative “fingernail” accents: a contrasting strip on only the left or top edge of a card, notice, navigation item, or selected row, including inset-shadow or pseudo-element equivalents. Prefer spacing, a quiet surface, and text weight for hierarchy and selection. This does not prohibit functional dividers, uniform outlines, or accessible focus rings.
+- Do not join separate entities into one string with a middle dot, a bullet, or a vertical bar. Examples are `Q3 2026 · YTD Sep`, `4 to validate · 2 late · 63 of 69 blocks validated`, and `To validate · 4`. A separator makes the line shorter, but the reader must then do the parsing work. Dense text is difficult to read. Give each entity its own element and role. `references/method.md` gives the techniques in "Grouped Values And Metadata".
+- If you want to add a separator, examine the structure first. Usually the structure does not show the relationship, or the surface shows details that the reader does not need.
+
 ## Optional Coordination
 
 - If another skill provides project design context, use that context without changing this workflow.

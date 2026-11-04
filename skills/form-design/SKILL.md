@@ -23,3 +23,7 @@ Resolve all paths relative to this skill directory. Use the support directory pr
 - Put field errors near their controls and provide an error summary when users must locate multiple errors.
 - Adapt the information and action order for small screens. Do not only stack the desktop form.
 - Respect the existing product design system unless the user requests a new direction.
+
+## User Design Preference
+
+- Do not join separate entities into one string with a middle dot, a bullet, or a vertical bar. Examples are `Required · 200 characters max` and `Step 2 of 4 · Billing`. Give each entity its own element and role. `references/method.md` gives the techniques in "Grouped Values And Metadata".

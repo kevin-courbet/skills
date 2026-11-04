@@ -1,5 +1,5 @@
 ---
-updated: 2026-08-15
+updated: 2026-11-05
 ---
 
 # UI Design
@@ -77,6 +77,18 @@ Three text roles are often enough for one surface: primary, secondary, and low-p
 - Use color to enrich status, not to carry status alone. Pair it with text, icon, or shape.
 - Prefer dark text on a soft status background when a saturated badge would overpower the page.
 
+### Grouped Values And Metadata
+
+- Give each separate entity its own element. Do not join labels, metadata, counts, or concepts into one string with a middle dot, a bullet, or a vertical bar, for example `Q3 2026 · YTD Sep`. A dense string gives the parsing work to the reader.
+- Use whitespace and type roles to separate peers on one line. Give the identifying value the primary role and the qualifier a quieter role. Then `Q3 2026` and `YTD Sep` need only a gap.
+- Show a count on a heading or a tab as a count badge: `To validate` followed by a `4` badge, not `To validate · 4`.
+- Show a status summary as separate figures. Put each value above its short label: `4` above `to validate`, `2` above `late`, `63 of 69` above `blocks validated`. Add a meter when progress toward a total is important. When a figure needs attention, add a status color and a text cue.
+- Show labelled metadata, such as owners, versions, and key dates, as label and value pairs.
+- When several facts must stay in running text, write a complete sentence, not a chain of fragments.
+- Text that cannot use layout, such as native `<option>` labels, tooltips, and accessible names, uses natural language with ordinary punctuation: `Target: 60`, `Competitor A (AML, marketed)`.
+- Keep the en dash in a numeric or date range (`2024–2026`, `Q1–Q3`). A range is one value, not a list of separate entities.
+- If you want to add a separator, treat this as a design warning. Usually the structure does not show the relationship, or the surface shows details that the reader does not need. Improve the structure or remove the details.
+
 ### Tables
 
 - Left-align ordinary text.
@@ -152,6 +164,7 @@ Three text roles are often enough for one surface: primary, secondary, and low-p
 - Can users identify the page purpose and primary value or action in a few seconds?
 - Does visual importance match user importance?
 - Are labels, metadata, and secondary actions quiet enough?
+- Does each label, count, and item of metadata have its own element, with no dot, bullet, or bar separator between separate entities?
 - Does spacing show which elements belong together?
 - Are paragraph measure and line-height comfortable?
 - Are numbers easy to compare and statuses easy to interpret?
