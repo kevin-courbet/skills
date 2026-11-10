@@ -102,7 +102,7 @@ Three text roles are often enough for one surface: primary, secondary, and low-p
 
 #### Table Surfaces
 
-When a page has several dense tables, give each table its own surface. The surface separates each table from the page and from the other tables. A single sparse table can stay on the page without a container.
+Give each table its own surface. The surface separates the table from the page and from other content.
 
 - Put the table in a container with a 1px border in the subtle rule color and an 8px radius.
 - Use a raised surface for the container.
@@ -191,7 +191,7 @@ In both examples, the header band is a little darker than the container. `refere
 - Does spacing show which elements belong together?
 - Are paragraph measure and line-height comfortable?
 - Are numbers easy to compare and statuses easy to interpret?
-- On a page with several dense tables, does each table have its own surface, a quiet header band, and rules only between rows?
+- Does each table have its own surface, a quiet header band, and rules only between rows?
 - Are form fields grouped, correctly sized, and clearly labeled?
 - Are focus, selected, invalid, disabled, and loading states visible?
 - Can status and selection be understood without color?
