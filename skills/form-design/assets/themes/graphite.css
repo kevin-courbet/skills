@@ -1,0 +1,58 @@
+/* Graphite: the default dark palette of the ui-design skill.
+   Source: the Graphite tokens that the skill owner approved on 2026-11-10.
+   references/dark-theme.md gives the role of each token and the measured contrast.
+
+   Use: copy both blocks into a product stylesheet when the product has no dark theme.
+   The first block follows the system preference unless the page sets data-theme="light".
+   The second block applies when the page sets data-theme="dark".
+   Keep the light values from the product. If the product uses other token names,
+   map these values to those names.
+
+   Canonical file: skills/ui-design/assets/themes/graphite.css.
+   scripts/sync-form-design copies it to skills/form-design. Do not edit the copy. */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181a;
+    --surface: #202124;
+    --inset: #111214;
+    --rule: #383a40;
+    --rule-strong: #757981;
+    --ink: #ececee;
+    --muted: #a9acb3;
+    --accent: #9aaeff;
+    --good: #72cf98;
+    --warn: #efc35e;
+    --bad: #ff8480;
+    --info: #6cc6e2;
+    --accent-soft: #292d3a;
+    --good-soft: #24322c;
+    --warn-soft: #353024;
+    --bad-soft: #372728;
+    --info-soft: #233036;
+    --on-accent: #17181a;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #17181a;
+  --surface: #202124;
+  --inset: #111214;
+  --rule: #383a40;
+  --rule-strong: #757981;
+  --ink: #ececee;
+  --muted: #a9acb3;
+  --accent: #9aaeff;
+  --good: #72cf98;
+  --warn: #efc35e;
+  --bad: #ff8480;
+  --info: #6cc6e2;
+  --accent-soft: #292d3a;
+  --good-soft: #24322c;
+  --warn-soft: #353024;
+  --bad-soft: #372728;
+  --info-soft: #233036;
+  --on-accent: #17181a;
+  color-scheme: dark;
+}

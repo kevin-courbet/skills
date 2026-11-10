@@ -1,5 +1,5 @@
 ---
-updated: 2026-11-05
+updated: 2026-11-10
 ---
 
 # UI Design
@@ -100,6 +100,29 @@ Three text roles are often enough for one surface: primary, secondary, and low-p
 - Preserve a visible cue when a narrow-screen table scrolls horizontally. Make the scroll container keyboard-focusable, give it an accessible name, and show focus clearly.
 - If the screen is for overview, remove low-priority columns instead of forcing the full desktop table onto mobile.
 
+#### Table Surfaces
+
+When a page has several dense tables, give each table its own surface. The surface separates each table from the page and from the other tables. A single sparse table can stay on the page without a container.
+
+- Put the table in a container with a 1px border in the subtle rule color and an 8px radius.
+- Use a raised surface for the container.
+- Give the header row a band in a different tone from the container.
+- Keep headings quiet. Use `0.75rem`, uppercase, `0.06em` letter-spacing, weight 600, and the muted text color.
+- Use the product font for headings, not a monospace font.
+- Give cells `14px 16px` padding.
+- Put rules only between rows. Do not put a rule after the last row. Do not add column rules.
+- Keep the data dominant. The surface and the header band frame the data. They must not compete with it.
+- When the container also scrolls, keep its accessible name and a visible focus ring.
+
+| Role | Light example | Dark example with Graphite |
+| --- | --- | --- |
+| Container | `#FFFFFF`, the raised surface | `#202124` (`--surface`) |
+| Header band | `#F0F5FC`, a pale surface | `#17181a` (`--bg`) |
+| Border and row rules | The subtle rule color | `#383a40` (`--rule`) |
+| Headings | The muted text color | `#a9acb3` (`--muted`) |
+
+In both examples, the header band is a little darker than the container. `references/dark-theme.md` gives the Graphite tokens and their measured contrast.
+
 ## Complex Forms
 
 - Group related fields into named sections such as profile, account, billing, or notifications.
@@ -168,6 +191,7 @@ Three text roles are often enough for one surface: primary, secondary, and low-p
 - Does spacing show which elements belong together?
 - Are paragraph measure and line-height comfortable?
 - Are numbers easy to compare and statuses easy to interpret?
+- On a page with several dense tables, does each table have its own surface, a quiet header band, and rules only between rows?
 - Are form fields grouped, correctly sized, and clearly labeled?
 - Are focus, selected, invalid, disabled, and loading states visible?
 - Can status and selection be understood without color?

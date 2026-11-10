@@ -18,16 +18,28 @@ test -f "$repo_root/skills/ui-design/references/component-patterns.md"
 test -f "$repo_root/skills/ui-design/references/font-selection.md"
 test -f "$repo_root/skills/ui-design/references/icon-usage.md"
 test -f "$repo_root/skills/ui-design/references/palette-usage.md"
+test -f "$repo_root/skills/ui-design/references/dark-theme.md"
+test -f "$repo_root/skills/ui-design/assets/themes/graphite.css"
 test -f "$repo_root/skills/ui-design/assets/palettes/swatches.json"
 test -f "$repo_root/skills/ui-design/assets/palettes/NOTICE.md"
 
 test -f "$repo_root/skills/form-design/SKILL.md"
 test -f "$repo_root/skills/form-design/references/method.md"
 test -f "$repo_root/skills/form-design/references/component-patterns.md"
+test -f "$repo_root/skills/form-design/references/dark-theme.md"
+test -f "$repo_root/skills/form-design/assets/themes/graphite.css"
 test -x "$repo_root/scripts/sync-form-design"
 shopt -s nullglob
 form_reference_files=("$repo_root"/skills/form-design/references/*)
-test "${#form_reference_files[@]}" -eq 2
+test "${#form_reference_files[@]}" -eq 3
+form_theme_files=("$repo_root"/skills/form-design/assets/themes/*)
+test "${#form_theme_files[@]}" -eq 1
+cmp -s \
+  "$repo_root/skills/ui-design/references/dark-theme.md" \
+  "$repo_root/skills/form-design/references/dark-theme.md"
+cmp -s \
+  "$repo_root/skills/ui-design/assets/themes/graphite.css" \
+  "$repo_root/skills/form-design/assets/themes/graphite.css"
 cmp -s \
   "$repo_root/skills/ui-design/references/method.md" \
   "$repo_root/skills/form-design/references/method.md"

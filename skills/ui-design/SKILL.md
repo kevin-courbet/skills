@@ -12,7 +12,7 @@ Apply a hierarchy-first method to make an existing interface clearer, easier to 
 1. Read `references/method.md` before design or implementation. Treat it as the canonical method and checklist.
 2. Read `references/component-patterns.md` before selecting page or component structures.
 3. Read `references/palette-usage.md` before creating or changing a color system.
-4. Read `references/dark-theme.md` before creating, changing, or reviewing a dark theme.
+4. Read `references/dark-theme.md` before creating, changing, or reviewing a dark theme. Graphite is the default dark palette. Use `assets/themes/graphite.css` when the product has no dark theme of its own.
 5. Read `references/font-selection.md` before selecting or pairing typefaces.
 6. Read `references/icon-usage.md` before selecting or implementing icons.
 
