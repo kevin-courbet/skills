@@ -6,6 +6,7 @@ import { renderStyles } from "@/lib/rac";
 import { color, font, radius, space } from "@/styles/tokens.stylex";
 import { overlay } from "./overlay";
 import { ControlSizeProvider } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 export interface HoverCardProps {
   /**
@@ -31,6 +32,7 @@ export function HoverCard({
   placement = "bottom start",
   delay,
 }: HoverCardProps) {
+  const overlayDensity = useOverlayDensity();
   return (
     <PreviewTrigger delay={delay}>
       {children}
@@ -39,6 +41,7 @@ export function HoverCard({
           placement={placement}
           offset={6}
           {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+            ...overlayDensity,
             overlay.popover,
             styles.card,
             state.isEntering && overlay.entering,

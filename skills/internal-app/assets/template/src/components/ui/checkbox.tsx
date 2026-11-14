@@ -8,7 +8,7 @@ import {
   type CheckboxGroupProps as AriaCheckboxGroupProps,
   type CheckboxProps as AriaCheckboxProps,
 } from "react-aria-components";
-import { color, font, motion, radius, space } from "@/styles/tokens.stylex";
+import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
 import {
   assertChoiceOptions,
   type ChoiceAppearance,
@@ -218,6 +218,7 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: space.sm,
+    paddingBlock: size.togglePadding,
     fontSize: font.md,
     cursor: "pointer",
     outlineStyle: "none",
@@ -226,8 +227,8 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "1rem",
-    height: "1rem",
+    width: size.toggle,
+    height: size.toggle,
     flexShrink: 0,
     borderWidth: "1px",
     borderStyle: "solid",
@@ -247,18 +248,20 @@ const styles = stylex.create({
     outlineOffset: "2px",
   },
   boxInvalid: { borderColor: color.danger },
-  icon: { width: "0.75rem", height: "0.75rem", strokeWidth: "3" },
+  icon: { width: size.toggleMark, height: size.toggleMark, strokeWidth: "3" },
   label: { color: color.text, userSelect: "none" },
   list: { display: "flex", flexDirection: "column", gap: space.sm, paddingBlock: space.xs },
   listItem: {
     display: "flex",
     alignItems: "flex-start",
     gap: space.sm,
+    paddingBlock: size.togglePadding,
     fontSize: font.md,
     cursor: "pointer",
     outlineStyle: "none",
   },
-  listBox: { marginTop: "0.125rem" },
+  // Centers the box on the first line of the label in every density.
+  listBox: { marginTop: `calc((1lh - ${size.toggle}) / 2)` },
   listText: { display: "flex", flexDirection: "column", gap: "0.125rem", color: color.text },
   listDescription: { fontSize: font.sm, color: color.textMuted },
   disabled: { opacity: "0.5", cursor: "not-allowed" },

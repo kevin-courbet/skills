@@ -24,6 +24,7 @@ import {
 import { type ListOption, OptionList } from "./list-box";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 type AriaSingleComboBoxProps<Value extends string> = Omit<
   AriaComboBoxProps<ListOption<Value>>,
@@ -70,6 +71,7 @@ export function ComboBox<Value extends string>({
   ...props
 }: ComboBoxProps<Value>) {
   const controlSize = useControlSize();
+  const overlayDensity = useOverlayDensity();
   if (isOptional && props.isRequired === true)
     throw new Error("ComboBox: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
@@ -106,6 +108,7 @@ export function ComboBox<Value extends string>({
       <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
       <Popover
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           overlay.popover,
           overlay.matchTrigger,
           state.isEntering && overlay.entering,

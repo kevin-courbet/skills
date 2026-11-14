@@ -9,7 +9,7 @@ import {
   SliderTrack,
 } from "react-aria-components";
 import { appLocale } from "@/lib/locale";
-import { color, font, motion, radius, shadow, space } from "@/styles/tokens.stylex";
+import { color, font, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
 import { field } from "./field";
 
 interface SliderBaseProps {
@@ -168,12 +168,18 @@ const styles = stylex.create({
     gap: space.sm,
   },
   output: { fontSize: font.sm, color: color.textMuted, fontVariantNumeric: "tabular-nums" },
-  track: { position: "relative", height: "1.25rem", marginInline: "0.5rem", cursor: "pointer" },
+  // The track insets by half a thumb, so a thumb at either end stays inside the slider.
+  track: {
+    position: "relative",
+    height: size.sliderTrack,
+    marginInline: `calc(${size.sliderThumb} / 2)`,
+    cursor: "pointer",
+  },
   rail: {
     position: "absolute",
     top: "50%",
-    left: "-0.5rem",
-    right: "-0.5rem",
+    left: `calc(${size.sliderThumb} / -2)`,
+    right: `calc(${size.sliderThumb} / -2)`,
     height: "0.25rem",
     transform: "translateY(-50%)",
     borderRadius: radius.full,
@@ -191,8 +197,8 @@ const styles = stylex.create({
   fillAt: (low: number, high: number) => ({ left: `${low}%`, width: `${high - low}%` }),
   thumb: {
     top: "50%",
-    width: "1rem",
-    height: "1rem",
+    width: size.sliderThumb,
+    height: size.sliderThumb,
     borderWidth: "2px",
     borderStyle: "solid",
     borderColor: color.accent,
@@ -209,7 +215,7 @@ const styles = stylex.create({
     outlineColor: color.focus,
     outlineOffset: "2px",
   },
-  marks: { position: "relative", height: "1rem", marginInline: "0.5rem" },
+  marks: { position: "relative", height: "1lh", marginInline: `calc(${size.sliderThumb} / 2)` },
   mark: {
     position: "absolute",
     top: 0,

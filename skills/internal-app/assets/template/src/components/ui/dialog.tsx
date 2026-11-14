@@ -10,9 +10,20 @@ import {
   type ModalOverlayProps,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
-import { color, font, layer, media, motion, radius, shadow, space } from "@/styles/tokens.stylex";
+import {
+  color,
+  font,
+  layer,
+  media,
+  motion,
+  radius,
+  shadow,
+  size,
+  space,
+} from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { ControlSizeProvider } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 export { DialogTrigger };
 
@@ -38,18 +49,20 @@ export interface DialogProps extends Pick<
 export function Dialog({
   title,
   description,
-  size = "md",
+  size: width = "md",
   actions,
   children,
   isDismissable = true,
   ...props
 }: DialogProps) {
+  const overlayDensity = useOverlayDensity();
   return (
     <ControlSizeProvider size="md">
       <ModalOverlay
         {...props}
         isDismissable={isDismissable}
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           styles.backdrop,
           state.isEntering && styles.backdropEntering,
           state.isExiting && styles.backdropExiting,
@@ -58,7 +71,7 @@ export function Dialog({
         <Modal
           {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
             styles.modal,
-            sizes[size],
+            sizes[width],
             state.isEntering && styles.modalEntering,
             state.isExiting && styles.modalExiting,
           ])}
@@ -165,7 +178,7 @@ const styles = stylex.create({
   headingGroup: { display: "flex", flexDirection: "column", gap: space.xs, minWidth: 0 },
   title: { fontSize: font.lg, fontWeight: font.semibold, lineHeight: font.leadingTight, margin: 0 },
   description: { fontSize: font.md, color: color.textMuted },
-  closeIcon: { width: "1rem", height: "1rem" },
+  closeIcon: { width: size.icon, height: size.icon },
   body: { padding: space.lg, paddingTop: space.sm, overflow: "auto", minHeight: 0 },
   footer: {
     display: "flex",

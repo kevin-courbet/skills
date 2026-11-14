@@ -19,6 +19,7 @@ import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { control, field, FieldDescription, FieldLabel, type FieldWidth, fieldWidth } from "./field";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 export interface CascaderOption {
   /** Unique among its siblings. The value is the path of ids from the root. */
@@ -80,6 +81,7 @@ export function Cascader({
   style,
 }: CascaderProps) {
   const controlSize = useControlSize();
+  const overlayDensity = useOverlayDensity();
   const labelId = useId();
   const valueId = useId();
   const descriptionId = useId();
@@ -115,6 +117,7 @@ export function Cascader({
         <Popover
           placement="bottom start"
           {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+            ...overlayDensity,
             overlay.popover,
             styles.popover,
             state.isEntering && overlay.entering,
@@ -441,6 +444,7 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "center",
     gap: space.sm,
+    minHeight: size.controlSm,
     paddingBlock: "0.375rem",
     paddingInline: space.sm,
     borderRadius: radius.sm,

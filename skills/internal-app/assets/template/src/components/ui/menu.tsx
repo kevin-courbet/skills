@@ -14,6 +14,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { overlay } from "./overlay";
+import { useOverlayDensity } from "./density";
 
 export { MenuTrigger };
 
@@ -26,10 +27,12 @@ export interface MenuProps<Item extends object> extends Omit<
 
 /** Wrap the trigger button and this menu in MenuTrigger. */
 export function Menu<Item extends object>({ placement = "bottom end", ...props }: MenuProps<Item>) {
+  const overlayDensity = useOverlayDensity();
   return (
     <Popover
       placement={placement}
       {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+        ...overlayDensity,
         overlay.popover,
         styles.popover,
         state.isEntering && overlay.entering,
@@ -107,6 +110,7 @@ export function ContextMenu<Item extends object>({
   ...props
 }: ContextMenuProps<Item>) {
   const [point, setPoint] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  const overlayDensity = useOverlayDensity();
   const areaRef = useRef<HTMLDivElement>(null);
   const anchorRef = useRef<HTMLSpanElement>(null);
 
@@ -150,6 +154,7 @@ export function ContextMenu<Item extends object>({
         placement="bottom start"
         offset={2}
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           overlay.popover,
           styles.popover,
           state.isEntering && overlay.entering,
@@ -188,6 +193,7 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "center",
     gap: space.sm,
+    minHeight: size.controlSm,
     paddingBlock: "0.375rem",
     paddingInline: space.sm,
     borderRadius: radius.sm,
@@ -201,8 +207,8 @@ const styles = stylex.create({
   itemDisabled: { opacity: "0.5" },
   icon: {
     display: "inline-flex",
-    width: "1rem",
-    height: "1rem",
+    width: size.icon,
+    height: size.icon,
     color: color.textMuted,
     flexShrink: 0,
   },

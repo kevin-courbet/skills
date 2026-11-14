@@ -11,6 +11,7 @@ import { renderStyles } from "@/lib/rac";
 import { font, space } from "@/styles/tokens.stylex";
 import { overlay } from "./overlay";
 import { ControlSizeProvider } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 export { DialogTrigger as PopoverTrigger };
 
@@ -32,12 +33,14 @@ export function Popover({
   offset = 6,
   children,
 }: PopoverProps) {
+  const overlayDensity = useOverlayDensity();
   return (
     <ControlSizeProvider size="md">
       <AriaPopover
         placement={placement}
         offset={offset}
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           overlay.popover,
           styles.popover,
           state.isEntering && overlay.entering,

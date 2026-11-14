@@ -8,6 +8,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, layer, radius, shadow, space } from "@/styles/tokens.stylex";
 import { overlay } from "./overlay";
+import { useOverlayDensity } from "./density";
 
 export interface TooltipProps extends Omit<AriaTooltipProps, "className" | "style" | "children"> {
   readonly children: ReactNode;
@@ -15,11 +16,13 @@ export interface TooltipProps extends Omit<AriaTooltipProps, "className" | "styl
 
 /** Wrap a focusable trigger and this tooltip in TooltipTrigger. Never put required information only here. */
 export function Tooltip({ children, offset = 6, ...props }: TooltipProps) {
+  const overlayDensity = useOverlayDensity();
   return (
     <AriaTooltip
       {...props}
       offset={offset}
       {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+        ...overlayDensity,
         styles.tooltip,
         state.isEntering && overlay.entering,
         state.isExiting && overlay.exiting,

@@ -22,6 +22,7 @@ import {
 import { type ListOption, OptionList } from "./list-box";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 export type SelectOption<Value extends string> = ListOption<Value>;
 
@@ -74,6 +75,7 @@ export function Select<Value extends string>({
   ...props
 }: SelectProps<Value>) {
   const controlSize = useControlSize();
+  const overlayDensity = useOverlayDensity();
   if (isOptional && props.isRequired === true)
     throw new Error("Select: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
@@ -118,6 +120,7 @@ export function Select<Value extends string>({
       <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
       <Popover
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           overlay.popover,
           overlay.matchTrigger,
           state.isEntering && overlay.entering,

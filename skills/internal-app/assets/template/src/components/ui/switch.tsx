@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import { Switch as AriaSwitch, type SwitchProps as AriaSwitchProps } from "react-aria-components";
-import { color, font, motion, radius, space } from "@/styles/tokens.stylex";
+import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface SwitchProps extends Omit<AriaSwitchProps, "className" | "style" | "children"> {
   readonly children?: ReactNode;
@@ -39,14 +39,15 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: space.sm,
+    paddingBlock: size.togglePadding,
     fontSize: font.md,
     cursor: "pointer",
     outlineStyle: "none",
   },
   track: {
     position: "relative",
-    width: "1.75rem",
-    height: "1rem",
+    width: size.switchWidth,
+    height: size.switchHeight,
     flexShrink: 0,
     borderRadius: radius.full,
     backgroundColor: color.borderStrong,
@@ -65,15 +66,15 @@ const styles = stylex.create({
     position: "absolute",
     top: "2px",
     left: "2px",
-    width: "0.75rem",
-    height: "0.75rem",
+    width: `calc(${size.switchHeight} - 4px)`,
+    height: `calc(${size.switchHeight} - 4px)`,
     borderRadius: radius.full,
     backgroundColor: color.raised,
     transitionProperty: "transform",
     transitionDuration: motion.fast,
     transitionTimingFunction: motion.ease,
   },
-  thumbSelected: { transform: "translateX(0.75rem)" },
+  thumbSelected: { transform: `translateX(calc(${size.switchWidth} - ${size.switchHeight}))` },
   label: { color: color.text, userSelect: "none" },
   disabled: { opacity: "0.5", cursor: "not-allowed" },
 });

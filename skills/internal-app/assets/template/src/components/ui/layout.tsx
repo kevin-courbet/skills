@@ -5,6 +5,7 @@ import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 import { touchDensity } from "@/styles/themes";
 import { type ControlSize, ControlSizeProvider, useControlSize } from "./control-size";
+import { type Density, DensityProvider } from "./density";
 import { color, container, font, media, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface PageHeaderProps {
@@ -43,22 +44,25 @@ export function Page({
   readonly width?: "full" | "reading";
   /**
    * "touch" makes controls and text larger for a shared tablet or kiosk. Use it
-   * for a whole page, never for one control. Dialogs, popovers, menus, and toasts
-   * render outside the page and keep the default density, so keep touch flows inline.
+   * for a whole page, never for one control. Dialogs, sheets, popovers, menus,
+   * and tooltips that the page opens follow it. Toasts render in the app shell
+   * and keep the default density.
    */
-  readonly density?: "default" | "touch";
+  readonly density?: Density;
 }) {
   return (
-    <div
-      {...stylex.props(
-        density === "touch" && touchDensity,
-        styles.page,
-        width === "reading" && styles.pageReading,
-        density === "touch" && styles.pageTouch,
-      )}
-    >
-      {children}
-    </div>
+    <DensityProvider density={density}>
+      <div
+        {...stylex.props(
+          density === "touch" && touchDensity,
+          styles.page,
+          width === "reading" && styles.pageReading,
+          density === "touch" && styles.pageTouch,
+        )}
+      >
+        {children}
+      </div>
+    </DensityProvider>
   );
 }
 

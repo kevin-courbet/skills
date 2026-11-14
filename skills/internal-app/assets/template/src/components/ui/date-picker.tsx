@@ -29,6 +29,7 @@ import {
 import { choice, chipSizes } from "./choice";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 /** A date that people pick with one press, such as "Today" or "Fri". */
 export interface DateQuickPick {
@@ -90,6 +91,7 @@ export function DatePicker({
   ...props
 }: DatePickerProps) {
   const controlSize = useControlSize();
+  const overlayDensity = useOverlayDensity();
   if (isOptional && props.isRequired === true)
     throw new Error("DatePicker: a field cannot be both optional and required.");
   if (new Set(quickPicks.map((pick) => pick.value)).size !== quickPicks.length)
@@ -165,6 +167,7 @@ export function DatePicker({
       <Popover
         placement="bottom end"
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           overlay.popover,
           state.isEntering && overlay.entering,
           state.isExiting && overlay.exiting,

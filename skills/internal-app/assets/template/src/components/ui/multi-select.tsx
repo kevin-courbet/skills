@@ -23,6 +23,7 @@ import { type ListOption, OptionList } from "./list-box";
 import { overlay } from "./overlay";
 import { TagGroup } from "./tag-group";
 import { useControlSize } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 type AriaMultipleSelectProps<Value extends string> = Omit<
   AriaSelectProps<ListOption<Value>, "multiple">,
@@ -77,6 +78,7 @@ export function MultiSelect<Value extends string>({
   ...props
 }: MultiSelectProps<Value>) {
   const controlSize = useControlSize();
+  const overlayDensity = useOverlayDensity();
   if (isOptional && props.isRequired === true)
     throw new Error("MultiSelect: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
@@ -121,6 +123,7 @@ export function MultiSelect<Value extends string>({
         <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
         <Popover
           {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+            ...overlayDensity,
             overlay.popover,
             overlay.matchTrigger,
             state.isEntering && overlay.entering,

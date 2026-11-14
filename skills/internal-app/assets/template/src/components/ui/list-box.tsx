@@ -64,6 +64,7 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "center",
     gap: space.sm,
+    minHeight: size.controlSm,
     paddingBlock: "0.375rem",
     paddingInline: space.sm,
     borderRadius: radius.sm,

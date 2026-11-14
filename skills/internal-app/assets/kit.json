@@ -20,6 +20,7 @@
     "src/components/ui/command-palette.tsx",
     "src/components/ui/confirm-dialog.tsx",
     "src/components/ui/control-size.tsx",
+    "src/components/ui/density.tsx",
     "src/components/ui/copy-button.tsx",
     "src/components/ui/data-table.tsx",
     "src/components/ui/date-picker.tsx",

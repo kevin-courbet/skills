@@ -31,6 +31,7 @@ import {
 } from "./field";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 export interface TimeFieldProps extends Omit<
   AriaTimeFieldProps<Time>,
@@ -91,6 +92,7 @@ export function TimeField({
   ...props
 }: TimeFieldProps) {
   const controlSize = useControlSize();
+  const overlayDensity = useOverlayDensity();
   if (!Number.isInteger(minuteStep) || minuteStep < 1 || 60 % minuteStep !== 0)
     throw new Error(`TimeField: minuteStep ${minuteStep} must be a whole number that divides 60.`);
   if (isOptional && props.isRequired === true)
@@ -147,6 +149,7 @@ export function TimeField({
             triggerRef={groupRef}
             placement="bottom start"
             {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+              ...overlayDensity,
               overlay.popover,
               state.isEntering && overlay.entering,
               state.isExiting && overlay.exiting,

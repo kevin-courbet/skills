@@ -36,6 +36,7 @@ import { field as fieldStyles } from "./field";
 import { OptionList } from "./list-box";
 import { overlay } from "./overlay";
 import { TextField } from "./text-field";
+import { useOverlayDensity } from "./density";
 
 export interface FiltersProps {
   /** Names the filter bar for screen readers, such as "Deployment filters". */
@@ -365,10 +366,12 @@ function OperatorMenu({
   readonly selected: string;
   readonly onSelect: (id: string) => void;
 }) {
+  const overlayDensity = useOverlayDensity();
   return (
     <Popover
       placement="bottom start"
       {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+        ...overlayDensity,
         overlay.popover,
         styles.popover,
         state.isEntering && overlay.entering,
@@ -412,11 +415,13 @@ function FilterPopover({
   readonly label: string;
   readonly children: ReactNode;
 }) {
+  const overlayDensity = useOverlayDensity();
   return (
     <ControlSizeProvider size="md">
       <Popover
         placement="bottom start"
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           overlay.popover,
           styles.popover,
           state.isEntering && overlay.entering,
@@ -828,6 +833,7 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "center",
     gap: space.sm,
+    minHeight: size.controlSm,
     paddingBlock: "0.375rem",
     paddingInline: space.sm,
     borderRadius: radius.sm,

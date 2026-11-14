@@ -33,6 +33,7 @@ import { ControlSizeProvider } from "./control-size";
 import { field } from "./field";
 import { overlay } from "./overlay";
 import { SegmentedControl } from "./segmented-control";
+import { useOverlayDensity } from "./density";
 
 export type CalendarView = "month" | "week" | "day" | "agenda";
 
@@ -967,6 +968,7 @@ function MonthView({
   interaction,
   onDayAction,
 }: MonthViewProps) {
+  const overlayDensity = useOverlayDensity();
   const [focused, setFocused] = useState<CalendarDate>(
     isSameMonth(anchor, today) ? today : startOfMonth(anchor),
   );
@@ -1086,6 +1088,7 @@ function MonthView({
                               placement="bottom start"
                               {...renderStyles<{ isEntering: boolean; isExiting: boolean }>(
                                 (state) => [
+                                  ...overlayDensity,
                                   overlay.popover,
                                   styles.morePopover,
                                   state.isEntering && overlay.entering,

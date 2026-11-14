@@ -108,6 +108,20 @@ export const size = stylex.defineVars({
   iconSm: "0.875rem",
   icon: "1rem",
   iconLg: "1.25rem",
+  /** The box of a checkbox and the circle of a radio. */
+  toggle: "1rem",
+  /** The check or the dash inside a checkbox. */
+  toggleMark: "0.75rem",
+  switchWidth: "1.75rem",
+  switchHeight: "1rem",
+  sliderThumb: "1rem",
+  /** Height of the slider track area that takes the pointer. */
+  sliderTrack: "1.25rem",
+  /**
+   * Space above and below a checkbox, a radio, or a switch row. Touch density
+   * sets it so that a one-line row reaches the 44px touch target.
+   */
+  togglePadding: "0px",
   sidebar: "15rem",
   topbar: "3rem",
   /** Gap between the sidebar frame and the content panel. */

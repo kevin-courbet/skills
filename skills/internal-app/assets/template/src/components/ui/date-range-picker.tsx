@@ -23,6 +23,7 @@ import {
 } from "./field";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 /** Inclusive range of ISO calendar dates. */
 export interface DateRange {
@@ -82,6 +83,7 @@ export function DateRangePicker({
   ...props
 }: DateRangePickerProps) {
   const controlSize = useControlSize();
+  const overlayDensity = useOverlayDensity();
   if (isOptional && props.isRequired === true)
     throw new Error("DateRangePicker: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
@@ -120,6 +122,7 @@ export function DateRangePicker({
       <Popover
         placement="bottom end"
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           overlay.popover,
           state.isEntering && overlay.entering,
           state.isExiting && overlay.exiting,

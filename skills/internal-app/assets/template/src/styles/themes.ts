@@ -117,6 +117,13 @@ const touchSize = stylex.createTheme(size, {
   iconSm: "1.125rem",
   icon: "1.25rem",
   iconLg: "1.5rem",
+  toggle: "1.5rem",
+  toggleMark: "1.125rem",
+  switchWidth: "2.75rem",
+  switchHeight: "1.625rem",
+  sliderThumb: "1.75rem",
+  sliderTrack: "2.75rem",
+  togglePadding: "0.625rem",
   fieldXs: "8rem",
   fieldSm: "14rem",
   fieldMd: "22rem",
@@ -138,7 +145,8 @@ const touchFont = stylex.createTheme(font, {
 /**
  * Touch density for a page on a shared tablet or kiosk that people tap and read
  * from arm's length. The smallest control reaches 44px, the minimum touch target,
- * and text grows one step. `Page density="touch"` applies it to the page region.
- * Overlays render in a portal outside that region and keep the default density.
+ * and text grows one step. Checkboxes, radios, switches, and sliders grow with it.
+ * `Page density="touch"` applies it to the page region, and `useOverlayDensity`
+ * applies it to the overlays that the page opens.
  */
 export const touchDensity = [touchSize, touchFont] as const;

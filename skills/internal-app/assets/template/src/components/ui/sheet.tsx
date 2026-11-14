@@ -22,6 +22,7 @@ import {
 } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { ControlSizeProvider } from "./control-size";
+import { useOverlayDensity } from "./density";
 
 export type SheetSide = "right" | "left";
 /** `peek` is a large panel over the list for reading a record without leaving the list. */
@@ -89,12 +90,14 @@ export function Sheet({
   ...props
 }: SheetProps) {
   const isPeek = width === "peek";
+  const overlayDensity = useOverlayDensity();
   return (
     <ControlSizeProvider size="md">
       <ModalOverlay
         {...props}
         isDismissable
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          ...overlayDensity,
           styles.backdrop,
           state.isEntering && styles.backdropEntering,
           state.isExiting && styles.backdropExiting,

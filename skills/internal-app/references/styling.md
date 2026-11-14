@@ -137,20 +137,35 @@ applies it to the full page region:
 | `controlSm`, `controlMd`, `controlLg` | 28, 32, 36px | 44, 48, 56px |
 | `iconSm`, `icon`, `iconLg` | 14, 16, 20px | 18, 20, 24px |
 | `fieldXs`, `fieldSm`, `fieldMd`, `fieldLg` | 6, 11, 17, 26rem | 8, 14, 22, 34rem |
+| `toggle`, `toggleMark` (checkbox box, radio circle, check) | 16, 12px | 24, 18px |
+| `switchWidth`, `switchHeight` | 28 by 16px | 44 by 26px |
+| `sliderThumb`, `sliderTrack` (track height that takes the pointer) | 16, 20px | 28, 44px |
+| `togglePadding` (above and below a checkbox, radio, or switch row) | 0px | 10px |
 | `font.md` (body) | 13px | 17px |
 | `font.sm` (labels) | 12px | 15px |
 | `font.xxl` (page title) | 20px | 26px |
 
 All primitives read these tokens. Buttons, fields, segmented controls, badges,
-and tables become larger together, without one-off styles. Use touch density
-for a full page that runs on such a device. Do not use it for one control on a
-desk page.
+checkboxes, radios, switches, sliders, and tables become larger together,
+without one-off styles. A one-line checkbox, radio, or switch row is at least
+44px high. Menu, select, and list box options are at least `controlSm` high.
+Use touch density for a full page that runs on such a device. Do not use it for
+one control on a desk page.
 
-Dialogs, popovers, menus, and toasts render in a portal outside the page, so
-they keep the default density. On a touch page, keep the flows inline: confirm
-in place, and show the choices in a `SegmentedControl` or a `RadioGroup`, not
-in a `Select`. A `DatePicker` takes `quickPicks`, so people tap a day instead
-of opening the calendar popover.
+`Page` also puts the density in a React context (`DensityProvider` in
+`src/components/ui/density.tsx`). Dialogs, sheets, popovers, hover cards,
+menus, the option lists of the select fields and pickers, and tooltips render
+in a portal outside the page. Each one gets the page theme again from
+`useOverlayDensity()` on its root element, so it opens with the density of the
+page that opens it. A new overlay component must do the same: put
+`...useOverlayDensity()` first in the styles of its portal root. Toasts and the
+command palette render in the app shell, outside every page, and keep the
+default density.
+
+On a touch page, prefer visible choices to a list in a popover: show a short
+list in a `SegmentedControl` or a `RadioGroup`, not in a `Select`. A
+`DatePicker` takes `quickPicks`, so people tap a day instead of opening the
+calendar popover.
 
 ### Category Colors
 

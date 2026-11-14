@@ -166,8 +166,8 @@ export const choice = stylex.create({
     whiteSpace: "nowrap",
     lineHeight: font.leadingTight,
   },
-  /** Centers a card's 1rem radio or checkbox mark on the first line of the label in every density. */
-  cardMark: { lineHeight: font.leadingTight, marginTop: "calc((1lh - 1rem) / 2)" },
+  /** Centers a card's radio or checkbox mark on the first line of the label in every density. */
+  cardMark: { lineHeight: font.leadingTight, marginTop: `calc((1lh - ${size.toggle}) / 2)` },
   chip: {
     display: "inline-flex",
     alignItems: "center",

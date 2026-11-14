@@ -5,7 +5,7 @@ import {
   RadioGroup as AriaRadioGroup,
   type RadioGroupProps as AriaRadioGroupProps,
 } from "react-aria-components";
-import { color, font, motion, radius, space } from "@/styles/tokens.stylex";
+import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
 import {
   assertChoiceOptions,
   type ChoiceAppearance,
@@ -206,14 +206,16 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "flex-start",
     gap: space.sm,
+    paddingBlock: size.togglePadding,
     fontSize: font.md,
     cursor: "pointer",
     outlineStyle: "none",
   },
+  // The circle centers on the first line of the label in every density.
   circle: {
-    width: "1rem",
-    height: "1rem",
-    marginTop: "0.125rem",
+    width: size.toggle,
+    height: size.toggle,
+    marginTop: `calc((1lh - ${size.toggle}) / 2)`,
     flexShrink: 0,
     borderRadius: radius.full,
     borderWidth: "1px",
@@ -223,7 +225,7 @@ const styles = stylex.create({
     transitionProperty: "border-color, border-width",
     transitionDuration: motion.fast,
   },
-  circleSelected: { borderColor: color.accent, borderWidth: "5px" },
+  circleSelected: { borderColor: color.accent, borderWidth: `calc(${size.toggle} * 0.3125)` },
   circleFocused: {
     outlineStyle: "solid",
     outlineWidth: "2px",
