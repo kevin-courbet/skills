@@ -9,7 +9,9 @@ pipeline, activity, and detail-card patterns; `WorkspaceShowcase`
 (`src/components/kit/showcase-workspace.tsx`) shows traces, boards, trees,
 sortable lists, code, calendars, schedules, and panels; and `ControlsShowcase`
 (`src/components/kit/showcase-controls.tsx`) shows items, field add-ons,
-toggles, sliders, hover cards, and context menus. The `/design-kit/form` route
+toggles, sliders, hover cards, and context menus. `MotionShowcase`
+(`src/components/kit/showcase-motion.tsx`) shows each motion helper on one
+list. The `/design-kit/form` route
 renders `FormShowcase` (`src/components/kit/showcase-form.tsx`), a long form
 that uses every form component. Copy its structure for a new form; see Forms
 below. The `/design-kit/queue` route renders `QueueShowcase`

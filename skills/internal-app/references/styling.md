@@ -270,8 +270,10 @@ without the animation: a card that goes to a different lane, a row that leaves
 a list, a status that changes while people look at a different part of the
 screen.
 
-`src/lib/motion.ts` has the helpers. The overlay, button, and kanban
-components already use them.
+`src/lib/motion.ts` has the helpers. The overlay, button, `Kanban`,
+`SortableList`, and `WorkQueue` components already use them. `MotionShowcase`
+(`src/components/kit/showcase-motion.tsx`) on the `/design-kit` route shows
+each helper on one list.
 
 | Change | Use | Duration and easing |
 |---|---|---|

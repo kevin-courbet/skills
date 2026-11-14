@@ -77,6 +77,7 @@ import { toast } from "@/components/ui/toaster";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ActiveFilter, FilterField } from "@/lib/filter-params";
 import { color, font, media, size, space } from "@/styles/tokens.stylex";
+import { MotionShowcase } from "./showcase-motion";
 import { OperationsShowcase } from "./showcase-operations";
 import { WorkspaceShowcase } from "./showcase-workspace";
 
@@ -856,6 +857,8 @@ export function KitShowcase() {
       <OperationsShowcase />
 
       <WorkspaceShowcase />
+
+      <MotionShowcase />
 
       <TouchDensityShowcase />
 
