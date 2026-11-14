@@ -88,6 +88,8 @@ src/
     charts/                    kit. chartHost bridge, TrendChart, and Sparkline.
     kit/showcase.tsx           kit. Every primitive on one page for visual checks.
     kit/showcase-operations.tsx kit. Filter, status, pipeline, activity, and card patterns for the showcase.
+    kit/showcase-workspace.tsx kit. Traces, boards, trees, sortable lists, code, calendars, schedules, and panels for the showcase.
+    kit/showcase-controls.tsx  kit. Items, field add-ons, toggles, sliders, hover cards, and context menus for the showcase.
     kit/showcase-motion.tsx    kit. Each motion helper on one list of access requests, for the showcase.
     kit/showcase-form.tsx      kit. A long form that uses every form component, on /design-kit/form.
     kit/showcase-queue.tsx     kit. A touch work view of facilities work orders, on /design-kit/queue.
