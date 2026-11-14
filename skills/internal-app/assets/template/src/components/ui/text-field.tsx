@@ -15,6 +15,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, space } from "@/styles/tokens.stylex";
 import { control, field, inputText } from "./field";
+import { useControlSize } from "./control-size";
 
 export interface TextFieldProps extends Omit<
   AriaTextFieldProps,
@@ -52,6 +53,7 @@ export function TextField({
   style,
   ...props
 }: TextFieldProps) {
+  const controlSize = useControlSize();
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   const hasAdornment = prefix !== undefined || suffix !== undefined;
   if (multiline && hasAdornment)
@@ -77,6 +79,7 @@ export function TextField({
           isDisabled={props.isDisabled}
           {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
             control.base,
+            controlSize === "sm" && control.compact,
             styles.group,
             state.isInvalid && control.invalid,
             state.isDisabled && control.disabled,
@@ -92,6 +95,7 @@ export function TextField({
           placeholder={placeholder}
           {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
             control.base,
+            controlSize === "sm" && control.compact,
             control.textInput,
             styles.input,
             state.isInvalid && control.invalid,

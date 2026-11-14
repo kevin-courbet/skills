@@ -4,6 +4,7 @@ import { Check, type LucideIcon } from "lucide-react";
 import { ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+import { useControlSize } from "./control-size";
 
 export interface ToggleOption<Value extends string> {
   readonly id: Value;
@@ -22,8 +23,6 @@ export interface ToggleGroupProps<Value extends string> {
   readonly onChange: (value: ReadonlyArray<Value>) => void;
   /** Shows only the icons; each label stays as the accessible name. */
   readonly iconOnly?: boolean;
-  /** `sm` matches the 28px controls of a compact toolbar. */
-  readonly size?: "sm" | "md";
   readonly isDisabled?: boolean;
 }
 
@@ -38,9 +37,9 @@ export function ToggleGroup<Value extends string>({
   value,
   onChange,
   iconOnly = false,
-  size: sizeKey = "md",
   isDisabled,
 }: ToggleGroupProps<Value>) {
+  const controlSize = useControlSize();
   return (
     <ToggleButtonGroup
       aria-label={label}
@@ -63,8 +62,8 @@ export function ToggleGroup<Value extends string>({
             {...renderStyles<{ isSelected: boolean; isFocusVisible: boolean; isDisabled: boolean }>(
               (state) => [
                 styles.toggle,
-                sizes[sizeKey],
-                iconOnly && squares[sizeKey],
+                sizes[controlSize],
+                iconOnly && squares[controlSize],
                 state.isSelected && styles.selected,
                 state.isFocusVisible && styles.focused,
                 state.isDisabled && styles.disabled,

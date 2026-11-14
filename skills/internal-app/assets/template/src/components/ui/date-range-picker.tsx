@@ -17,6 +17,7 @@ import { Button } from "./button";
 import { CalendarButton, DateSegments, RangeCalendarView, calendar } from "./calendar";
 import { control, field } from "./field";
 import { overlay } from "./overlay";
+import { useControlSize } from "./control-size";
 
 /** Inclusive range of ISO calendar dates. */
 export interface DateRange {
@@ -69,6 +70,7 @@ export function DateRangePicker({
   style,
   ...props
 }: DateRangePickerProps) {
+  const controlSize = useControlSize();
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaDateRangePicker
@@ -86,6 +88,7 @@ export function DateRangePicker({
       <Group
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          controlSize === "sm" && control.compact,
           calendar.group,
           state.isInvalid && control.invalid,
           state.isDisabled && control.disabled,

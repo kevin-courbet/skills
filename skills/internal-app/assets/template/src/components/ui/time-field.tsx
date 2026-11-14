@@ -25,6 +25,7 @@ import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { DateSegments } from "./calendar";
 import { control, field } from "./field";
 import { overlay } from "./overlay";
+import { useControlSize } from "./control-size";
 
 export interface TimeFieldProps extends Omit<
   AriaTimeFieldProps<Time>,
@@ -78,6 +79,7 @@ export function TimeField({
   style,
   ...props
 }: TimeFieldProps) {
+  const controlSize = useControlSize();
   if (!Number.isInteger(minuteStep) || minuteStep < 1 || 60 % minuteStep !== 0)
     throw new Error(`TimeField: minuteStep ${minuteStep} must be a whole number that divides 60.`);
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
@@ -104,6 +106,7 @@ export function TimeField({
         isDisabled={props.isDisabled}
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          controlSize === "sm" && control.compact,
           styles.box,
           state.isInvalid && control.invalid,
           state.isDisabled && control.disabled,

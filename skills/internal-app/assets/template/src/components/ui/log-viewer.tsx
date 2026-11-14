@@ -5,6 +5,7 @@ import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { appLocale, appTimeZone } from "@/lib/locale";
 import { color, container, font, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
+import { ControlSizeProvider } from "./control-size";
 import { EmptyState } from "./feedback";
 import { field } from "./field";
 import { SearchField } from "./search-field";
@@ -142,49 +143,48 @@ export function LogViewer({
     <div {...stylex.props(styles.root, isEmbedded && styles.rootEmbedded)}>
       <div {...stylex.props(styles.header, isEmbedded && styles.headerEmbedded)}>
         {title === undefined ? null : <div {...stylex.props(styles.title)}>{title}</div>}
-        <div {...stylex.props(styles.controls)}>
-          {filters}
-          {hasProblems ? (
-            <SegmentedControl
-              size="sm"
-              label="Lines"
-              value={level}
-              onChange={setLevel}
-              options={[
-                { id: "all", label: "All" },
-                { id: "problems", label: "Warnings and errors" },
-              ]}
+        <ControlSizeProvider size="sm">
+          <div {...stylex.props(styles.controls)}>
+            {filters}
+            {hasProblems ? (
+              <SegmentedControl
+                label="Lines"
+                value={level}
+                onChange={setLevel}
+                options={[
+                  { id: "all", label: "All" },
+                  { id: "problems", label: "Warnings and errors" },
+                ]}
+              />
+            ) : null}
+            <SearchField
+              label={`Search ${label.toLowerCase()}`}
+              hideLabel
+              placeholder="Find in output"
+              value={query}
+              onChange={setQuery}
+              style={styles.search}
             />
-          ) : null}
-          <SearchField
-            label={`Search ${label.toLowerCase()}`}
-            hideLabel
-            size="sm"
-            placeholder="Find in output"
-            value={query}
-            onChange={setQuery}
-            style={styles.search}
-          />
-          {follow && !isAtEnd ? (
-            <Button
-              size="sm"
-              intent="ghost"
-              onPress={() => {
-                setAtEnd(true);
-                virtualizer.scrollToIndex(matches.length - 1, { align: "end" });
-              }}
-            >
-              <ArrowDownToLine aria-hidden {...stylex.props(styles.buttonIcon)} />
-              Follow output
-            </Button>
-          ) : null}
-          {downloadName === undefined ? null : (
-            <Button size="sm" onPress={() => download(lines, downloadName)}>
-              <Download aria-hidden {...stylex.props(styles.buttonIcon)} />
-              Download
-            </Button>
-          )}
-        </div>
+            {follow && !isAtEnd ? (
+              <Button
+                intent="ghost"
+                onPress={() => {
+                  setAtEnd(true);
+                  virtualizer.scrollToIndex(matches.length - 1, { align: "end" });
+                }}
+              >
+                <ArrowDownToLine aria-hidden {...stylex.props(styles.buttonIcon)} />
+                Follow output
+              </Button>
+            ) : null}
+            {downloadName === undefined ? null : (
+              <Button onPress={() => download(lines, downloadName)}>
+                <Download aria-hidden {...stylex.props(styles.buttonIcon)} />
+                Download
+              </Button>
+            )}
+          </div>
+        </ControlSizeProvider>
       </div>
       {matches.length === 0 ? (
         <div {...stylex.props(isEmbedded ? styles.embeddedEmpty : styles.frame)}>

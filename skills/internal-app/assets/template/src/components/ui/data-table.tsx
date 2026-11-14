@@ -36,6 +36,7 @@ import { appLocale } from "@/lib/locale";
 import { color, container, font, motion, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
+import { ControlSizeProvider } from "./control-size";
 import { Skeleton } from "./feedback";
 import { field } from "./field";
 import { Toolbar } from "./layout";
@@ -152,7 +153,10 @@ export interface DataTableProps<TData extends RowData> {
   readonly caption: string;
   /** Marks a numeric column so values align right with tabular figures. */
   readonly numericColumns?: ReadonlyArray<string>;
-  /** A compact Toolbar rendered inside the table frame, above the header. */
+  /**
+   * A Toolbar rendered inside the table frame, above the header. The row
+   * sets the `sm` control size, so its controls share the compact height.
+   */
   readonly toolbar?: ReactNode;
   /** Opens the record of a row from its header cell and from a click on the row. */
   readonly rowAction?: DataTableRowAction<TData>;
@@ -453,18 +457,20 @@ export function DataTable<TData extends RowData>({
         {isLoading ? "Loading rows" : ""}
       </span>
       {hasToolbarRow ? (
-        <div {...stylex.props(styles.toolbar)}>
-          <div {...stylex.props(styles.toolbarMain)}>
-            {selection !== undefined && selectedCount > 0 ? (
-              <BulkActions selection={selection} />
-            ) : (
-              toolbar
+        <ControlSizeProvider size="sm">
+          <div {...stylex.props(styles.toolbar)}>
+            <div {...stylex.props(styles.toolbarMain)}>
+              {selection !== undefined && selectedCount > 0 ? (
+                <BulkActions selection={selection} />
+              ) : (
+                toolbar
+              )}
+            </div>
+            {columnVisibility === undefined ? null : (
+              <ColumnsMenu table={table} onChange={columnVisibility.onChange} />
             )}
           </div>
-          {columnVisibility === undefined ? null : (
-            <ColumnsMenu table={table} onChange={columnVisibility.onChange} />
-          )}
-        </div>
+        </ControlSizeProvider>
       ) : null}
       {data.length === 0 && !isLoading ? (
         <div {...stylex.props(styles.empty)}>{emptyState}</div>
@@ -899,7 +905,7 @@ function ColumnsMenu<TData extends RowData>({
   const visibleIds = hideable.filter((column) => column.getIsVisible()).map((column) => column.id);
   return (
     <MenuTrigger>
-      <Button intent="ghost" size="sm" iconOnly aria-label="Choose columns">
+      <Button intent="ghost" iconOnly aria-label="Choose columns">
         <Columns3 aria-hidden {...stylex.props(styles.toolbarIcon)} />
       </Button>
       <Menu
@@ -931,9 +937,8 @@ function BulkActions<TData extends RowData>({
   return (
     <Toolbar
       label="Bulk actions"
-      density="compact"
       actions={
-        <Button intent="ghost" size="sm" onPress={() => selection.onChange([])}>
+        <Button intent="ghost" onPress={() => selection.onChange([])}>
           Clear selection
         </Button>
       }
@@ -956,49 +961,48 @@ function PaginationBar({ pagination }: { readonly pagination: DataTablePaginatio
   const format = (value: number) => value.toLocaleString(appLocale);
   const sizes = pagination.pageSizeOptions ?? defaultPageSizes;
   return (
-    <nav aria-label="Pagination" {...stylex.props(styles.pagination)}>
-      {onPageSizeChange === undefined ? (
-        <span />
-      ) : (
-        <span {...stylex.props(styles.pageSize)}>
-          <span aria-hidden>Rows per page</span>
-          <Select
-            label="Rows per page"
-            hideLabel
-            size="sm"
-            value={String(pageSize)}
-            options={sizes.map((option) => ({ id: String(option), label: String(option) }))}
-            onChange={(next) => onPageSizeChange(Number(next))}
-            style={styles.pageSizeSelect}
-          />
+    <ControlSizeProvider size="sm">
+      <nav aria-label="Pagination" {...stylex.props(styles.pagination)}>
+        {onPageSizeChange === undefined ? (
+          <span />
+        ) : (
+          <span {...stylex.props(styles.pageSize)}>
+            <span aria-hidden>Rows per page</span>
+            <Select
+              label="Rows per page"
+              hideLabel
+              value={String(pageSize)}
+              options={sizes.map((option) => ({ id: String(option), label: String(option) }))}
+              onChange={(next) => onPageSizeChange(Number(next))}
+              style={styles.pageSizeSelect}
+            />
+          </span>
+        )}
+        <span {...stylex.props(styles.pageNav)}>
+          <span {...stylex.props(styles.pageRange)}>
+            {format(from)}–{format(to)} of {format(total)}
+          </span>
+          <Button
+            intent="ghost"
+            iconOnly
+            aria-label="Previous page"
+            isDisabled={page <= 1}
+            onPress={() => onPageChange(page - 1)}
+          >
+            <ChevronLeft aria-hidden {...stylex.props(styles.toolbarIcon)} />
+          </Button>
+          <Button
+            intent="ghost"
+            iconOnly
+            aria-label="Next page"
+            isDisabled={page >= pageCount}
+            onPress={() => onPageChange(page + 1)}
+          >
+            <ChevronRight aria-hidden {...stylex.props(styles.toolbarIcon)} />
+          </Button>
         </span>
-      )}
-      <span {...stylex.props(styles.pageNav)}>
-        <span {...stylex.props(styles.pageRange)}>
-          {format(from)}–{format(to)} of {format(total)}
-        </span>
-        <Button
-          intent="ghost"
-          size="sm"
-          iconOnly
-          aria-label="Previous page"
-          isDisabled={page <= 1}
-          onPress={() => onPageChange(page - 1)}
-        >
-          <ChevronLeft aria-hidden {...stylex.props(styles.toolbarIcon)} />
-        </Button>
-        <Button
-          intent="ghost"
-          size="sm"
-          iconOnly
-          aria-label="Next page"
-          isDisabled={page >= pageCount}
-          onPress={() => onPageChange(page + 1)}
-        >
-          <ChevronRight aria-hidden {...stylex.props(styles.toolbarIcon)} />
-        </Button>
-      </span>
-    </nav>
+      </nav>
+    </ControlSizeProvider>
   );
 }
 

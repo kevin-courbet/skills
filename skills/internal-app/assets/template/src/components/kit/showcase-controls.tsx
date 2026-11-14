@@ -20,6 +20,7 @@ import { type ReactNode, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonGroup } from "@/components/ui/button";
+import { ControlSizeProvider } from "@/components/ui/control-size";
 import { CopyButton } from "@/components/ui/copy-button";
 import { EmptyState, Spinner } from "@/components/ui/feedback";
 import { FileTypeIcon } from "@/components/ui/file-type-icon";
@@ -235,14 +236,15 @@ export function ControlsShowcase() {
             />
           </div>
           <div {...stylex.props(styles.grid)}>
-            <Specimen label="Run on days">
-              <ToggleGroup
-                label="Run on days"
-                options={weekdays}
-                value={days}
-                onChange={setDays}
-                size="sm"
-              />
+            <Specimen label="Run on days, sm">
+              <ControlSizeProvider size="sm">
+                <ToggleGroup
+                  label="Run on days"
+                  options={weekdays}
+                  value={days}
+                  onChange={setDays}
+                />
+              </ControlSizeProvider>
             </Specimen>
             <Specimen label="Notify by">
               <ToggleGroup

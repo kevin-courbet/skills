@@ -17,6 +17,7 @@ import { control, field } from "./field";
 import { type ListOption, OptionList } from "./list-box";
 import { overlay } from "./overlay";
 import { TagGroup } from "./tag-group";
+import { useControlSize } from "./control-size";
 
 type AriaMultipleSelectProps<Value extends string> = Omit<
   AriaSelectProps<ListOption<Value>, "multiple">,
@@ -39,8 +40,6 @@ export interface MultiSelectProps<Value extends string> extends AriaMultipleSele
   readonly onChange: (value: ReadonlyArray<Value>) => void;
   /** Hide the visible label in dense toolbars. The label stays available to screen readers. */
   readonly hideLabel?: boolean;
-  /** `sm` uses the compact control height for toolbars inside a table frame. */
-  readonly size?: "sm" | "md";
   /** Lists the chosen values as removable tags under the field. Use in forms, not toolbars. */
   readonly showTags?: boolean;
   readonly description?: string;
@@ -59,7 +58,6 @@ export function MultiSelect<Value extends string>({
   value,
   onChange,
   hideLabel = false,
-  size: sizeKey = "md",
   showTags = false,
   description,
   errorMessage,
@@ -67,6 +65,7 @@ export function MultiSelect<Value extends string>({
   style,
   ...props
 }: MultiSelectProps<Value>) {
+  const controlSize = useControlSize();
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   const selected = options.filter((option) => value.includes(option.id));
   const toValues = (keys: ReadonlyArray<unknown>) =>
@@ -87,7 +86,7 @@ export function MultiSelect<Value extends string>({
           {...renderStyles<{ isDisabled: boolean }>((state) => [
             control.base,
             styles.trigger,
-            sizeKey === "sm" && control.compact,
+            controlSize === "sm" && control.compact,
             isInvalid && control.invalid,
             state.isDisabled && control.disabled,
           ])}

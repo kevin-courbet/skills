@@ -970,7 +970,6 @@ function GanttShowcase() {
         description="Tasks on a time line with progress, milestones, dependencies, and the load of each assignee. Drag a row by its grip, or press Alt and Up or Down, to change the order."
         actions={
           <SegmentedControl
-            size="sm"
             label="Scale"
             value={scale}
             onChange={setScale}

@@ -5,6 +5,7 @@ import { Link, Popover, PreviewTrigger } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, space } from "@/styles/tokens.stylex";
 import { overlay } from "./overlay";
+import { ControlSizeProvider } from "./control-size";
 
 export interface HoverCardProps {
   /**
@@ -33,18 +34,20 @@ export function HoverCard({
   return (
     <PreviewTrigger delay={delay}>
       {children}
-      <Popover
-        placement={placement}
-        offset={6}
-        {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-          overlay.popover,
-          styles.card,
-          state.isEntering && overlay.entering,
-          state.isExiting && overlay.exiting,
-        ])}
-      >
-        {content}
-      </Popover>
+      <ControlSizeProvider size="md">
+        <Popover
+          placement={placement}
+          offset={6}
+          {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+            overlay.popover,
+            styles.card,
+            state.isEntering && overlay.entering,
+            state.isExiting && overlay.exiting,
+          ])}
+        >
+          {content}
+        </Popover>
+      </ControlSizeProvider>
     </PreviewTrigger>
   );
 }

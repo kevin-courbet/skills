@@ -16,6 +16,7 @@ import { color, size, space } from "@/styles/tokens.stylex";
 import { control, field } from "./field";
 import { type ListOption, OptionList } from "./list-box";
 import { overlay } from "./overlay";
+import { useControlSize } from "./control-size";
 
 export type SelectOption<Value extends string> = ListOption<Value>;
 
@@ -38,8 +39,6 @@ export interface SelectProps<Value extends string> extends AriaSingleSelectProps
   readonly options: ReadonlyArray<SelectOption<Value>>;
   /** Hide the visible label in dense toolbars. The label stays available to screen readers. */
   readonly hideLabel?: boolean;
-  /** `sm` uses the compact control height for toolbars inside a table frame. */
-  readonly size?: "sm" | "md";
   readonly value?: Value | null;
   readonly defaultValue?: Value;
   readonly onChange?: (value: Value) => void;
@@ -53,7 +52,6 @@ export interface SelectProps<Value extends string> extends AriaSingleSelectProps
 export function Select<Value extends string>({
   label,
   hideLabel = false,
-  size: sizeKey = "md",
   options,
   value,
   defaultValue,
@@ -64,6 +62,7 @@ export function Select<Value extends string>({
   style,
   ...props
 }: SelectProps<Value>) {
+  const controlSize = useControlSize();
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaSelect
@@ -83,7 +82,7 @@ export function Select<Value extends string>({
         {...renderStyles<{ isDisabled: boolean }>((state) => [
           control.base,
           styles.trigger,
-          sizeKey === "sm" && control.compact,
+          controlSize === "sm" && control.compact,
           isInvalid && control.invalid,
           state.isDisabled && control.disabled,
         ])}

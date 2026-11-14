@@ -29,6 +29,7 @@ import { renderStyles } from "@/lib/rac";
 import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
 import type { BadgeIntent } from "./badge";
 import { Button } from "./button";
+import { ControlSizeProvider } from "./control-size";
 import { field } from "./field";
 import { overlay } from "./overlay";
 import { SegmentedControl } from "./segmented-control";
@@ -348,43 +349,40 @@ export function EventCalendar({
 
   return (
     <section ref={rootRef} aria-label={label} {...stylex.props(styles.root)}>
-      <div {...stylex.props(styles.toolbar)}>
-        <div {...stylex.props(styles.nav)}>
-          <Button size="sm" onPress={() => setAnchor(todayDate)}>
-            Today
-          </Button>
-          <Button
-            size="sm"
-            intent="ghost"
-            iconOnly
-            aria-label={previousLabel[currentView]}
-            onPress={() => step(-1)}
-          >
-            <ChevronLeft aria-hidden {...stylex.props(styles.icon)} />
-          </Button>
-          <Button
-            size="sm"
-            intent="ghost"
-            iconOnly
-            aria-label={nextLabel[currentView]}
-            onPress={() => step(1)}
-          >
-            <ChevronRight aria-hidden {...stylex.props(styles.icon)} />
-          </Button>
-          <h3 aria-live="polite" {...stylex.props(styles.heading)}>
-            {periodHeading(currentView, anchor)}
-          </h3>
+      <ControlSizeProvider size="sm">
+        <div {...stylex.props(styles.toolbar)}>
+          <div {...stylex.props(styles.nav)}>
+            <Button onPress={() => setAnchor(todayDate)}>Today</Button>
+            <Button
+              intent="ghost"
+              iconOnly
+              aria-label={previousLabel[currentView]}
+              onPress={() => step(-1)}
+            >
+              <ChevronLeft aria-hidden {...stylex.props(styles.icon)} />
+            </Button>
+            <Button
+              intent="ghost"
+              iconOnly
+              aria-label={nextLabel[currentView]}
+              onPress={() => step(1)}
+            >
+              <ChevronRight aria-hidden {...stylex.props(styles.icon)} />
+            </Button>
+            <h3 aria-live="polite" {...stylex.props(styles.heading)}>
+              {periodHeading(currentView, anchor)}
+            </h3>
+          </div>
+          {views.length > 1 ? (
+            <SegmentedControl
+              label="Calendar view"
+              value={currentView}
+              onChange={setView}
+              options={views.map((id) => ({ id, label: viewLabels[id] }))}
+            />
+          ) : null}
         </div>
-        {views.length > 1 ? (
-          <SegmentedControl
-            size="sm"
-            label="Calendar view"
-            value={currentView}
-            onChange={setView}
-            options={views.map((id) => ({ id, label: viewLabels[id] }))}
-          />
-        ) : null}
-      </div>
+      </ControlSizeProvider>
       {currentView === "month" ? (
         <MonthView
           anchor={anchor}

@@ -794,7 +794,6 @@ export function OperationsShowcase() {
           toolbar={
             <Toolbar
               label="Table options"
-              density="compact"
               actions={
                 <Switch isSelected={isLoading} onChange={setLoading}>
                   Loading state
@@ -802,7 +801,6 @@ export function OperationsShowcase() {
               }
             >
               <SegmentedControl
-                size="sm"
                 label="Density"
                 value={density}
                 onChange={setDensity}

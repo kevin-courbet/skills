@@ -15,6 +15,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size } from "@/styles/tokens.stylex";
 import { control, field, inputText } from "./field";
+import { useControlSize } from "./control-size";
 
 export interface NumberFieldProps extends Omit<
   AriaNumberFieldProps,
@@ -45,6 +46,7 @@ export function NumberField({
   style,
   ...props
 }: NumberFieldProps) {
+  const controlSize = useControlSize();
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaNumberField {...props} isInvalid={isInvalid} {...stylex.props(field.root, style)}>
@@ -52,6 +54,7 @@ export function NumberField({
       <Group
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          controlSize === "sm" && control.compact,
           showStepper && styles.groupStepper,
           state.isInvalid && control.invalid,
           state.isDisabled && control.disabled,

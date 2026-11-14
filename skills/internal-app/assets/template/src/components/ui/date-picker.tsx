@@ -18,6 +18,7 @@ import { renderStyles } from "@/lib/rac";
 import { CalendarButton, CalendarHeader, DateSegments, calendar } from "./calendar";
 import { control, field } from "./field";
 import { overlay } from "./overlay";
+import { useControlSize } from "./control-size";
 
 export interface DatePickerProps extends Omit<
   AriaDatePickerProps<CalendarDate>,
@@ -56,6 +57,7 @@ export function DatePicker({
   style,
   ...props
 }: DatePickerProps) {
+  const controlSize = useControlSize();
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaDatePicker
@@ -71,6 +73,7 @@ export function DatePicker({
       <Group
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          controlSize === "sm" && control.compact,
           calendar.group,
           state.isInvalid && control.invalid,
           state.isDisabled && control.disabled,

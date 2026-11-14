@@ -18,6 +18,7 @@ import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { control, field } from "./field";
 import { overlay } from "./overlay";
+import { useControlSize } from "./control-size";
 
 export interface CascaderOption {
   /** Unique among its siblings. The value is the path of ids from the root. */
@@ -39,8 +40,6 @@ export interface CascaderProps {
   readonly allowsBranchSelection?: boolean;
   /** Shows a search box that finds options at every level. Defaults to on above 12 options. */
   readonly isSearchable?: boolean;
-  /** `sm` uses the compact control height for toolbars. */
-  readonly size?: "sm" | "md";
   readonly placeholder?: string;
   readonly description?: string;
   readonly style?: StyleXStyles;
@@ -69,11 +68,11 @@ export function Cascader({
   onChange,
   allowsBranchSelection = false,
   isSearchable,
-  size: sizeKey = "md",
   placeholder = "Select",
   description,
   style,
 }: CascaderProps) {
+  const controlSize = useControlSize();
   const labelId = useId();
   const valueId = useId();
   const descriptionId = useId();
@@ -90,7 +89,7 @@ export function Cascader({
         <AriaButton
           aria-labelledby={`${labelId} ${valueId}`}
           aria-describedby={description ? descriptionId : undefined}
-          {...stylex.props(control.base, styles.trigger, sizeKey === "sm" && control.compact)}
+          {...stylex.props(control.base, styles.trigger, controlSize === "sm" && control.compact)}
         >
           <span
             id={valueId}

@@ -633,11 +633,11 @@ export function KitShowcase() {
               canSelect: (row) => row.status !== "paused",
               actions: (ids) => (
                 <>
-                  <Button size="sm">
+                  <Button>
                     <Pause aria-hidden width={14} height={14} />
                     Pause
                   </Button>
-                  <Button size="sm" onPress={() => setConfirmOpen(true)}>
+                  <Button onPress={() => setConfirmOpen(true)}>
                     <Trash2 aria-hidden width={14} height={14} />
                     Delete {ids.length} {ids.length === 1 ? "job" : "jobs"}
                   </Button>
@@ -648,13 +648,12 @@ export function KitShowcase() {
             toolbar={
               <Toolbar
                 label="Filter jobs"
-                density="compact"
                 actions={
                   <>
-                    <Button intent="ghost" size="sm" iconOnly aria-label="Refresh">
+                    <Button intent="ghost" iconOnly aria-label="Refresh">
                       <RefreshCw aria-hidden width={14} height={14} />
                     </Button>
-                    <Button intent="ghost" size="sm" iconOnly aria-label="Export">
+                    <Button intent="ghost" iconOnly aria-label="Export">
                       <Download aria-hidden width={14} height={14} />
                     </Button>
                   </>
@@ -663,7 +662,6 @@ export function KitShowcase() {
                 <Select
                   label="Scope"
                   hideLabel
-                  size="sm"
                   defaultValue="all"
                   options={[
                     { id: "all", label: "All jobs" },
@@ -674,7 +672,6 @@ export function KitShowcase() {
                 <SearchField
                   label="Search jobs"
                   hideLabel
-                  size="sm"
                   focusShortcut
                   placeholder="Search jobs"
                   style={styles.toolbarSearch}

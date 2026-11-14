@@ -10,6 +10,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { font, space } from "@/styles/tokens.stylex";
 import { overlay } from "./overlay";
+import { ControlSizeProvider } from "./control-size";
 
 export { DialogTrigger as PopoverTrigger };
 
@@ -32,25 +33,27 @@ export function Popover({
   children,
 }: PopoverProps) {
   return (
-    <AriaPopover
-      placement={placement}
-      offset={offset}
-      {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-        overlay.popover,
-        styles.popover,
-        state.isEntering && overlay.entering,
-        state.isExiting && overlay.exiting,
-      ])}
-    >
-      <Dialog aria-label={showTitle ? undefined : title} {...stylex.props(styles.dialog)}>
-        {showTitle ? (
-          <Heading slot="title" {...stylex.props(styles.title)}>
-            {title}
-          </Heading>
-        ) : null}
-        {children}
-      </Dialog>
-    </AriaPopover>
+    <ControlSizeProvider size="md">
+      <AriaPopover
+        placement={placement}
+        offset={offset}
+        {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          overlay.popover,
+          styles.popover,
+          state.isEntering && overlay.entering,
+          state.isExiting && overlay.exiting,
+        ])}
+      >
+        <Dialog aria-label={showTitle ? undefined : title} {...stylex.props(styles.dialog)}>
+          {showTitle ? (
+            <Heading slot="title" {...stylex.props(styles.title)}>
+              {title}
+            </Heading>
+          ) : null}
+          {children}
+        </Dialog>
+      </AriaPopover>
+    </ControlSizeProvider>
   );
 }
 

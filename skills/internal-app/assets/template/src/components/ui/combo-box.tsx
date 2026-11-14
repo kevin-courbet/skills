@@ -17,6 +17,7 @@ import { color, radius, size } from "@/styles/tokens.stylex";
 import { control, field, inputText } from "./field";
 import { type ListOption, OptionList } from "./list-box";
 import { overlay } from "./overlay";
+import { useControlSize } from "./control-size";
 
 type AriaSingleComboBoxProps<Value extends string> = Omit<
   AriaComboBoxProps<ListOption<Value>>,
@@ -56,6 +57,7 @@ export function ComboBox<Value extends string>({
   style,
   ...props
 }: ComboBoxProps<Value>) {
+  const controlSize = useControlSize();
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaComboBox
@@ -74,6 +76,7 @@ export function ComboBox<Value extends string>({
       <Group
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          controlSize === "sm" && control.compact,
           styles.group,
           state.isInvalid && control.invalid,
           state.isDisabled && control.disabled,

@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
+import { useControlSize } from "./control-size";
 
 export interface SegmentOption<Value extends string> {
   readonly id: Value;
@@ -16,8 +17,6 @@ export interface SegmentedControlProps<Value extends string> {
   readonly options: ReadonlyArray<SegmentOption<Value>>;
   readonly value: Value;
   readonly onChange: (value: Value) => void;
-  /** `sm` matches the 28px compact controls of a toolbar. */
-  readonly size?: "sm" | "md";
 }
 
 /** Switches between two to five views or modes of the same content. */
@@ -26,8 +25,8 @@ export function SegmentedControl<Value extends string>({
   options,
   value,
   onChange,
-  size: sizeKey = "md",
 }: SegmentedControlProps<Value>) {
+  const controlSize = useControlSize();
   return (
     <ToggleButtonGroup
       aria-label={label}
@@ -38,7 +37,7 @@ export function SegmentedControl<Value extends string>({
         const option = options.find((candidate) => keys.has(candidate.id));
         if (option !== undefined) onChange(option.id);
       }}
-      {...stylex.props(styles.group)}
+      {...stylex.props(styles.group, groupSizes[controlSize])}
     >
       {options.map((option) => {
         const Icon = option.icon;
@@ -48,7 +47,7 @@ export function SegmentedControl<Value extends string>({
             id={option.id}
             {...renderStyles<{ isSelected: boolean; isFocusVisible: boolean }>((state) => [
               styles.segment,
-              sizeKey === "sm" && styles.segmentSm,
+              segmentSizes[controlSize],
               state.isSelected && styles.selected,
               state.isFocusVisible && styles.focused,
             ])}
@@ -78,24 +77,15 @@ const styles = stylex.create({
     alignItems: "center",
     gap: space.xs,
     whiteSpace: "nowrap",
-    height: size.controlSm,
-    paddingInline: space.md,
     borderStyle: "none",
     borderRadius: radius.md,
     backgroundColor: "transparent",
-    fontSize: font.md,
     fontWeight: font.medium,
     color: { default: color.textMuted, ":hover": color.text },
     cursor: "pointer",
     outlineStyle: "none",
     transitionProperty: "background-color, color, box-shadow",
     transitionDuration: motion.fast,
-  },
-  // The group adds 2px padding and a 1px border on each side, so the whole control is 28px.
-  segmentSm: {
-    height: `calc(${size.controlSm} - 6px)`,
-    paddingInline: space.sm,
-    fontSize: font.sm,
   },
   selected: { backgroundColor: color.raised, color: color.text, boxShadow: shadow.sm },
   focused: {
@@ -105,4 +95,15 @@ const styles = stylex.create({
     outlineOffset: "1px",
   },
   icon: { width: size.iconSm, height: size.iconSm },
+});
+
+// The group carries the height, so the control matches the other controls of its size even when the browser rounds the border width. The segments stretch inside the padding.
+const groupSizes = stylex.create({
+  sm: { height: size.controlSm },
+  md: { height: size.controlMd },
+});
+
+const segmentSizes = stylex.create({
+  sm: { paddingInline: space.sm, fontSize: font.sm },
+  md: { paddingInline: space.md, fontSize: font.md },
 });

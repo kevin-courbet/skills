@@ -29,6 +29,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
+import { ControlSizeProvider, useControlSize } from "./control-size";
 import { RangeCalendarView } from "./calendar";
 import { type DateRange, DateRangePresetList, rangePanel } from "./date-range-picker";
 import { field as fieldStyles } from "./field";
@@ -54,8 +55,10 @@ const searchableOptionCount = 8;
  * the field has more than one), then value, and adds a complete filter. Each
  * chip edits its operator and value in place and has a remove button.
  * Fields: select, multi-select, text, and date range. One filter per field.
+ * The chips take the control size of the surrounding row.
  */
 export function Filters({ label, fields, value, onChange }: FiltersProps) {
+  const controlSize = useControlSize();
   const barRef = useRef<HTMLDivElement>(null);
   const [announcement, setAnnouncement] = useState("");
   const activeIds = new Set(value.map((filter) => filter.field));
@@ -109,7 +112,7 @@ export function Filters({ label, fields, value, onChange }: FiltersProps) {
             setAnnouncement("All filters cleared.");
             focusBarControl("[data-filters-add]");
           }}
-          {...stylex.props(styles.clear)}
+          {...stylex.props(styles.clear, chipSizes[controlSize])}
         >
           Clear all
         </AriaButton>
@@ -137,10 +140,11 @@ function FilterChipControl({
   const operator = operators.find((candidate) => candidate.id === filter.operator);
   if (operator === undefined)
     throw new Error(`Filter "${field.id}" uses the unknown operator "${filter.operator}".`);
+  const controlSize = useControlSize();
   const valueText = filterValueText(field, filter);
   const Icon = field.icon;
   return (
-    <span {...stylex.props(styles.chip)}>
+    <span {...stylex.props(styles.chip, chipSizes[controlSize])}>
       <span {...stylex.props(styles.segment, styles.fieldSegment)}>
         {Icon ? <Icon aria-hidden {...stylex.props(styles.icon)} /> : null}
         {field.label}
@@ -213,6 +217,7 @@ function AddFilter({
   readonly hasFilters: boolean;
   readonly onAdd: (filter: ActiveFilter) => void;
 }) {
+  const controlSize = useControlSize();
   const [isOpen, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>({ step: "field" });
 
@@ -232,7 +237,7 @@ function AddFilter({
         if (!open) setDraft({ step: "field" });
       }}
     >
-      <AriaButton data-filters-add {...stylex.props(styles.add)}>
+      <AriaButton data-filters-add {...stylex.props(styles.add, chipSizes[controlSize])}>
         <ListFilter aria-hidden {...stylex.props(styles.icon)} />
         {hasFilters ? "Add filter" : "Filter"}
       </AriaButton>
@@ -408,19 +413,21 @@ function FilterPopover({
   readonly children: ReactNode;
 }) {
   return (
-    <Popover
-      placement="bottom start"
-      {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-        overlay.popover,
-        styles.popover,
-        state.isEntering && overlay.entering,
-        state.isExiting && overlay.exiting,
-      ])}
-    >
-      <Dialog aria-label={label} {...stylex.props(styles.dialog)}>
-        {children}
-      </Dialog>
-    </Popover>
+    <ControlSizeProvider size="md">
+      <Popover
+        placement="bottom start"
+        {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          overlay.popover,
+          styles.popover,
+          state.isEntering && overlay.entering,
+          state.isExiting && overlay.exiting,
+        ])}
+      >
+        <Dialog aria-label={label} {...stylex.props(styles.dialog)}>
+          {children}
+        </Dialog>
+      </Popover>
+    </ControlSizeProvider>
   );
 }
 
@@ -700,14 +707,11 @@ function formatRange(range: DateRange): string {
   return `${formatDay(range.start, !sameYear)} – ${formatDay(range.end, true)}`;
 }
 
-const chipHeight = size.controlSm;
-
 const styles = stylex.create({
   bar: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: space.sm, minWidth: 0 },
   chip: {
     display: "inline-flex",
     alignItems: "stretch",
-    height: chipHeight,
     maxWidth: "100%",
     minWidth: 0,
     overflow: "hidden",
@@ -716,7 +720,6 @@ const styles = stylex.create({
     borderColor: color.border,
     borderRadius: radius.md,
     backgroundColor: color.raised,
-    fontSize: font.sm,
   },
   segment: {
     display: "inline-flex",
@@ -765,7 +768,6 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: space.xs,
-    height: chipHeight,
     paddingInline: space.sm,
     borderWidth: "1px",
     borderStyle: "dashed",
@@ -774,7 +776,6 @@ const styles = stylex.create({
     backgroundColor: { default: "transparent", ":hover": color.subtle },
     color: color.text,
     fontFamily: "inherit",
-    fontSize: font.sm,
     fontWeight: font.medium,
     cursor: "pointer",
     outlineStyle: { default: "none", ":focus-visible": "solid" },
@@ -783,14 +784,12 @@ const styles = stylex.create({
     outlineOffset: "1px",
   },
   clear: {
-    height: chipHeight,
     paddingInline: space.sm,
     borderStyle: "none",
     borderRadius: radius.md,
     backgroundColor: { default: "transparent", ":hover": color.subtle },
     color: { default: color.textMuted, ":hover": color.text },
     fontFamily: "inherit",
-    fontSize: font.sm,
     cursor: "pointer",
     outlineStyle: { default: "none", ":focus-visible": "solid" },
     outlineWidth: "2px",
@@ -885,4 +884,10 @@ const dots = stylex.create({
   warning: { backgroundColor: color.warning },
   danger: { backgroundColor: color.danger },
   info: { backgroundColor: color.info },
+});
+
+/** Chip, add, and clear sizes. They match the Button sizes, so the bar lines up with the other controls in its row. */
+const chipSizes = stylex.create({
+  sm: { height: size.controlSm, fontSize: font.sm },
+  md: { height: size.controlMd, fontSize: font.md },
 });

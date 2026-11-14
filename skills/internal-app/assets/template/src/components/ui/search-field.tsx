@@ -11,6 +11,7 @@ import {
 } from "react-aria-components";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { control, field, inputText } from "./field";
+import { useControlSize } from "./control-size";
 
 export interface SearchFieldProps extends Omit<
   AriaSearchFieldProps,
@@ -20,8 +21,6 @@ export interface SearchFieldProps extends Omit<
   /** Hide the visible label in dense toolbars. The label stays available to screen readers. */
   readonly hideLabel?: boolean;
   readonly placeholder?: string;
-  /** `sm` uses the compact control height for toolbars inside a table frame. */
-  readonly size?: "sm" | "md";
   /** Pressing "/" outside a text field focuses this field. Use it for the main list search only. */
   readonly focusShortcut?: boolean;
   readonly style?: StyleXStyles;
@@ -37,11 +36,11 @@ export function SearchField({
   label,
   hideLabel = false,
   placeholder,
-  size: sizeKey = "md",
   focusShortcut = false,
   style,
   ...props
 }: SearchFieldProps) {
+  const controlSize = useControlSize();
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!focusShortcut) return;
@@ -63,7 +62,7 @@ export function SearchField({
             {...stylex.props(
               control.base,
               styles.box,
-              sizeKey === "sm" && control.compact,
+              controlSize === "sm" && control.compact,
               isDisabled && control.disabled,
             )}
           >

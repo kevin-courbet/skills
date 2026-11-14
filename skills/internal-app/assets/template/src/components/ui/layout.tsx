@@ -4,6 +4,7 @@ import type { StyleXStyles } from "@stylexjs/stylex";
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 import { touchDensity } from "@/styles/themes";
+import { type ControlSize, ControlSizeProvider, useControlSize } from "./control-size";
 import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface PageHeaderProps {
@@ -435,29 +436,37 @@ export function SettingRow({
   );
 }
 
-/** Row of filters and view controls above a list. */
+/** Row of filters and view controls above a list. Every kit control in the row takes the toolbar size. */
 export function Toolbar({
   children,
   label,
-  density = "default",
+  size: explicitSize,
   actions,
 }: {
   readonly children: ReactNode;
   readonly label: string;
-  /** `compact` centers 28px controls in one line, for a toolbar inside a DataTable frame. */
-  readonly density?: "default" | "compact";
+  /**
+   * Height of every control in the row. Defaults to the size of the
+   * surrounding row: `sm` inside a DataTable frame, `md` elsewhere. `sm`
+   * also centers the controls in one line.
+   */
+  readonly size?: ControlSize;
   /** View actions at the end of the row, such as refresh or export icon buttons. */
   readonly actions?: ReactNode;
 }) {
+  const rowSize = useControlSize();
+  const sizeKey = explicitSize ?? rowSize;
   return (
-    <div
-      role="toolbar"
-      aria-label={label}
-      {...stylex.props(styles.toolbar, density === "compact" && styles.toolbarCompact)}
-    >
-      {children}
-      {actions ? <div {...stylex.props(styles.toolbarActions)}>{actions}</div> : null}
-    </div>
+    <ControlSizeProvider size={sizeKey}>
+      <div
+        role="toolbar"
+        aria-label={label}
+        {...stylex.props(styles.toolbar, sizeKey === "sm" && styles.toolbarCompact)}
+      >
+        {children}
+        {actions ? <div {...stylex.props(styles.toolbarActions)}>{actions}</div> : null}
+      </div>
+    </ControlSizeProvider>
   );
 }
 

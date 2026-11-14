@@ -5,6 +5,7 @@ import { createContext, type ReactNode, useContext } from "react";
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components";
 import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+import { useControlSize } from "./control-size";
 
 /** Set by ButtonGroup so its buttons join into one control. */
 const ButtonGroupContext = createContext(false);
@@ -34,6 +35,10 @@ export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonOwnProps {
   readonly intent?: ButtonIntent;
+  /**
+   * Defaults to the size of the surrounding row, set by Toolbar or
+   * ControlSizeProvider, and `md` elsewhere. Do not set it inside a Toolbar.
+   */
   readonly size?: ButtonSize;
   /** Square control for a single icon. Pass aria-label. */
   readonly iconOnly?: boolean;
@@ -46,12 +51,14 @@ export type ButtonProps = ButtonOwnProps &
 
 export function Button({
   intent = "secondary",
-  size: sizeKey = "md",
+  size: explicitSize,
   iconOnly = false,
   style,
   children,
   ...props
 }: ButtonProps) {
+  const rowSize = useControlSize();
+  const sizeKey = explicitSize ?? rowSize;
   const isGrouped = useContext(ButtonGroupContext);
   return (
     <AriaButton
@@ -80,12 +87,14 @@ export type LinkButtonProps = ButtonOwnProps &
 /** Router link with button appearance. Use for navigation that reads as an action. */
 export function LinkButton({
   intent = "secondary",
-  size: sizeKey = "md",
+  size: explicitSize,
   iconOnly = false,
   style,
   children,
   ...props
 }: LinkButtonProps) {
+  const rowSize = useControlSize();
+  const sizeKey = explicitSize ?? rowSize;
   const resolved = stylex.props(
     styles.base,
     intents[intent],

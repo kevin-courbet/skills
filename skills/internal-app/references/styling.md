@@ -113,7 +113,7 @@ Density defaults:
 | Body and table text | `font.md` (13px), line height 1.45 |
 | Labels, metadata, captions | `font.sm` (12px) |
 | Page title | `font.xxl` (20px), weight 600 |
-| Control height | `size.controlMd` (32px); `controlSm` 28px for toolbars and table rows |
+| Control height | `size.controlMd` (32px); `controlSm` 28px inside a `DataTable` frame. All controls in one row share one height (`ControlSizeProvider`). |
 | Table row | 36px total: 8px padding plus one text line |
 | Spacing between fields | `space.lg` (16px); between sections `space.xxl` (24px) |
 | Radius | `radius.md` (6px) controls, `radius.lg` (8px) sidebar items, popovers, and the table frame, `radius.xl` (12px) the content panel, cards, stat tiles, settings cards, dialogs, and the peek sheet |

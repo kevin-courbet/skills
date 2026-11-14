@@ -12,6 +12,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, layer, media, motion, radius, shadow, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
+import { ControlSizeProvider } from "./control-size";
 
 export { DialogTrigger };
 
@@ -44,46 +45,52 @@ export function Dialog({
   ...props
 }: DialogProps) {
   return (
-    <ModalOverlay
-      {...props}
-      isDismissable={isDismissable}
-      {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-        styles.backdrop,
-        state.isEntering && styles.backdropEntering,
-        state.isExiting && styles.backdropExiting,
-      ])}
-    >
-      <Modal
+    <ControlSizeProvider size="md">
+      <ModalOverlay
+        {...props}
+        isDismissable={isDismissable}
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-          styles.modal,
-          sizes[size],
-          state.isEntering && styles.modalEntering,
-          state.isExiting && styles.modalExiting,
+          styles.backdrop,
+          state.isEntering && styles.backdropEntering,
+          state.isExiting && styles.backdropExiting,
         ])}
       >
-        <AriaDialog {...stylex.props(styles.dialog)}>
-          {({ close }) => (
-            <>
-              <header {...stylex.props(styles.header)}>
-                <div {...stylex.props(styles.headingGroup)}>
-                  <Heading slot="title" {...stylex.props(styles.title)}>
-                    {title}
-                  </Heading>
-                  {description ? <p {...stylex.props(styles.description)}>{description}</p> : null}
+        <Modal
+          {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+            styles.modal,
+            sizes[size],
+            state.isEntering && styles.modalEntering,
+            state.isExiting && styles.modalExiting,
+          ])}
+        >
+          <AriaDialog {...stylex.props(styles.dialog)}>
+            {({ close }) => (
+              <>
+                <header {...stylex.props(styles.header)}>
+                  <div {...stylex.props(styles.headingGroup)}>
+                    <Heading slot="title" {...stylex.props(styles.title)}>
+                      {title}
+                    </Heading>
+                    {description ? (
+                      <p {...stylex.props(styles.description)}>{description}</p>
+                    ) : null}
+                  </div>
+                  <Button intent="ghost" size="sm" iconOnly aria-label="Close" onPress={close}>
+                    <X {...stylex.props(styles.closeIcon)} />
+                  </Button>
+                </header>
+                <div {...stylex.props(styles.body)}>
+                  {typeof children === "function" ? children(close) : children}
                 </div>
-                <Button intent="ghost" size="sm" iconOnly aria-label="Close" onPress={close}>
-                  <X {...stylex.props(styles.closeIcon)} />
-                </Button>
-              </header>
-              <div {...stylex.props(styles.body)}>
-                {typeof children === "function" ? children(close) : children}
-              </div>
-              {actions ? <footer {...stylex.props(styles.footer)}>{actions(close)}</footer> : null}
-            </>
-          )}
-        </AriaDialog>
-      </Modal>
-    </ModalOverlay>
+                {actions ? (
+                  <footer {...stylex.props(styles.footer)}>{actions(close)}</footer>
+                ) : null}
+              </>
+            )}
+          </AriaDialog>
+        </Modal>
+      </ModalOverlay>
+    </ControlSizeProvider>
   );
 }
 

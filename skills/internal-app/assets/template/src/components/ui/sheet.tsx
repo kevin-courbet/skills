@@ -21,6 +21,7 @@ import {
   space,
 } from "@/styles/tokens.stylex";
 import { Button } from "./button";
+import { ControlSizeProvider } from "./control-size";
 
 export type SheetSide = "right" | "left";
 /** `peek` is a large panel over the list for reading a record without leaving the list. */
@@ -89,89 +90,95 @@ export function Sheet({
 }: SheetProps) {
   const isPeek = width === "peek";
   return (
-    <ModalOverlay
-      {...props}
-      isDismissable
-      {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-        styles.backdrop,
-        state.isEntering && styles.backdropEntering,
-        state.isExiting && styles.backdropExiting,
-      ])}
-    >
-      <Modal
-        {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) =>
-          isPeek
-            ? [
-                styles.panel,
-                styles.peek,
-                state.isEntering && styles.enterPeek,
-                state.isExiting && styles.exitPeek,
-              ]
-            : [
-                styles.panel,
-                sides[side],
-                widths[width],
-                state.isEntering && (side === "right" ? styles.enterRight : styles.enterLeft),
-                state.isExiting && (side === "right" ? styles.exitRight : styles.exitLeft),
-              ],
-        )}
+    <ControlSizeProvider size="md">
+      <ModalOverlay
+        {...props}
+        isDismissable
+        {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+          styles.backdrop,
+          state.isEntering && styles.backdropEntering,
+          state.isExiting && styles.backdropExiting,
+        ])}
       >
-        <Dialog {...stylex.props(styles.dialog)}>
-          {({ close }) => (
-            <>
-              {navigation ? <NavigationKeys navigation={navigation} /> : null}
-              <header {...stylex.props(styles.header, isPeek && styles.headerPeek)}>
-                <div {...stylex.props(styles.headingGroup)}>
-                  <div {...stylex.props(styles.titleRow)}>
-                    <Heading slot="title" {...stylex.props(styles.title)}>
-                      {title}
-                    </Heading>
-                    {meta}
-                  </div>
-                  {description ? <p {...stylex.props(styles.description)}>{description}</p> : null}
-                </div>
-                <div {...stylex.props(styles.headerActions)}>
-                  {navigation ? (
-                    <>
-                      <Button
-                        intent="ghost"
-                        size="sm"
-                        iconOnly
-                        aria-label="Previous"
-                        aria-keyshortcuts="k"
-                        isDisabled={navigation.onPrevious === undefined}
-                        onPress={navigation.onPrevious}
-                      >
-                        <ChevronUp aria-hidden {...stylex.props(styles.icon)} />
-                      </Button>
-                      <Button
-                        intent="ghost"
-                        size="sm"
-                        iconOnly
-                        aria-label="Next"
-                        aria-keyshortcuts="j"
-                        isDisabled={navigation.onNext === undefined}
-                        onPress={navigation.onNext}
-                      >
-                        <ChevronDown aria-hidden {...stylex.props(styles.icon)} />
-                      </Button>
-                    </>
-                  ) : null}
-                  {headerActions}
-                  <Button intent="ghost" size="sm" iconOnly aria-label="Close" onPress={close}>
-                    <X aria-hidden {...stylex.props(styles.icon)} />
-                  </Button>
-                </div>
-              </header>
-              <div {...stylex.props(styles.body)}>
-                {typeof children === "function" ? children(close) : children}
-              </div>
-              {actions ? <footer {...stylex.props(styles.footer)}>{actions(close)}</footer> : null}
-            </>
+        <Modal
+          {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) =>
+            isPeek
+              ? [
+                  styles.panel,
+                  styles.peek,
+                  state.isEntering && styles.enterPeek,
+                  state.isExiting && styles.exitPeek,
+                ]
+              : [
+                  styles.panel,
+                  sides[side],
+                  widths[width],
+                  state.isEntering && (side === "right" ? styles.enterRight : styles.enterLeft),
+                  state.isExiting && (side === "right" ? styles.exitRight : styles.exitLeft),
+                ],
           )}
-        </Dialog>
-      </Modal>
-    </ModalOverlay>
+        >
+          <Dialog {...stylex.props(styles.dialog)}>
+            {({ close }) => (
+              <>
+                {navigation ? <NavigationKeys navigation={navigation} /> : null}
+                <header {...stylex.props(styles.header, isPeek && styles.headerPeek)}>
+                  <div {...stylex.props(styles.headingGroup)}>
+                    <div {...stylex.props(styles.titleRow)}>
+                      <Heading slot="title" {...stylex.props(styles.title)}>
+                        {title}
+                      </Heading>
+                      {meta}
+                    </div>
+                    {description ? (
+                      <p {...stylex.props(styles.description)}>{description}</p>
+                    ) : null}
+                  </div>
+                  <div {...stylex.props(styles.headerActions)}>
+                    {navigation ? (
+                      <>
+                        <Button
+                          intent="ghost"
+                          size="sm"
+                          iconOnly
+                          aria-label="Previous"
+                          aria-keyshortcuts="k"
+                          isDisabled={navigation.onPrevious === undefined}
+                          onPress={navigation.onPrevious}
+                        >
+                          <ChevronUp aria-hidden {...stylex.props(styles.icon)} />
+                        </Button>
+                        <Button
+                          intent="ghost"
+                          size="sm"
+                          iconOnly
+                          aria-label="Next"
+                          aria-keyshortcuts="j"
+                          isDisabled={navigation.onNext === undefined}
+                          onPress={navigation.onNext}
+                        >
+                          <ChevronDown aria-hidden {...stylex.props(styles.icon)} />
+                        </Button>
+                      </>
+                    ) : null}
+                    {headerActions}
+                    <Button intent="ghost" size="sm" iconOnly aria-label="Close" onPress={close}>
+                      <X aria-hidden {...stylex.props(styles.icon)} />
+                    </Button>
+                  </div>
+                </header>
+                <div {...stylex.props(styles.body)}>
+                  {typeof children === "function" ? children(close) : children}
+                </div>
+                {actions ? (
+                  <footer {...stylex.props(styles.footer)}>{actions(close)}</footer>
+                ) : null}
+              </>
+            )}
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
+    </ControlSizeProvider>
   );
 }
 
