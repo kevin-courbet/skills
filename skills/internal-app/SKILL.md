@@ -32,11 +32,13 @@ needed. Treat it as a failure, not a warning.
   app: `sync` reports the edit as `modified` and `doctor` fails. Change the kit
   in this skill, then run `sync --write` in each app.
 - **App files** belong to the app: routes, features, server services, the
-  router, the root route, `src/lib/locale.ts`, and config. The template
+  router, the root route, `src/lib/locale.ts`, `src/lib/brand.ts`,
+  `src/styles/brand.stylex.ts`, and config. The template
   contains working examples of each. Kit files import app modules:
   `src/server/runtime.server.ts` (`runtime`, `AppServices`, `recordEffectCause`),
-  `src/lib/locale.ts` (`appLocale`, `appTimeZone`), and
-  `src/lib/error-presentation.ts` (`unexpectedFailureMessage`).
+  `src/lib/locale.ts` (`appLocale`, `appTimeZone`), `src/lib/brand.ts`
+  (`defaultTheme`), `src/styles/brand.stylex.ts` (`lightBrand`, `darkBrand`),
+  and `src/lib/error-presentation.ts` (`unexpectedFailureMessage`).
 
 ## Workflows
 
@@ -87,7 +89,7 @@ fixes the design method.
 
 - **One stack.** TanStack Start (Vite, Nitro bun preset), Router, Query, Table v9, Form, and Virtual. Effect 4 on the server. StyleX for every style. react-aria-components for every interactive control. lucide-react icons, Aperture charts, sonner toasts. No Tailwind, shadcn/ui, Radix, Base UI, zod, react-hook-form, visx, or heroicons.
 - **Kit first.** Pages compose kit primitives. Never put a raw `<button>`, `<input>`, `<select>`, or `<table>` in a route or feature.
-- **Tokens only.** Raw colors, font sizes, and theme media queries live in the token files. Density changes happen in the skill, not in an app.
+- **Tokens only.** Raw colors, font sizes, and theme media queries live in the token files. Brand colors go in the app's `brand.stylex.ts`. Density changes happen in the skill, not in an app.
 - **Both themes.** Check every page in light and dark before handoff.
 - **Dense and quiet.** Use 13 px body text, 32 px controls, and 36 px table rows. One primary action per view. Sentence case. No success toasts for results the UI already shows.
 - **App frame.** The sidebar sits on the `frame` color; the page sits in the raised content panel. Do not add page chrome outside the panel.

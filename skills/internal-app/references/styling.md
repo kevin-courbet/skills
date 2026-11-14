@@ -47,9 +47,19 @@ Rules that follow from the wiring:
 
 ## Token Files
 
-`src/styles/palette.stylex.ts` holds raw values as `stylex.defineConsts`.
-`src/styles/tokens.stylex.ts` holds semantic roles as `stylex.defineVars` and
-build-time constants as `stylex.defineConsts`. Components import tokens only.
+Raw values live in two `stylex.defineConsts` files:
+
+- `src/styles/brand.stylex.ts` is app-owned. It holds `lightBrand` and
+  `darkBrand`: the frame, surface, text, border, and accent roles. The template
+  ships neutral grey with a blue accent. An app with its own brand colors
+  changes these values (see Brand colors).
+- `src/styles/palette.stylex.ts` is kit-owned. It holds `lightPalette` and
+  `darkPalette`: `scheme`, the status triples, `backdrop`, and the shadows.
+  These values are the same in every app, so status reads the same everywhere.
+
+`src/styles/tokens.stylex.ts` maps both files into semantic roles as
+`stylex.defineVars` and holds build-time constants as `stylex.defineConsts`.
+Components import tokens only.
 
 Semantic color roles (every component uses these names and nothing else):
 
@@ -67,6 +77,25 @@ Surface order, from recessed to raised: `page`, `inset`, `frame`, `raised`, `sub
 The content panel (`page`) is the deepest surface so cards on `raised` stand clearly off it.
 The sidebar (`frame`) sits lighter than the panel so navigation reads as its own plane.
 Keep these gaps when you tune the palette; equal values make the app look washed out.
+
+### Brand colors
+
+To apply a brand, change only `src/styles/brand.stylex.ts` in the app:
+
+1. Convert the brand colors to OKLCH. Keep the lightness and hue of the brand.
+   The steps around them follow from the rules below.
+2. Tint the neutrals toward the warm or cool base of the brand. Use one hue for
+   every frame, surface, text, and border role. Keep chroma low: 0.004 to 0.02
+   on light surfaces and less than 0.012 on dark surfaces, so large areas stay calm.
+3. Keep the surface order and the gaps above in the two themes.
+4. Put the main brand color on `accent`. Make `accentHover` and `accentStrong`
+   darker in light and lighter in dark. `onAccent` text must have 4.5:1
+   contrast against `accent`, and `accentText` must have 4.5:1 against `raised`.
+5. If the brand is green, keep the accent different from `success` in hue or
+   chroma, so that a primary button does not look like a status.
+6. Set `defaultTheme` in `src/lib/brand.ts` if the brand starts in one theme
+   (see Themes).
+7. Examine every page in the two themes, as for all color changes.
 
 Other groups: `shadow` (`sm`, `md`, `lg`, `xl` for a floating surface such as a dragged item or a docked panel, and
 `frame` for the content panel), `font` (families, sizes `xs` to `xxxl`, `display` and `displayLg` for large numerals
@@ -118,13 +147,16 @@ status roles.
 Tokens carry light values by default and dark values under
 `@media (prefers-color-scheme: dark)`, so the server renders the right theme
 without knowing the user. An explicit choice is a cookie read in the root
-`beforeLoad`; `src/styles/themes.ts` creates `lightTheme` and `darkTheme` with
-`stylex.createTheme` and `AppDocument` applies the chosen one to `<html>`.
+`beforeLoad`. Without a cookie, the choice is `defaultTheme` from the app-owned
+`src/lib/brand.ts`. The template uses `"system"`. Use `"light"` or `"dark"` for
+an app whose brand starts in one theme. `src/styles/themes.ts` creates
+`lightTheme` and `darkTheme` with `stylex.createTheme`, and `AppDocument`
+applies the chosen one to `<html>`.
 `createTheme` results must be bound to a bare `const`; the compiler rejects
 inline calls inside arrays.
 
-`AppDocument` also sets `data-theme` on `<html>`: from the cookie when there is
-one, else from an inline script before first paint. Aperture and any other
+`AppDocument` also sets `data-theme` on `<html>`: from the choice when it is
+`"light"` or `"dark"`, else from an inline script before first paint. Aperture and any other
 third-party CSS keyed on `[data-theme]` follow it. The `ThemeSwitch` in the
 top bar writes the cookie through a server function and invalidates the router.
 
@@ -139,8 +171,8 @@ Dark values are not inverted light values. They follow `ui-design`'s
 `dark-theme.md`: tinted near-black page, lighter raised surfaces, reduced
 chroma on large areas, higher contrast text. Dark neutrals keep chroma
 near 0.003 so the frame, panel, and cards read as neutral grey steps:
-`frame` (L 0.145) < `page` (0.178) < `subtle` (0.198) < `raised` (0.212) <
-`overlay` (0.24). Each step stays visible without a border.
+`page` (L 0.13) < `inset` (0.158) < `frame` (0.195) < `raised` (0.205) <
+`subtle` and `overlay` (0.245). Each step stays visible without a border.
 
 ## Writing Styles
 
@@ -204,7 +236,7 @@ file, and line. Fix the source; there are no ignore comments.
 | `class-name-string` | `className="..."`. Use `stylex.props`. |
 | `inline-style-object` | `style={{ ... }}`. Use `stylex.create`; dynamic values use a style function. |
 | `stylex-shorthand` | `border:`, `background:`, or `outline:` shorthands. Use longhands. |
-| `palette-import` | `palette.stylex` imported outside `tokens.stylex.ts` and `themes.ts`. |
+| `palette-import` | `palette.stylex` or `brand.stylex` imported outside `tokens.stylex.ts` and `themes.ts`. |
 | `left-edge-nav` | `borderLeft`, `borderInlineStart`, or an inset shadow in shell or navigation files. |
 | `theme-media-query` | `prefers-color-scheme` in a component. Themes are a token concern. |
 | `forbidden-import`, `forbidden-dependency` | Tailwind, `clsx`, Radix, Base UI, zod, visx, heroicons, and the other replaced libraries. |

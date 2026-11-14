@@ -1,6 +1,7 @@
 import { createIsomorphicFn, createServerFn } from "@tanstack/react-start";
 import { Result, Schema } from "effect";
 import { createContext, useContext } from "react";
+import { defaultTheme } from "@/lib/brand";
 import { ValidationError } from "@/lib/wire-errors";
 
 export const THEME_COOKIE = "theme";
@@ -21,7 +22,7 @@ const decodeThemeChoice = Schema.decodeUnknownResult(ThemeChoice);
 
 function parseThemeChoice(raw: string | undefined): ThemeChoice {
   const result = decodeThemeChoice(raw);
-  return Result.isSuccess(result) ? result.success : "system";
+  return Result.isSuccess(result) ? result.success : defaultTheme;
 }
 
 function readCookie(source: string, name: string): string | undefined {

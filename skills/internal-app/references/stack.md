@@ -81,6 +81,7 @@ src/
     _app.tsx                   App. Navigation config, ChartProvider, AppShell.
     _app/...                   App. Pages. Set staticData.crumb for breadcrumbs.
   styles/                      kit. palette.stylex.ts, tokens.stylex.ts, themes.ts, category.ts, app.css
+  styles/brand.stylex.ts       App. Brand surfaces, text, borders, and accent for the two themes.
   components/
     ui/                        kit. Primitives on react-aria-components.
     shell/                     kit. AppDocument, AppShell, NavLink, RouteBreadcrumbs, RouteError, ThemeSwitch.
@@ -94,6 +95,7 @@ src/
     ui/                        Feature components that receive resolved data as props.
   lib/
     locale.ts                  App. appLocale, appTimeZone, and the formatters.
+    brand.ts                   App. defaultTheme for people without a saved theme.
     filter-params.ts           kit. Filter field types and the URL codec for the Filters chip bar.
     form.ts                    kit. fieldError for TanStack Form fields.
     rac.ts                     kit. renderStyles adapter for react-aria render props.
@@ -114,7 +116,7 @@ Import rules, enforced by `check`:
 
 - Routes import `features/*/api.ts`, `components/*`, and `lib/*`. Never `server/*` or a `.server` module.
 - `api.ts` loads `*.server.ts` with a dynamic import inside the handler.
-- Components read styles from `@/styles/tokens.stylex` only. Never `palette.stylex.ts`.
+- Components read styles from `@/styles/tokens.stylex` only. Never `palette.stylex.ts` or `brand.stylex.ts`.
 - Format numbers and dates with `src/lib/locale.ts`. Do not create `Intl` formatters in components.
 
 ## Scripts

@@ -125,6 +125,9 @@
     "@tanstack/zod-adapter"
   ],
   "appContract": {
+    "src/lib/brand.ts": [
+      "defaultTheme"
+    ],
     "src/lib/error-presentation.ts": [
       "unexpectedFailureMessage"
     ],
@@ -136,6 +139,10 @@
     "src/lib/locale.ts": [
       "appLocale",
       "appTimeZone"
+    ],
+    "src/styles/brand.stylex.ts": [
+      "lightBrand",
+      "darkBrand"
     ]
   }
 }

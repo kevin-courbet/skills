@@ -285,9 +285,9 @@ function lineRules(manifest: Manifest): ReadonlyArray<LineRule> {
     },
     {
       id: "palette-import",
-      message: "palette.stylex imported outside tokens.stylex.ts and themes.ts. Components read tokens only.",
-      applies: (file) => isSrcCode(file) && !/^src\/styles\/(tokens\.stylex|themes|palette\.stylex)\.ts$/.test(file),
-      test: (line) => /from ["'][^"']*palette\.stylex["']/.test(line),
+      message: "palette.stylex or brand.stylex imported outside tokens.stylex.ts and themes.ts. Components read tokens only.",
+      applies: (file) => isSrcCode(file) && !/^src\/styles\/(tokens\.stylex|themes)\.ts$/.test(file),
+      test: (line) => /from ["'][^"']*(?:palette|brand)\.stylex["']/.test(line),
     },
     {
       id: "left-edge-nav",
