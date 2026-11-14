@@ -12,7 +12,9 @@ sortable lists, code, calendars, schedules, and panels; and `ControlsShowcase`
 toggles, sliders, hover cards, and context menus. The `/design-kit/form` route
 renders `FormShowcase` (`src/components/kit/showcase-form.tsx`), a long form
 that uses every form component. Copy its structure for a new form; see Forms
-below.
+below. The `/design-kit/queue` route renders `QueueShowcase`
+(`src/components/kit/showcase-queue.tsx`), a touch work view on a shared
+tablet. Copy its structure for a touch view; see Touch Work View below.
 
 Several primitives re-implement the behavior and design of free ReUI
 components. `THIRD_PARTY_NOTICES.md` in this skill lists them with the ReUI
@@ -77,7 +79,7 @@ Forms. A field with both `isOptional` and `isRequired` throws an error.
 |---|---|---|
 | `layout.tsx` | `Page`, `PageHeader`, `Section`, `Toolbar`, `Card`, `CardSection`, `StatTile`, `StatStrip`, `DescriptionList`, `SettingsCard`, `SettingRow`, `Code`, `Kbd`, `Separator` | Page structure, filter rows, overview numbers, and read-only facts. `Page width="reading"` makes a detail or form page narrower. `Section layout="split"` puts the `title` and a one-sentence `description` in a column on the left and the content on the right, with a line between consecutive split sections. It needs a `title` and takes no `actions`. Use it for the parts of a long form or a settings page. It stacks when the section is narrower than the `md` breakpoint. `Page density="touch"` makes controls and text larger for a shared tablet or kiosk, and the overlays that the page opens follow it (see Touch density in `styling.md`). `PageHeader` `title` and `description` take rich content like `Card`: the title is the page's only `<h1>` and its parts wrap as one heading line, such as an `Identifier size="lg"` followed by a `StatusDot` or a `Badge size="lg"`; the description flows as text and can hold `Code`, links, or a small `Identifier`. Put a `{" "}` between the parts of a title so the heading reads with a space. `PageHeader` `actions` never grow wider than the header, so a wrapping control such as a `RadioGroup appearance="chips"` wraps in place. `Card` takes `title`, `description`, `actions` (a total, a link, or one button), and `footer`; `layout="sections"` stacks `CardSection` rows divided by lines (see Cards below). `StatTile` deltas take `tone` when "down" is good; `chart` takes the kit `Sparkline` (`src/components/charts/sparkline.tsx`) and `footnote` names the source. `StatStrip` is a divided row of key facts for detail headers and peeks; `variant="status"` shows one status word per cell with a `detail` line (CI, artifact, traffic), and `framed={false}` drops its border inside a `CardSection`. An item `link` makes the whole cell open the records that it counts, such as the list filtered to them. The link name is the label and the value, such as "Overdue 12". `DescriptionList layout="grid"` puts labels above values in columns for the key facts of a record; an item with `span="wide"` takes two columns. `SettingsCard` with `SettingRow` puts the label left and the value or control right. `Toolbar` sets the control size of its row. It is `sm` (28px) inside a `DataTable` frame and `md` (32px) elsewhere; `size` changes it. Its `actions` hold trailing icon buttons. `Code` shows inline code and commands. |
 | `control-size.tsx` | `ControlSizeProvider`, `useControlSize`, `ControlSize` | The control size of a row: `sm` (`size.controlSm`, 28px) or `md` (`size.controlMd`, 32px, the default). Every kit control inside the provider takes this height, so a row cannot mix heights. `Toolbar`, the `DataTable` toolbar row and footer, and the `LogViewer` and `EventCalendar` headers set it. Dialogs, sheets, and popovers set `md` again, because React context passes into portals. A primitive with a control height reads `useControlSize()` and has no `size` prop. |
-| `src/lib/motion.ts` | `withViewTransition`, `viewTransitionName`, `motionStyles`, `useDropTransition`, `useArrivals`, `useHasChanged`, `isViewTransitionRunning` | Motion that helps people follow an object when the state changes (see Motion in `styling.md`). `withViewTransition(update)` runs a synchronous state change in a view transition. `viewTransitionName(scope, ...parts)` makes a unique name from a `useId()` scope and the id of the element; `motionStyles.named(name)` sets it. `useDropTransition()` returns `{ droppedByPointer, commit(ids, update) }` for a new drag-and-drop collection. `useArrivals(keys)` returns the keys that arrived since the last render, for `motionStyles.enter`. `useHasChanged(value)` is true after the value changes, for `motionStyles.changed`. `Kanban` and `SortableList` already use these helpers. |
+| `src/lib/motion.ts` | `withViewTransition`, `viewTransitionName`, `motionStyles`, `useDropTransition`, `useArrivals`, `useHasChanged`, `isViewTransitionRunning` | Motion that helps people follow an object when the state changes (see Motion in `styling.md`). `withViewTransition(update)` runs a synchronous state change in a view transition. `viewTransitionName(scope, ...parts)` makes a unique name from a `useId()` scope and the id of the element; `motionStyles.named(name)` sets it. `useDropTransition()` returns `{ droppedByPointer, commit(ids, update) }` for a new drag-and-drop collection. `useArrivals(keys)` returns the keys that arrived since the last render, for `motionStyles.enter`. `useHasChanged(value)` is true after the value changes, for `motionStyles.changed`. `Kanban`, `SortableList`, and `WorkQueue` already use these helpers. |
 | `density.tsx` | `DensityProvider`, `useDensity`, `useOverlayDensity`, `Density` | The density of the page: `default` or `touch`. `Page density` sets it; do not set it in other places. `useDensity()` tells a component that it renders on a touch page. `useOverlayDensity()` returns the styles that give the root of an overlay the density of the page that opens it. Every kit dialog, sheet, popover, hover card, menu, option list, and tooltip uses it. A new overlay puts `...useOverlayDensity()` first in the styles of its portal root (see Touch density in `styling.md`). |
 | `data-table.tsx` | `DataTable`, `DataTableColumn`, `DataTableSelection`, `DataTableExpansion`, `DataTablePinning`, `DataTablePagination`, `DataTableRowAction`, `DataTableColumnVisibility`, `TwoLineCell`, `MeterCell` | Server-sorted table on semantic `<table>` with `aria-sort`, sticky header, numeric columns, and an empty-state slot. `toolbar` renders a `Toolbar` inside the frame. The toolbar row, the bulk-action bar, and the pagination footer use the `sm` control size. `rowAction` opens a row: `{ link: (row) => ({ to, params }) }` or `{ onAction }`. The `rowHeader` column (default: the first data column) becomes a `<th scope="row">` with that link or button, so Tab and Enter open the row, and a click anywhere else on the row does the same. `pinnedColumns={{ start, end }}` keeps columns in view while the table scrolls sideways, such as the name and a row menu. `expansion` adds a toggle column and a full-width detail row. `density="compact"` uses 28px rows. `isLoading` shows `loadingRows` skeleton rows for client-triggered loads. `pagination` adds a footer in the frame with the row range, page buttons, and rows per page. A column `footer` adds a summary row. `activeRowId` marks the row open in a peek. `selection` adds a checkbox column and a bulk-action bar that replaces the toolbar while rows are selected. `columnVisibility` adds a column menu. `resizableColumns` adds drag and arrow-key handles on header edges; set `size` on each column. `virtualize={{ visibleRows }}` renders only the rows in view; it cannot combine with `expansion`. `responsiveColumns` makes a table read on a phone: `{ [columnId]: { hideBelow: "sm" \| "md" \| "lg", stack?: boolean } }` removes a column while the table frame is narrower than the breakpoint (`sm` 640px, `md` 768px, `lg` 1024px). The frame width decides through a container query on the scroller, so a table in a narrow panel adapts too. With `stack`, the cell shows under the row header while its column is hidden, for short values such as a region or an owner. Keep the row header and the status; hide secondary facts such as the source, the author, or the date. Below `sm` cell text also wraps and the padding tightens, so the columns that stay fit the frame. The row header column cannot be responsive. `TwoLineCell` holds a primary line and a quiet second line. `MeterCell` adds a bar that compares a number with the column maximum. |
 | `pagination.tsx` | `Pagination` | Previous and next for server-paged lists that are not tables, such as card grids. Tables use the `DataTable` `pagination` footer. Renders nothing for one page. |
@@ -99,12 +101,14 @@ Forms. A field with both `isOptional` and `isRequired` throws an error.
 ### Runs, Boards, And Schedules
 
 `WorkspaceShowcase` (`src/components/kit/showcase-workspace.tsx`) shows each
-primitive below on the `/design-kit` route.
+primitive below on the `/design-kit` route, except `WorkQueue`. `QueueShowcase`
+shows `WorkQueue` on the `/design-kit/queue` route.
 
 | File | Exports | Use |
 |---|---|---|
 | `trace.tsx` | `Trace`, `TraceStep`, `TraceStatus`, `SpanWaterfall`, `TraceSpan` | `Trace` is a run as a column of quiet step lines: agent turns, CI jobs, checks, and imports. Each step has an `icon`, a `title` that says what happened, a `status` (`done` default, `running`, `failed`, `pending`, `skipped`), a `meta` such as a duration, and an optional `badge`. A step with `detail` or child `steps` opens in place; `expandedIds` with `onExpandedChange` controls which steps are open, such as the running one. Screen readers hear the status word before the title. `SpanWaterfall` shows a distributed trace: spans nest under their parent on a shared time axis, arrow keys move between spans and open or close them, and the selected span shows its duration, self time, start, status, and `attributes` below. The span with the most self time shows its share of the trace. Use `Stepper mode="status"` for a short fixed pipeline and `Timeline` for an audit feed. |
 | `kanban.tsx` | `Kanban`, `KanbanColumn`, `KanbanMove` | Cards that people move between stages, such as incidents or requests. `columns` names each stage with an optional `icon` and a work-in-progress `limit` (the count turns to a warning above it). `value` maps each column id to its items in order; `onChange` receives the next value and the `KanbanMove`. Apply the move optimistically, persist it, and on failure restore the previous value and show an error toast (see Optimistic moves in `data.md`). `onChange` runs inside a view transition: a card that moves by the keyboard glides to its new place, a card that people drop with the pointer lands at once, and the other cards make room. A card that arrives in `value` without a move, such as after a refetch, fades in. Change the value synchronously in `onChange`, and restore it with `withViewTransition`. `renderItem` draws the card content (a title and two or three facts); `getItemLabel` names the card for typeahead and drag announcements; `onItemAction` opens a card on click or Enter. Drag with the pointer, or focus the grip and press Enter, Tab to a column, arrow to a place, and press Enter. `columnActions` adds header content such as an add button. Columns scroll sideways on narrow screens. `onColumnsChange(columns, move)` makes the column order changeable: drag a column by the grip in its header, or focus that grip, press Enter or Space, move with Left and Right, and press Enter to drop or Escape to cancel. A line marks the place and a live region announces it. `KanbanColumnMove` is `{ columnId, fromIndex, toIndex }`; apply it optimistically and persist it. The columns glide to their new places. Without `onColumnsChange` the order is fixed. |
+| `work-queue.tsx` | `WorkQueue`, `QueueSection`, `QueueSectionProps`, `QueueCard`, `QueueCardProps`, `QueueCardAction` | The work of one person on a touch page, grouped by the next action. Put it in `Page density="touch"`; see Touch Work View. `QueueSection` takes a `title` that names the next action, an `icon`, the `items` in the order of work, `getItemId` (unique in the whole queue), and `renderItem`. It shows the count beside the title. `emptyMessage` keeps an empty section on the page with that sentence; without it, an empty section does not show. `emphasis` gives the section that people work on now a stronger card edge; use it once. `QueueCard` takes a `title`, a `link` that opens the record (the title gets a chevron), a `tag` at the top right such as a `Badge size="lg"`, a one-line `subtitle`, `children` with what people need to do the work, quiet `meta` under a divider, and `actions`: `{ label, icon?, intent?, onPress, isDisabled? }`. The actions are large buttons that share the width of the card and stack when the card is narrow. One action at most has `intent: "primary"`. `panel` replaces the actions with short content, such as a form that asks why work stops; do not give `panel` and `actions` together. `tone="attention"` marks an item that needs help; say why in the card too. A card that moves to another section in a `withViewTransition` update glides there, a card that leaves fades out, a card that arrives without a move fades in, and the count animates when it changes. Each component throws outside its parent. |
 | `tree.tsx` | `Tree`, `TreeNode`, `TreeSelection`, `TreeMove`, `moveTreeNodes` | A hierarchy of records, such as folders, categories, an org chart, or permissions. Each node has a `label`, an optional `icon` and `openIcon`, a quiet `description`, trailing `meta`, and `children`. Arrow keys move between rows, Right and Left open and close a branch. `selection` is `{ mode: "single", value, onChange }` for the open record, or `{ mode: "checkbox", value, onChange }` with leaf ids: a branch checkbox selects or clears every leaf under it and shows a dash when only some are selected. `onAction` opens a node. `onMove` enables drag and drop to reorder and nest nodes; apply the move with `moveTreeNodes` and persist it. `guides` (on by default) draws the level lines. Pass `expandedIds` and `onExpandedChange` to keep open branches in the URL. |
 | `sortable-list.tsx` | `SortableList`, `SortableMove` | A list people put in order, such as an escalation chain, a column order, or dashboard widgets. `onReorder` receives the items in their new order and the `SortableMove`; apply it optimistically, persist it, and restore the old order with an error toast if it fails. `onReorder` runs inside a view transition, so the other rows glide to their new places; change the order synchronously in `onReorder`. `renderItem` draws the row content, `itemActions` adds trailing controls such as a remove button, and `onItemAction` opens a row. `showPosition` numbers the rows for priority orders. `layout="grid"` wraps tiles. Drag by the grip, or focus the grip, press Enter, move with the arrow keys, and press Enter; Escape cancels. `framed={false}` drops the frame inside a `Card`. |
 | `code-block.tsx` | `CodeBlock`, `CodeLanguage`, `CodeDiagnostic`, `CodeLineSpec` | Read-only config, payloads, queries, commands, and short output. `language` is `ts`, `tsx`, `js`, `jsx`, `json`, `sh`, `bash`, `sql`, `yaml`, `css`, `html`, `python`, `go`, `rust`, `toml`, `dockerfile`, `markdown`, `diff` (the +/- prefixes mark lines), or `text`. A small built-in highlighter colors comments, strings, numbers, keywords, keys, functions, types, and tags; it adds no dependency to the bundle. `title` names the file or command in the header with a copy button and a wrap toggle; without a title the buttons pin to the corner. `highlightedLines` and `diff={{ added, removed }}` take line numbers and `[start, end]` ranges. `diagnostics` tint error and warning lines and show the message under the line, such as config validation. `maxLines` collapses long code behind "Show all N lines". `startLine` numbers an excerpt. `variant="embedded"` drops the border inside a `CardSection padding="flush"` or a `Trace` step. Use `LogViewer` for long or streaming logs and `Code` for inline values. |
@@ -164,6 +168,7 @@ The template contains one working example of each:
 | Detail | `_app/items/$itemId.tsx` | `Page width="reading"`, `PageHeader` with quiet actions, `DescriptionList` in a `Section`, `ConfirmDialog` for delete. |
 | Create | `features/items/ui/create-item-dialog.tsx` | `Dialog` with a TanStack Form; the footer submit button uses `form={formId}`. Status is a `RadioGroup appearance="chips"`. |
 | Long form | `_app/design-kit_.form.tsx` with `components/kit/showcase-form.tsx` | `FormLayout` with an `ErrorSummary`, one `Section layout="split"` for each part, a `FormPreview` beside the sections, and a `FormFooter` with the summary and the submit button. After submit, a success `Alert` names the new record and offers the next action. |
+| Touch queue | `_app/design-kit_.queue.tsx` with `components/kit/showcase-queue.tsx` | `Page density="touch"`. A person picker as `RadioGroup appearance="cards"`, then a `PageHeader` that names the person with the person chips in its actions. A `WorkQueue` with one `QueueSection` for each next action, `QueueCard` actions that move a card optimistically, an inline panel for a short question, and a `Sheet` for the full record. |
 | Settings | `_app/settings.tsx` | Reading-width page with `SettingsCard` and `SettingRow`. Identifiers use `Code` with a `CopyButton`. |
 
 Choose the container by task:
@@ -173,6 +178,167 @@ Choose the container by task:
 - Records read one after another from a list: `Sheet size="peek"` with `navigation` and an "Open page" link to the detail route. Keep the open record in a search param.
 - Long forms (more than about six fields) or multi-section records: a dedicated route with `FormLayout`. See Forms.
 - Irreversible actions: `ConfirmDialog` that names the object and the consequence. The confirm label repeats the verb ("Delete item"). The `danger` intent is for that button, not for the entry point.
+
+## Touch Work View
+
+Some people do their work away from a desk. A technician, a stock picker, or
+a nurse holds a tablet or a phone, finishes one item, and then starts the next.
+A desktop list page in touch density does not help these people. Make a
+separate touch view when all of these conditions are true:
+
+- People work away from a desk: on a tablet, on a phone, or on a shared screen
+  at a bench or on a wall.
+- People work on their own items, one item after the other.
+- People change the state of an item (start, finish, wait) more frequently
+  than they edit its fields.
+
+Keep the desktop page for the people who plan, assign, and audit the work.
+The two pages read the same data. The touch view does not replace the desktop
+page.
+
+A desktop page that is squeezed onto a tablet shows these signs. If you see
+one of them on a page for work away from a desk, make a touch view:
+
+- A `DataTable` that scrolls sideways, or columns that people must read across
+  the screen to find the next item.
+- Actions in a row menu, in a toolbar above the list, or behind a hover.
+- Filters that people must set each time to see their own items.
+- The state is a column value, so people must read each row to find what to
+  do next.
+- Small controls next to each other, so a tap hits the wrong control.
+
+`QueueShowcase` on the `/design-kit/queue` route is the reference. Copy its
+structure.
+
+### Structure
+
+1. Render the route in `Page density="touch"`.
+2. If no person is chosen, show a `PageHeader` that asks "Who is working on
+   this tablet?" and a `RadioGroup appearance="cards"` with one card for each
+   person. Show the number of open items of each person in the card `meta`.
+3. When a person is chosen, show a `PageHeader` whose title names the person
+   and the amount of work. Put a `RadioGroup appearance="chips"` with the first
+   names in the header `actions`, so the next person can change the queue in
+   one tap.
+4. Show a `WorkQueue` with one `QueueSection` for each next action.
+5. Open the full record in a `Sheet` from the card title. Keep the id of the
+   open record in a search param.
+
+### The Person
+
+- Keep the person in the URL, such as `?person=`, so a reload and a link show
+  the same queue.
+- On a shared device, remember the last person for each device in a cookie.
+  Read the cookie in `beforeLoad`, as `getThemeChoice` in `src/lib/theme.ts`
+  reads the theme. Do not read `localStorage` during a render: the server
+  cannot read it, so the server HTML and the first browser render are
+  different. The showcase keeps the person in the URL only.
+- If the app has sign-in and the device is personal, the signed-in user is the
+  person. Do not show the picker.
+
+### Sections
+
+- Make one section for each next action, in the order of work: "In progress",
+  then "Up next", then "Waiting for a part", then "Not assigned yet". Name a
+  section with the next action or the state that people know. Do not name it
+  with an internal status code.
+- Sort the items of a section: urgent items first, then by due date. Sort a
+  waiting section by the longest wait first.
+- Give `emphasis` to the section that people work on now. Use it on one
+  section only.
+- Give `emptyMessage` to a section that people expect to see, so that an empty
+  section tells them what to do next: "Nothing in progress. Start the next work
+  order below." Do not give it to a section that is frequently empty, such as
+  a waiting section. That section does not show when it is empty.
+
+### Cards
+
+- Keep a card short: the title, one `subtitle` line, the tasks as a short
+  list, a quote from the requester, and an `Alert` that says why the item
+  waits. Put all other fields in the `Sheet`.
+- Give the card a `link`. The title becomes the link to the record. Do not
+  make the full card a link, because the card contains buttons.
+- Give one `primary` action: the next step. Label each action with a verb, such
+  as "Start work", "Mark as done", or "Take this work order". Do not use an
+  icon-only button.
+- Do not put an action behind a hover or in a menu. A touch screen has no
+  hover. Put feedback that only a hover shows, such as an underline, under
+  `media.finePointer`, because a touch screen keeps the hover state after a
+  tap.
+- Make every target 44px or more. The kit buttons, links, and choices do this
+  in touch density. A `Badge` keeps its size in all densities, so use `Badge
+  size="lg"` on a touch page.
+- Give `tone="attention"` to an item that needs help, such as an overdue item
+  or an item that waits too long. Also write the reason in the card, such as
+  "6 days without the part. Call the supplier." The color is not the only cue.
+- If a move needs a short answer, such as the name of the missing part, show a
+  `panel` in the card, not a dialog. Keep the panel to one or two fields, a
+  submit button, and a cancel button.
+
+### Moves
+
+- Change the query cache inside `withViewTransition`, then send the request.
+  See Optimistic moves in `data.md`.
+- If the request fails, restore the item inside `withViewTransition` and show
+  a toast that names the item: "WO-1042 did not change. Try again." The card
+  moves back, so the toast is the only place for the message.
+- Do not show a toast when the move succeeds. The card in its new section
+  shows the result.
+- `WorkQueue` already animates the moves, the items that arrive after a
+  refetch, and the count of each section. Do not add motion.
+
+```tsx
+<Page density="touch">
+  <PageHeader
+    title={`${technician.firstName}, ${greeting(count)}`}
+    actions={
+      <RadioGroup
+        label="Work orders of"
+        appearance="chips"
+        options={people}
+        value={person}
+        onChange={setPerson}
+      />
+    }
+  />
+  <WorkQueue>
+    <QueueSection
+      title="In progress"
+      icon={Wrench}
+      emphasis
+      items={queue.inProgress}
+      getItemId={(order) => order.id}
+      emptyMessage="Nothing in progress. Start the next work order below."
+      renderItem={(order) => (
+        <QueueCard
+          title={order.title}
+          link={{ to: "/work", search: (previous) => ({ ...previous, order: order.id }) }}
+          subtitle={order.place}
+          actions={[
+            {
+              label: "Mark as done",
+              icon: Check,
+              intent: "primary",
+              onPress: () => change(order, { stage: "done" }),
+            },
+            { label: "Waiting for a part", icon: PackageSearch, onPress: () => askForPart(order) },
+          ]}
+        >
+          <TaskList tasks={order.tasks} />
+        </QueueCard>
+      )}
+    />
+    <QueueSection
+      title="Up next"
+      icon={ListTodo}
+      items={queue.next}
+      getItemId={(order) => order.id}
+      emptyMessage="Your queue is clear."
+      renderItem={(order) => <WorkOrderCard order={order} />}
+    />
+  </WorkQueue>
+</Page>
+```
 
 ## Forms
 

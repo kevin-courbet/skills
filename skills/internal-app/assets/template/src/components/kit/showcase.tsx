@@ -231,7 +231,7 @@ function TouchDensityShowcase() {
   return (
     <Section
       title="Touch density"
-      description="Page density=touch, for a shared tablet or kiosk read from arm's length."
+      description="Page density=touch, for a shared tablet or kiosk read from arm's length. The /design-kit/queue route shows a full touch work view."
     >
       <Card layout="sections">
         <Page density="touch">

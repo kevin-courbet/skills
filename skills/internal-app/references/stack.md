@@ -89,6 +89,7 @@ src/
     kit/showcase.tsx           kit. Every primitive on one page for visual checks.
     kit/showcase-operations.tsx kit. Filter, status, pipeline, activity, and card patterns for the showcase.
     kit/showcase-form.tsx      kit. A long form that uses every form component, on /design-kit/form.
+    kit/showcase-queue.tsx     kit. A touch work view of facilities work orders, on /design-kit/queue.
   features/<name>/             App.
     schemas.ts                 Effect Schema for entities, inputs, and search params. Client-safe.
     api.ts                     Server functions, query keys, queryOptions. The only data module routes import.

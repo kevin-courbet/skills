@@ -97,7 +97,7 @@ validation.
 - **Kit first.** Pages compose kit primitives. Never put a raw `<button>`, `<input>`, `<select>`, or `<table>` in a route or feature.
 - **Tokens only.** Raw colors, font sizes, and theme media queries live in the token files. Brand colors go in the app's `brand.stylex.ts`. Density changes happen in the skill, not in an app.
 - **Both themes.** Check every page in light and dark before handoff.
-- **Dense and quiet.** Use 13 px body text, 32 px controls, and 36 px table rows. A page for a shared tablet or kiosk uses `Page density="touch"` instead. One primary action per view. Sentence case. No success toasts for results the UI already shows.
+- **Dense and quiet.** Use 13 px body text, 32 px controls, and 36 px table rows. A page for a shared tablet or kiosk uses `Page density="touch"` instead. Work that people do away from a desk gets a separate touch view, not a squeezed desktop page; see Touch Work View in `references/components.md`. One primary action per view. Sentence case. No success toasts for results the UI already shows.
 - **App frame.** The sidebar sits on the `frame` color; the page sits in the raised content panel. Do not add page chrome outside the panel.
 - **Current navigation** uses a selected surface, medium weight, and `aria-current="page"`. Never a left-edge border, rail, pseudo-element, or inset shadow.
 - **Effect at the boundary.** Services are `Context.Service` classes with layers in one `ManagedRuntime`. Server functions validate input with Effect Schema and run through `runServerFn`. Expected failures travel as typed data; defects throw. Nothing is swallowed.
