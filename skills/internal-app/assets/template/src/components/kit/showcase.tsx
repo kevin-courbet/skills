@@ -597,7 +597,12 @@ export function KitShowcase() {
           items={[
             { label: "Elapsed", value: "320 ms" },
             { label: "Steps", value: "3", hint: "3 types" },
-            { label: "Failed steps", value: "2", tone: "danger" },
+            {
+              label: "Failed steps",
+              value: "2",
+              tone: "danger",
+              link: { to: ".", hash: "sample-jobs" },
+            },
             { label: "Coverage", value: "100%" },
           ]}
         />
@@ -608,81 +613,83 @@ export function KitShowcase() {
           source="Job runner, sample data"
           series={jobsPerDay}
         />
-        <DataTable
-          caption="Sample jobs"
-          columns={sampleColumns}
-          data={sampleRows}
-          getRowId={(row) => row.id}
-          numericColumns={["volume"]}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          pinnedColumns={{ start: ["name"] }}
-          responsiveColumns={{ region: { hideBelow: "sm", stack: true } }}
-          rowAction={{ onAction: (row) => setPeekIndex(sampleRows.indexOf(row)) }}
-          activeRowId={peekRow?.id}
-          selection={{
-            selectedIds,
-            onChange: setSelectedIds,
-            rowLabel: (row) => row.name,
-            canSelect: (row) => row.status !== "paused",
-            actions: (ids) => (
-              <>
-                <Button size="sm">
-                  <Pause aria-hidden width={14} height={14} />
-                  Pause
-                </Button>
-                <Button size="sm" onPress={() => setConfirmOpen(true)}>
-                  <Trash2 aria-hidden width={14} height={14} />
-                  Delete {ids.length} {ids.length === 1 ? "job" : "jobs"}
-                </Button>
-              </>
-            ),
-          }}
-          columnVisibility={{ hidden: hiddenColumns, onChange: setHiddenColumns }}
-          toolbar={
-            <Toolbar
-              label="Filter jobs"
-              density="compact"
-              actions={
+        <div id="sample-jobs">
+          <DataTable
+            caption="Sample jobs"
+            columns={sampleColumns}
+            data={sampleRows}
+            getRowId={(row) => row.id}
+            numericColumns={["volume"]}
+            sorting={sorting}
+            onSortingChange={setSorting}
+            pinnedColumns={{ start: ["name"] }}
+            responsiveColumns={{ region: { hideBelow: "sm", stack: true } }}
+            rowAction={{ onAction: (row) => setPeekIndex(sampleRows.indexOf(row)) }}
+            activeRowId={peekRow?.id}
+            selection={{
+              selectedIds,
+              onChange: setSelectedIds,
+              rowLabel: (row) => row.name,
+              canSelect: (row) => row.status !== "paused",
+              actions: (ids) => (
                 <>
-                  <Button intent="ghost" size="sm" iconOnly aria-label="Refresh">
-                    <RefreshCw aria-hidden width={14} height={14} />
+                  <Button size="sm">
+                    <Pause aria-hidden width={14} height={14} />
+                    Pause
                   </Button>
-                  <Button intent="ghost" size="sm" iconOnly aria-label="Export">
-                    <Download aria-hidden width={14} height={14} />
+                  <Button size="sm" onPress={() => setConfirmOpen(true)}>
+                    <Trash2 aria-hidden width={14} height={14} />
+                    Delete {ids.length} {ids.length === 1 ? "job" : "jobs"}
                   </Button>
                 </>
-              }
-            >
-              <Select
-                label="Scope"
-                hideLabel
-                size="sm"
-                defaultValue="all"
-                options={[
-                  { id: "all", label: "All jobs" },
-                  { id: "mine", label: "My jobs" },
-                ]}
-                style={styles.scope}
-              />
-              <SearchField
-                label="Search jobs"
-                hideLabel
-                size="sm"
-                focusShortcut
-                placeholder="Search jobs"
-                style={styles.toolbarSearch}
-              />
-              <Filters
-                label="Job filters"
-                fields={jobFilterFields}
-                value={jobFilters}
-                onChange={setJobFilters}
-              />
-            </Toolbar>
-          }
-          emptyState={<EmptyState title="No jobs" />}
-        />
+              ),
+            }}
+            columnVisibility={{ hidden: hiddenColumns, onChange: setHiddenColumns }}
+            toolbar={
+              <Toolbar
+                label="Filter jobs"
+                density="compact"
+                actions={
+                  <>
+                    <Button intent="ghost" size="sm" iconOnly aria-label="Refresh">
+                      <RefreshCw aria-hidden width={14} height={14} />
+                    </Button>
+                    <Button intent="ghost" size="sm" iconOnly aria-label="Export">
+                      <Download aria-hidden width={14} height={14} />
+                    </Button>
+                  </>
+                }
+              >
+                <Select
+                  label="Scope"
+                  hideLabel
+                  size="sm"
+                  defaultValue="all"
+                  options={[
+                    { id: "all", label: "All jobs" },
+                    { id: "mine", label: "My jobs" },
+                  ]}
+                  style={styles.scope}
+                />
+                <SearchField
+                  label="Search jobs"
+                  hideLabel
+                  size="sm"
+                  focusShortcut
+                  placeholder="Search jobs"
+                  style={styles.toolbarSearch}
+                />
+                <Filters
+                  label="Job filters"
+                  fields={jobFilterFields}
+                  value={jobFilters}
+                  onChange={setJobFilters}
+                />
+              </Toolbar>
+            }
+            emptyState={<EmptyState title="No jobs" />}
+          />
+        </div>
         <Pagination page={page} pageCount={4} onPageChange={setPage} />
         <DataTable
           caption="Nightly runs"

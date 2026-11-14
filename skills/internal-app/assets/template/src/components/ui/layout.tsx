@@ -1,6 +1,7 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
+import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 import { touchDensity } from "@/styles/themes";
 import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
@@ -230,6 +231,19 @@ export function StatTile({ label, value, hint, delta, chart, footnote }: StatTil
 
 export type StatStripTone = "danger" | "warning" | "success" | "info" | "muted";
 
+/** Router link props of a stat that opens the records it counts. */
+export type StatStripLink = Omit<
+  LinkComponentProps<"a">,
+  | "children"
+  | "className"
+  | "style"
+  | "activeProps"
+  | "inactiveProps"
+  | "id"
+  | "aria-label"
+  | "aria-labelledby"
+>;
+
 export interface StatStripItem {
   readonly label: string;
   readonly value: ReactNode;
@@ -239,6 +253,11 @@ export interface StatStripItem {
   readonly tone?: StatStripTone;
   /** Secondary line under the value, such as "All stages passed in 1m 56s". */
   readonly detail?: ReactNode;
+  /**
+   * Makes the whole cell open the records it counts, such as the list filtered
+   * to them. The link name is the label and the value, such as "Overdue 12".
+   */
+  readonly link?: StatStripLink;
 }
 
 export interface StatStripProps {
@@ -263,24 +282,55 @@ export function StatStrip({ items, variant = "metric", framed = true }: StatStri
   return (
     <dl {...stylex.props(styles.strip, framed && styles.stripFramed)}>
       {items.map((item) => (
-        <div key={item.label} {...stylex.props(styles.stripItem)}>
-          <dt {...stylex.props(styles.stripLabel)}>{item.label}</dt>
-          <dd
-            {...stylex.props(
-              styles.stripValue,
-              variant === "status" && styles.stripValueStatus,
-              item.tone && stripTones[item.tone],
-            )}
-          >
-            {item.value}
-            {item.hint ? <span {...stylex.props(styles.stripHint)}>{item.hint}</span> : null}
-          </dd>
-          {item.detail === undefined ? null : (
-            <dd {...stylex.props(styles.stripDetail)}>{item.detail}</dd>
-          )}
-        </div>
+        <StatStripCell key={item.label} item={item} variant={variant} />
       ))}
     </dl>
+  );
+}
+
+function StatStripCell({
+  item,
+  variant,
+}: {
+  readonly item: StatStripItem;
+  readonly variant: NonNullable<StatStripProps["variant"]>;
+}) {
+  const id = useId();
+  const labelId = `${id}-label`;
+  const valueId = `${id}-value`;
+  return (
+    <div {...stylex.props(styles.stripItem, item.link && styles.stripItemLinked)}>
+      <dt id={item.link ? labelId : undefined} {...stylex.props(styles.stripLabel)}>
+        {item.label}
+      </dt>
+      <dd
+        {...stylex.props(
+          styles.stripValue,
+          variant === "status" && styles.stripValueStatus,
+          item.tone && stripTones[item.tone],
+        )}
+      >
+        {item.link ? (
+          // The name keeps the visible label and value, so screen reader and voice control users hear and say the count.
+          <Link
+            {...item.link}
+            id={valueId}
+            aria-labelledby={`${labelId} ${valueId}`}
+            {...stylex.props(styles.stripLink)}
+          >
+            {item.value}
+            {/* Covers the cell, so a click on the label or the detail opens the link too. */}
+            <span aria-hidden {...stylex.props(styles.stripLinkCover)} />
+          </Link>
+        ) : (
+          item.value
+        )}
+        {item.hint ? <span {...stylex.props(styles.stripHint)}>{item.hint}</span> : null}
+      </dd>
+      {item.detail === undefined ? null : (
+        <dd {...stylex.props(styles.stripDetail)}>{item.detail}</dd>
+      )}
+    </div>
   );
 }
 
@@ -614,6 +664,22 @@ const styles = stylex.create({
     borderInlineStartStyle: "solid",
     borderInlineStartColor: color.borderSubtle,
   },
+  stripItemLinked: {
+    position: "relative",
+    backgroundColor: { default: "transparent", ":hover": color.subtle },
+  },
+  stripLink: {
+    color: "inherit",
+    textDecoration: { default: "none", ":hover": "underline" },
+    textUnderlineOffset: "3px",
+    textDecorationColor: color.borderStrong,
+    borderRadius: radius.sm,
+    outlineStyle: { default: "none", ":focus-visible": "solid" },
+    outlineWidth: "2px",
+    outlineColor: color.focus,
+    outlineOffset: "2px",
+  },
+  stripLinkCover: { position: "absolute", inset: 0 },
   stripLabel: { fontSize: font.sm, color: color.textMuted },
   stripValue: {
     display: "flex",
