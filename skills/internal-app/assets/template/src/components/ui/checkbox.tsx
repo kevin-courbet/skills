@@ -7,12 +7,18 @@ import {
   CheckboxGroup as AriaCheckboxGroup,
   type CheckboxGroupProps as AriaCheckboxGroupProps,
   type CheckboxProps as AriaCheckboxProps,
-  FieldError,
-  Label,
-  Text,
 } from "react-aria-components";
-import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
-import { field } from "./field";
+import { color, font, motion, radius, space } from "@/styles/tokens.stylex";
+import {
+  assertChoiceOptions,
+  type ChoiceAppearance,
+  type ChoiceOption,
+  ChoiceLeading,
+  choice,
+  chipSizes,
+} from "./choice";
+import { useControlSize } from "./control-size";
+import { field, FieldDescription, FieldErrorMessage, FieldLabel } from "./field";
 
 export interface CheckboxProps extends Omit<AriaCheckboxProps, "className" | "style" | "children"> {
   readonly children?: ReactNode;
@@ -45,32 +51,29 @@ export function Checkbox({ children, style, ...props }: CheckboxProps) {
   );
 }
 
-export interface CheckboxOption<Value extends string> {
-  readonly id: Value;
-  readonly label: string;
-  readonly description?: string;
-  /** Trailing fact that helps the choice, such as a price or a duration. */
-  readonly meta?: ReactNode;
-}
-
 export interface CheckboxGroupProps<Value extends string> extends Omit<
   AriaCheckboxGroupProps,
   "className" | "style" | "children" | "value" | "defaultValue" | "onChange"
 > {
   readonly label: string;
-  readonly options: ReadonlyArray<CheckboxOption<Value>>;
+  readonly options: ReadonlyArray<ChoiceOption<Value>>;
   readonly value: ReadonlyArray<Value>;
   readonly onChange: (value: ReadonlyArray<Value>) => void;
+  /** Hint between the label and the options, such as what the choice changes. */
   readonly description?: string;
   readonly errorMessage?: string;
+  /** See ChoiceAppearance. The default is `cards`. */
+  readonly appearance?: ChoiceAppearance;
+  /** Marks the label "optional" when people may choose nothing. Do not set it with `isRequired`. */
+  readonly isOptional?: boolean;
   readonly style?: StyleXStyles;
 }
 
 /**
  * Several visible choices from a short fixed list, such as the checks to run
- * before a deploy. Options are tiles in a grid that fills the width, so each one
- * is a large target and its `meta` (a duration or a price) lines up at the end.
- * Use MultiSelect for long or searchable lists.
+ * before a deploy. Each option is its own tab stop, and Space toggles it. Use
+ * `cards` when options carry a description or a `meta` (a duration or a price),
+ * `chips` for short labels in a row, and MultiSelect for long or searchable lists.
  */
 export function CheckboxGroup<Value extends string>({
   label,
@@ -79,9 +82,15 @@ export function CheckboxGroup<Value extends string>({
   onChange,
   description,
   errorMessage,
+  appearance = "cards",
+  isOptional = false,
   style,
   ...props
 }: CheckboxGroupProps<Value>) {
+  const controlSize = useControlSize();
+  assertChoiceOptions("CheckboxGroup", appearance, options);
+  if (isOptional && props.isRequired)
+    throw new Error("CheckboxGroup: set isOptional or isRequired, not both.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaCheckboxGroup
@@ -93,51 +102,101 @@ export function CheckboxGroup<Value extends string>({
       }
       {...stylex.props(field.root, style)}
     >
-      <Label {...stylex.props(field.label)}>{label}</Label>
-      <div {...stylex.props(styles.tiles)}>
+      <FieldLabel isOptional={isOptional}>{label}</FieldLabel>
+      <FieldDescription>{description}</FieldDescription>
+      <div
+        {...stylex.props(
+          appearance === "list" && styles.list,
+          appearance === "cards" && choice.cards,
+          appearance === "chips" && choice.chips,
+        )}
+      >
         {options.map((option) => (
-          <AriaCheckbox key={option.id} value={option.id} {...stylex.props(styles.tileRoot)}>
-            {({ isSelected, isFocusVisible, isDisabled, isHovered }) => (
-              <span
-                {...stylex.props(
-                  styles.tile,
-                  isHovered && styles.tileHovered,
-                  isSelected && styles.tileSelected,
-                  isFocusVisible && styles.boxFocused,
-                  isDisabled && styles.disabled,
-                )}
-              >
+          <AriaCheckbox
+            key={option.id}
+            value={option.id}
+            isDisabled={option.isDisabled}
+            {...stylex.props(appearance === "list" ? styles.listItem : choice.itemRoot)}
+          >
+            {({ isSelected, isFocusVisible, isDisabled }) => {
+              const box = (
                 <span
                   aria-hidden
                   {...stylex.props(
                     styles.box,
-                    styles.tileBox,
+                    appearance === "list" ? styles.listBox : choice.cardMark,
                     isSelected && styles.boxSelected,
-                    isInvalid && styles.boxInvalid,
+                    isInvalid && !isSelected && styles.boxInvalid,
+                    appearance === "list" && isFocusVisible && styles.boxFocused,
+                    appearance === "list" && isDisabled && styles.disabled,
                   )}
                 >
                   <CheckboxMark isSelected={isSelected} isIndeterminate={false} />
                 </span>
-                <span {...stylex.props(styles.tileText)}>
-                  <span {...stylex.props(styles.label)}>{option.label}</span>
-                  {option.description ? (
-                    <span {...stylex.props(styles.tileDescription)}>{option.description}</span>
-                  ) : null}
+              );
+              if (appearance === "list")
+                return (
+                  <>
+                    {box}
+                    <span {...stylex.props(styles.listText, isDisabled && styles.disabled)}>
+                      {option.label}
+                      {option.description ? (
+                        <span {...stylex.props(styles.listDescription)}>{option.description}</span>
+                      ) : null}
+                    </span>
+                  </>
+                );
+              const state = [
+                choice.base,
+                isSelected && choice.selected,
+                isInvalid && !isSelected && choice.invalid,
+                isFocusVisible && choice.focused,
+                isDisabled && choice.disabled,
+              ];
+              if (appearance === "cards")
+                return (
+                  <span {...stylex.props(choice.card, ...state)}>
+                    {box}
+                    <span {...stylex.props(choice.cardText)}>
+                      <span {...stylex.props(choice.cardLabel)}>
+                        <ChoiceLeading option={option} isSelected={isSelected} placement="card" />
+                        {option.label}
+                      </span>
+                      {option.description ? (
+                        <span {...stylex.props(choice.cardDescription)}>{option.description}</span>
+                      ) : null}
+                    </span>
+                    {option.meta === undefined ? null : (
+                      <span {...stylex.props(choice.cardMeta)}>{option.meta}</span>
+                    )}
+                  </span>
+                );
+              return (
+                <span
+                  {...stylex.props(
+                    choice.chip,
+                    chipSizes[controlSize],
+                    ...state,
+                    isSelected && choice.chipSelected,
+                  )}
+                >
+                  {isSelected ? (
+                    // A multiple choice shows a check, so chips never read as one choice of many.
+                    <Check aria-hidden {...stylex.props(choice.icon, choice.iconSelected)} />
+                  ) : (
+                    <ChoiceLeading option={option} isSelected={isSelected} placement="chip" />
+                  )}
+                  {option.label}
+                  {option.meta === undefined ? null : (
+                    <span {...stylex.props(choice.chipMeta)}>{option.meta}</span>
+                  )}
                 </span>
-                {option.meta === undefined ? null : (
-                  <span {...stylex.props(styles.tileMeta)}>{option.meta}</span>
-                )}
-              </span>
-            )}
+              );
+            }}
           </AriaCheckbox>
         ))}
       </div>
-      {description ? (
-        <Text slot="description" {...stylex.props(field.description)}>
-          {description}
-        </Text>
-      ) : null}
-      <FieldError {...stylex.props(field.error)}>{errorMessage}</FieldError>
+      <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
     </AriaCheckboxGroup>
   );
 }
@@ -190,40 +249,17 @@ const styles = stylex.create({
   boxInvalid: { borderColor: color.danger },
   icon: { width: "0.75rem", height: "0.75rem", strokeWidth: "3" },
   label: { color: color.text, userSelect: "none" },
-  tiles: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 12rem), 1fr))",
-    gap: space.sm,
-  },
-  tileRoot: { display: "flex", minWidth: 0, cursor: "pointer", outlineStyle: "none" },
-  tile: {
+  list: { display: "flex", flexDirection: "column", gap: space.sm, paddingBlock: space.xs },
+  listItem: {
     display: "flex",
     alignItems: "flex-start",
     gap: space.sm,
-    width: "100%",
-    minHeight: size.controlLg,
-    paddingBlock: space.sm,
-    paddingInline: space.md,
     fontSize: font.md,
-    backgroundColor: color.raised,
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: color.border,
-    borderRadius: radius.md,
-    transitionProperty: "background-color, border-color",
-    transitionDuration: motion.fast,
-    transitionTimingFunction: motion.ease,
+    cursor: "pointer",
+    outlineStyle: "none",
   },
-  tileHovered: { borderColor: color.borderStrong },
-  tileSelected: { backgroundColor: color.accentMuted, borderColor: color.accentBorder },
-  tileBox: { marginTop: "0.125rem" },
-  tileText: { display: "flex", flexDirection: "column", gap: "0.125rem", flex: "1", minWidth: 0 },
-  tileDescription: { fontSize: font.sm, color: color.textMuted },
-  tileMeta: {
-    flexShrink: 0,
-    color: color.textMuted,
-    fontVariantNumeric: "tabular-nums",
-    whiteSpace: "nowrap",
-  },
+  listBox: { marginTop: "0.125rem" },
+  listText: { display: "flex", flexDirection: "column", gap: "0.125rem", color: color.text },
+  listDescription: { fontSize: font.sm, color: color.textMuted },
   disabled: { opacity: "0.5", cursor: "not-allowed" },
 });
