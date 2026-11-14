@@ -70,6 +70,8 @@ export const font = stylex.defineVars({
   regular: "400",
   medium: "500",
   semibold: "600",
+  /** Wordmarks only. Headings and labels stay at semibold. */
+  bold: "700",
   leadingTight: "1.25",
   leadingNormal: "1.45",
   tracking: "0",

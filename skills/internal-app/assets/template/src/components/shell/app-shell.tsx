@@ -50,10 +50,18 @@ export interface NavGroup {
   readonly items: ReadonlyArray<NavItem>;
 }
 
+export type AppLogo = "initial" | "wordmark";
+
 export interface AppShellProps {
   readonly appName: string;
   /** Short context under the app name, such as the environment or the tenant. */
   readonly environment?: string;
+  /**
+   * How the app name reads in the sidebar. "initial" adds a square mark with the
+   * first letter. "wordmark" sets the name alone in bold, for a brand whose logo is
+   * its name in type.
+   */
+  readonly logo?: AppLogo;
   readonly nav: ReadonlyArray<NavGroup>;
   /** Global actions at the end of the top bar, such as a user menu. */
   readonly actions?: ReactNode;
@@ -118,17 +126,23 @@ function Navigation({
 function Brand({
   appName,
   environment,
+  logo,
 }: {
   readonly appName: string;
   readonly environment?: string;
+  readonly logo: AppLogo;
 }) {
   return (
     <Link to="/" {...stylex.props(styles.brand)}>
-      <span aria-hidden {...stylex.props(styles.brandMark)}>
-        {appName.slice(0, 1)}
-      </span>
+      {logo === "initial" ? (
+        <span aria-hidden {...stylex.props(styles.brandMark)}>
+          {appName.slice(0, 1)}
+        </span>
+      ) : null}
       <span {...stylex.props(styles.brandText)}>
-        <span {...stylex.props(styles.brandName)}>{appName}</span>
+        <span {...stylex.props(styles.brandName, logo === "wordmark" && styles.brandWordmark)}>
+          {appName}
+        </span>
         {environment ? <span {...stylex.props(styles.brandContext)}>{environment}</span> : null}
       </span>
     </Link>
@@ -143,6 +157,7 @@ function Brand({
 export function AppShell({
   appName,
   environment,
+  logo = "initial",
   nav,
   actions,
   sidebarFooter,
@@ -178,7 +193,7 @@ export function AppShell({
     <div {...stylex.props(styles.root, isSidebarHidden && styles.rootSidebarHidden)}>
       <aside {...stylex.props(styles.sidebar, isSidebarHidden && styles.sidebarHidden)}>
         <div {...stylex.props(styles.sidebarHeader)}>
-          <Brand appName={appName} environment={environment} />
+          <Brand appName={appName} environment={environment} logo={logo} />
           <Button
             intent="ghost"
             size="sm"
@@ -324,6 +339,11 @@ const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
+  },
+  brandWordmark: {
+    fontSize: font.lg,
+    fontWeight: font.bold,
+    letterSpacing: font.trackingTight,
   },
   brandContext: {
     fontSize: font.xs,

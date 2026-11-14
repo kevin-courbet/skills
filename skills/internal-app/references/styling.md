@@ -70,7 +70,7 @@ Keep these gaps when you tune the palette; equal values make the app look washed
 
 Other groups: `shadow` (`sm`, `md`, `lg`, `xl` for a floating surface such as a dragged item or a docked panel, and
 `frame` for the content panel), `font` (families, sizes `xs` to `xxxl`, `display` and `displayLg` for large numerals
-and labels that people read from a distance, weights, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
+and labels that people read from a distance, weights `regular` to `semibold`, `bold` for a wordmark only, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
 `size` (control heights, icon sizes, sidebar, top bar, frame gap, content widths),
 `media` (breakpoints, reduced motion, forced colors), `container` (`belowSm`,
 `belowMd`, `belowLg` container queries that resolve against the nearest
