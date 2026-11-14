@@ -4,7 +4,7 @@ import type { StyleXStyles } from "@stylexjs/stylex";
 import { createContext, type ReactNode, useContext } from "react";
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components";
-import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+import { color, font, media, motion, radius, size, space } from "@/styles/tokens.stylex";
 import { useControlSize } from "./control-size";
 
 /** Set by ButtonGroup so its buttons join into one control. */
@@ -68,6 +68,7 @@ export function Button({
         intents[intent],
         sizes[sizeKey],
         iconOnly && squareSizes[sizeKey],
+        !isGrouped && styles.press,
         isGrouped && styles.grouped,
         isGrouped && intent === "primary" && styles.groupedPrimary,
         style,
@@ -100,6 +101,7 @@ export function LinkButton({
     intents[intent],
     sizes[sizeKey],
     iconOnly && squareSizes[sizeKey],
+    styles.press,
     props.disabled === true && styles.disabledLink,
     style,
   );
@@ -127,13 +129,20 @@ const styles = stylex.create({
     opacity: { default: "1", ":disabled": "0.5" },
     textDecoration: "none",
     userSelect: "none",
-    transitionProperty: "background-color, border-color, color, box-shadow",
+    transitionProperty: "background-color, border-color, color, box-shadow, transform",
     transitionDuration: motion.fast,
     transitionTimingFunction: motion.ease,
     outlineStyle: { default: "none", ":focus-visible": "solid" },
     outlineWidth: "2px",
     outlineColor: color.focus,
     outlineOffset: "2px",
+  },
+  // The button gives a little under the finger, so a tap shows that it landed. Joined buttons stay still.
+  press: {
+    transform: {
+      default: null,
+      ":active": { default: "scale(0.97)", [media.reducedMotion]: null },
+    },
   },
   disabledLink: { opacity: "0.5", pointerEvents: "none" },
   group: {

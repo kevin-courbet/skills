@@ -89,6 +89,7 @@
     "src/components/kit/showcase-form.tsx",
     "src/lib/filter-params.ts",
     "src/lib/form.ts",
+    "src/lib/motion.ts",
     "src/lib/rac.ts",
     "src/lib/router-defaults.tsx",
     "src/lib/server-result.ts",

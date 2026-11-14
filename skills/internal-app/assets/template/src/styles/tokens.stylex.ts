@@ -169,11 +169,28 @@ export const layer = stylex.defineConsts({
   tooltip: "130",
 });
 
+/**
+ * Durations and easing curves. See Motion in the styling reference for what
+ * to animate. Every animation also sets a `media.reducedMotion` override.
+ */
 export const motion = stylex.defineConsts({
+  /** Feedback on the control that people touch: a press, a hover, a focus ring. */
   fast: "120ms",
+  /** Surfaces that open and close, such as a popover or a dialog. */
   normal: "180ms",
   slow: "260ms",
+  /**
+   * An object that moves to a new place, such as a card that changes lanes.
+   * The view transition rules in `app.css` repeat this value.
+   */
+  move: "240ms",
   ease: "cubic-bezier(0.2, 0, 0, 1)",
   /** Enter motion: a fast start that settles softly. */
   easeOut: "cubic-bezier(0.23, 1, 0.32, 1)",
+  /**
+   * Motion of an object from one place to another: a slow start and a slow
+   * end, so the eye can follow it. The view transition rules in `app.css`
+   * repeat this value.
+   */
+  easeInOut: "cubic-bezier(0.77, 0, 0.175, 1)",
 });

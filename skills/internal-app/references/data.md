@@ -150,7 +150,42 @@ const create = useMutation({
 - Invalidate by key prefix. Do not call `router.invalidate()` for query data.
 - Show expected failures inline where the user acted (form error, row message). Use a toast only when there is no inline place.
 - Do not toast success when the list, row, or dialog closing already shows the result.
-- Optimistic updates are optional for internal tools. Add them only for interactions that feel slow.
+- Optimistic updates are optional for internal tools. Add them for moves on a board or a queue, where the object must stay where people put it, and for interactions that feel slow.
+
+### Optimistic moves
+
+A move on a `Kanban`, a `SortableList`, or a touch work queue changes the
+screen at once and saves in the background. Write the query cache
+synchronously in the update of the view transition. Do not write it in
+`onMutate`: `onMutate` runs after an await, after the browser captures the new
+state, so the object jumps instead of moving.
+
+```ts
+const moveTicket = useMutation({
+  mutationFn: (move: TicketMove) => moveTicketFn({ data: move }).then(unwrap),
+  onSettled: () => queryClient.invalidateQueries({ queryKey: ticketKeys.all }),
+});
+
+const move = (next: TicketBoard, change: KanbanMove) => {
+  const key = ticketKeys.board(teamId);
+  const previous = queryClient.getQueryData<TicketBoard>(key);
+  if (previous === undefined) throw new Error("The ticket board is not loaded.");
+  void queryClient.cancelQueries({ queryKey: key });
+  // Kanban calls onChange inside its view transition. A button outside a
+  // board wraps this line in withViewTransition.
+  queryClient.setQueryData(key, next);
+  moveTicket.mutate(change, {
+    onError: () => {
+      withViewTransition(() => queryClient.setQueryData(key, previous));
+      toast.error("The ticket did not move. Try again.");
+    },
+  });
+};
+```
+
+- Cancel the queries of the key first, so that a refetch that is in progress does not overwrite the move.
+- A failure puts the object back with the same motion and shows an error toast. The board is the inline place, so the toast is the message.
+- `onSettled` invalidates the key, so the server order replaces the optimistic order.
 
 Destructive mutations run from `ConfirmDialog`. Pass `mutateAsync` as
 `onConfirm`; a rejection keeps the dialog open and shows `failureMessage`.

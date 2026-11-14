@@ -104,7 +104,7 @@ and labels that people read from a distance, weights `regular` to `semibold`, `b
 `media` (breakpoints, reduced motion, forced colors), `container` (`belowSm`,
 `belowMd`, `belowLg` container queries that resolve against the nearest
 `containerType: "inline-size"` ancestor, such as the DataTable scroller), `layer` (z-index), and
-`motion` (durations, `ease` for state changes and exits, `easeOut` for enter motion).
+`motion` (durations and easing curves; see Motion).
 
 Density defaults:
 
@@ -242,10 +242,96 @@ const styles = stylex.create({
 - Accept a `style?: StyleXStyles` prop on layout-level components so parents can set width or margin. Spread it last.
 - Dynamic values (measured widths, computed colors) use a style function: `stylex.create({ width: (px: number) => ({ width: px }) })`. Use them rarely.
 - Custom properties are allowed as keys (`"--aperture-color-text": color.text`). The chart host bridge relies on this.
-- Reserve `stylex.keyframes` for enter, exit, and loading motion. Every animated property gets a reduced-motion override.
+- Reserve `stylex.keyframes` for enter, exit, change, and loading motion. Every animated property gets a reduced-motion override. See Motion.
 - Pseudo-elements `::before` and `::after` are discouraged; render a real element.
 - Write longhands for `border`, `background`, and `outline`. In the verified build, `border: "none"` and `background: "transparent"` on a `<button>` left the native border and background in place even though the classes were emitted. `borderStyle: "none"`, `backgroundColor: "transparent"`, and `outlineStyle: "none"` reset them correctly. The `margin`, `padding`, `gap`, `inset`, and `flex` shorthands compile and apply.
 - Set the base font size on `<body>`, not `<html>`. A rem-based `fontSize` on `<html>` rescales every rem token.
+
+## Motion
+
+Motion helps people follow an object when the state changes. It is not
+decoration. Animate a change only when people can lose track of an object
+without the animation: a card that goes to a different lane, a row that leaves
+a list, a status that changes while people look at a different part of the
+screen.
+
+`src/lib/motion.ts` has the helpers. The overlay, button, and kanban
+components already use them.
+
+| Change | Use | Duration and easing |
+|---|---|---|
+| A card or a row moves to a different lane, group, or position after an action | `withViewTransition` around the update, and `motionStyles.named(viewTransitionName(scope, kind, id))` on each item that can move | `motion.move` (240ms), `motion.easeInOut` |
+| People remove an item or add an item | `withViewTransition`. The item fades out or in, and the other items close or open the gap. | `motion.move`, `motion.easeInOut` |
+| An item arrives from the server, such as a new ticket after a refetch | `useArrivals(ids)` and `motionStyles.enter` on each arriving item | `motion.normal` (180ms), `motion.easeOut` |
+| A value changes in place, such as a status badge | `useHasChanged(value)`, `key={value}`, and `motionStyles.changed` | `motion.normal`, `motion.easeOut` |
+| A dialog, a sheet, a popover, or a menu opens or closes | The kit component. Do not add motion. | Enter `motion.normal` with `easeOut`, exit `motion.fast` with `ease`. A side sheet enters in `motion.slow`. |
+| A button is pressed | `Button` and `LinkButton` scale to 0.97 while pressed | `motion.fast` (120ms) |
+| Hover, focus, and selection colors | `transitionDuration: motion.fast` | `motion.fast`, `motion.ease` |
+
+Do not animate:
+
+- The first render of a page or a list. `useArrivals` returns no keys on the first render.
+- A route change. `app.css` turns off the cross-fade of the page.
+- Rows that a sort, a filter, a search, or a new page replaces. People asked for a new list; they do not follow one row.
+- A refetch that changes many items at the same time.
+- Numbers that count up, text that types itself, and charts that grow on load.
+- Content that loads. Show a `Skeleton` or a `Spinner`. These are the only animations that repeat.
+- The page shell, the sidebar, and the layout of a page.
+
+Durations and easing:
+
+- Keep motion of the user interface at 300ms or less. People wait for motion that is longer.
+- An exit is shorter than its enter.
+- Use `easeOut` for an element that enters, `ease` for an exit and a change of state, and `easeInOut` for an object that moves from one place to another, so the eye can follow it. Do not use `linear`, except for a spinner.
+- `::view-transition-group(*)` in `app.css` uses `motion.move` and `motion.easeInOut`. Change the two places together.
+
+Reduced motion:
+
+- With `prefers-reduced-motion: reduce`, `withViewTransition` runs the update at once, and `app.css` turns off all view-transition animations.
+- Every `animationDuration` and every transition of a transform gets `[media.reducedMotion]: "0ms"`, or a `null` transform under `media.reducedMotion`. `motionStyles` already does this.
+- Loading animations stop: the spinner, the skeleton pulse, and the indeterminate progress bar. Their shape still shows that work runs.
+
+### View transitions
+
+```tsx
+function TicketList({ tickets }: { readonly tickets: ReadonlyArray<Ticket> }) {
+  const scope = useId();
+  return tickets.map((ticket) => (
+    <Item
+      key={ticket.id}
+      style={motionStyles.named(viewTransitionName(scope, "ticket", ticket.id))}
+      title={ticket.title}
+    />
+  ));
+}
+
+const close = (ticket: Ticket) => {
+  withViewTransition(() =>
+    queryClient.setQueryData(ticketKeys.queue, (tickets: ReadonlyArray<Ticket> = []) =>
+      tickets.filter((candidate) => candidate.id !== ticket.id),
+    ),
+  );
+  closeTicket.mutate(ticket.id);
+};
+
+function TicketStatus({ status }: { readonly status: TicketStatus }) {
+  const hasChanged = useHasChanged(status);
+  return (
+    // A transform does not apply to an inline element, so the wrapper is inline-flex.
+    <span key={status} {...stylex.props(styles.status, hasChanged && motionStyles.changed)}>
+      <Badge intent={statusIntents[status]}>{statusLabels[status]}</Badge>
+    </span>
+  );
+}
+```
+
+- `withViewTransition(update)` captures the screen, runs `update`, and moves every named element from its old place to its new place. Named elements that only exist on one side fade out or in. The rest of the page changes at once.
+- `update` must change the state synchronously: a state setter, a `queryClient.setQueryData`, or a router navigation. Put the request after the update. See Optimistic moves in `data.md`.
+- A name must be unique in the document. Take the scope from `useId()`, so two boards on one page do not share names. A duplicate name is a bug: the browser skips the animation and `withViewTransition` reports the error to the window error handlers.
+- Name only the items that can move, such as the cards of a board or a queue, and the groups that contain them. Do not name every element of a page.
+- While a view transition runs, the page does not take pointer input. Keep it at `motion.move`.
+- An item that people drop with the pointer is already at its new place. Remove its name before the transition, so it does not fly back to where it started. `Kanban` does this.
+- Browsers without the View Transitions API run the update without motion.
 
 ## react-aria-components Adapter
 

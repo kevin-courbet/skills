@@ -58,3 +58,27 @@
     color: inherit;
   }
 }
+
+/*
+ * View transitions that `withViewTransition` in `src/lib/motion.ts`
+ * starts. Only elements with a `view-transition-name` move or fade; the rest
+ * of the page changes at once. The values repeat `motion.move` and
+ * `motion.easeInOut` from `tokens.stylex.ts`.
+ */
+::view-transition-group(*) {
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

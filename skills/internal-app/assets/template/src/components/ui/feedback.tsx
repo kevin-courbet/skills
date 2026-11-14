@@ -114,7 +114,7 @@ const styles = stylex.create({
     borderTopColor: color.accent,
     borderRadius: radius.full,
     animationName: spin,
-    animationDuration: "0.8s",
+    animationDuration: { default: "0.8s", [media.reducedMotion]: "0s" },
     animationTimingFunction: "linear",
     animationIterationCount: "infinite",
   },
