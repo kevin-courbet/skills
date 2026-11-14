@@ -2,6 +2,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { type ReactNode, useId } from "react";
+import { touchDensity } from "@/styles/themes";
 import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface PageHeaderProps {
@@ -34,12 +35,28 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
 export function Page({
   children,
   width = "full",
+  density = "default",
 }: {
   readonly children: ReactNode;
   readonly width?: "full" | "reading";
+  /**
+   * "touch" makes controls and text larger for a shared tablet or kiosk. Use it
+   * for a whole page, never for one control. Dialogs, popovers, menus, and toasts
+   * render outside the page and keep the default density, so keep touch flows inline.
+   */
+  readonly density?: "default" | "touch";
 }) {
   return (
-    <div {...stylex.props(styles.page, width === "reading" && styles.pageReading)}>{children}</div>
+    <div
+      {...stylex.props(
+        density === "touch" && touchDensity,
+        styles.page,
+        width === "reading" && styles.pageReading,
+        density === "touch" && styles.pageTouch,
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -420,6 +437,8 @@ const styles = stylex.create({
     paddingInline: { default: space.lg, [media.md]: space.xxl },
   },
   pageReading: { maxWidth: size.readingMax },
+  // Text inherits the computed body size, so the touch page sets its own size again.
+  pageTouch: { fontSize: font.md, lineHeight: font.leadingNormal },
   pageHeader: {
     display: "flex",
     alignItems: "flex-start",

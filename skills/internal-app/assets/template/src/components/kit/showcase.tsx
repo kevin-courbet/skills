@@ -46,6 +46,7 @@ import {
   Code,
   DescriptionList,
   Kbd,
+  Page,
   PageHeader,
   Section,
   SettingRow,
@@ -222,6 +223,40 @@ function Specimen({ label, children }: { readonly label: string; readonly childr
       <span {...stylex.props(styles.specimenLabel)}>{label}</span>
       <div {...stylex.props(styles.specimenBody)}>{children}</div>
     </div>
+  );
+}
+
+function TouchDensityShowcase() {
+  const [shift, setShift] = useState("morning");
+  return (
+    <Section
+      title="Touch density"
+      description="Page density=touch, for a shared tablet or kiosk read from arm's length."
+    >
+      <Card layout="sections">
+        <Page density="touch">
+          <div {...stylex.props(styles.specimenBody)}>
+            <Button intent="primary">Mark as done</Button>
+            <Button>Report a problem</Button>
+            <Badge intent="warning">Due today</Badge>
+          </div>
+          <div {...stylex.props(styles.specimenBody)}>
+            <SegmentedControl
+              label="Shift"
+              options={[
+                { id: "morning", label: "Morning" },
+                { id: "afternoon", label: "Afternoon" },
+                { id: "night", label: "Night" },
+              ]}
+              value={shift}
+              onChange={setShift}
+            />
+            <SearchField label="Find an order" hideLabel placeholder="Order number" />
+          </div>
+          <p>Body text is one step larger, so people can read it from arm's length.</p>
+        </Page>
+      </Card>
+    </Section>
   );
 }
 
@@ -805,6 +840,8 @@ export function KitShowcase() {
       <OperationsShowcase />
 
       <WorkspaceShowcase />
+
+      <TouchDensityShowcase />
 
       <Section title="Feedback">
         <div {...stylex.props(styles.stack)}>

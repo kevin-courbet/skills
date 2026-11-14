@@ -124,6 +124,31 @@ Density defaults:
 Change a density value in the token file of this skill, never in a component
 and never in an app's copy of a kit file.
 
+### Touch density
+
+Some pages run on a shared tablet or kiosk, where people tap the screen and
+read it from arm's length. `src/styles/themes.ts` exports `touchDensity`, a
+pair of `createTheme` overrides on `size` and `font`. `Page density="touch"`
+applies it to the full page region:
+
+| Token | Default | Touch |
+|---|---|---|
+| `controlSm`, `controlMd`, `controlLg` | 28, 32, 36px | 44, 48, 56px |
+| `iconSm`, `icon`, `iconLg` | 14, 16, 20px | 18, 20, 24px |
+| `font.md` (body) | 13px | 17px |
+| `font.sm` (labels) | 12px | 15px |
+| `font.xxl` (page title) | 20px | 26px |
+
+All primitives read these tokens. Buttons, fields, segmented controls, badges,
+and tables become larger together, without one-off styles. Use touch density
+for a full page that runs on such a device. Do not use it for one control on a
+desk page.
+
+Dialogs, popovers, menus, and toasts render in a portal outside the page, so
+they keep the default density. On a touch page, keep the flows inline: confirm
+in place, and show the choices in a `SegmentedControl` or a `RadioGroup`, not
+in a `Select`.
+
 ### Category Colors
 
 `src/styles/category.ts` gives colors to categories that a hue identifies, such

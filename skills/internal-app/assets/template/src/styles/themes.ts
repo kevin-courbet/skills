@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { darkBrand, lightBrand } from "./brand.stylex";
 import { darkPalette, lightPalette } from "./palette.stylex";
-import { color, shadow } from "./tokens.stylex";
+import { color, font, shadow, size } from "./tokens.stylex";
 
 /**
  * Explicit themes for a light or dark choice, saved by the person or set as the app's
@@ -109,3 +109,32 @@ const darkShadow = stylex.createTheme(shadow, {
 });
 
 export const darkTheme = [darkColor, darkShadow] as const;
+
+const touchSize = stylex.createTheme(size, {
+  controlSm: "2.75rem",
+  controlMd: "3rem",
+  controlLg: "3.5rem",
+  iconSm: "1.125rem",
+  icon: "1.25rem",
+  iconLg: "1.5rem",
+});
+
+const touchFont = stylex.createTheme(font, {
+  xs: "0.8125rem",
+  sm: "0.9375rem",
+  md: "1.0625rem",
+  lg: "1.1875rem",
+  xl: "1.375rem",
+  xxl: "1.625rem",
+  xxxl: "1.875rem",
+  display: "2.5rem",
+  displayLg: "3rem",
+});
+
+/**
+ * Touch density for a page on a shared tablet or kiosk that people tap and read
+ * from arm's length. The smallest control reaches 44px, the minimum touch target,
+ * and text grows one step. `Page density="touch"` applies it to the page region.
+ * Overlays render in a portal outside that region and keep the default density.
+ */
+export const touchDensity = [touchSize, touchFont] as const;
