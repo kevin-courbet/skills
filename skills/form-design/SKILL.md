@@ -13,6 +13,7 @@ Apply the hierarchy-first UI method to forms, data-entry tasks, and multi-step f
 2. Read `references/component-patterns.md` before selecting controls, field groups, error treatment, or page structure.
 3. Read `references/dark-theme.md` before creating, changing, or reviewing a dark theme. Graphite is the default dark palette. Use `assets/themes/graphite.css` when the product has no dark theme of its own.
 4. Establish the user task, field relationships, validation model, and action priority before styling controls.
+5. In an internal app on the house stack, also follow the `internal-app` skill. Forms in its `references/components.md` names the kit component for each rule.
 
 Resolve all paths relative to this skill directory. Use the support directory printed by `skills use` when the skill is loaded on demand.
 

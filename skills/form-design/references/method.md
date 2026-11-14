@@ -134,9 +134,11 @@ In both examples, the header band is a little darker than the container. `refere
 - Keep each label closer to its own control than to the preceding control.
 - Provide clear default, hover, focus, selected, disabled, invalid, and loading states.
 - Keep native semantics and keyboard behavior when replacing browser-default visuals.
+- Show a small closed set of choices on the page as chips or cards, not in a dropdown. `references/component-patterns.md` gives the rules for each.
 - Use richer option cards only when choices contain meaningful values that users must compare.
 - In a choice card, emphasize the differentiator, reduce repeated labels, and show selection with more than color.
 - Group related read-only values in a quiet inset surface when a raised card would give them too much weight.
+- Keep the primary action of a long form in view, in a footer that stays at the bottom of the window.
 - Place workflow actions consistently across the product. On mobile, stacked full-width actions can work; keep the primary action first.
 
 ## Color

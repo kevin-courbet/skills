@@ -36,8 +36,21 @@ The source gallery covers:
 
 - Group fields by user intent, not storage schema.
 - Keep labels visibly associated with controls.
-- Put errors next to the field when one field caused the error.
-- Put a summary above the form when users need to locate multiple errors.
+- Show a small closed set of choices on the page. A dropdown hides the options and costs two actions. Use one only for a long list, or in a row that has no space.
+  - For one choice from about seven or fewer short labels, use radio chips. For several choices, use checkbox chips that show a check when selected.
+  - When users compare the options, use cards with one sentence that states the difference, such as the response time of each priority.
+  - Add a quiet fact to a chip when it helps the choice, such as the open work of each person.
+- Give an optional single choice an explicit "no value" option, such as "Decide later". Users do not discover that a second press clears a selected chip.
+- For a date that is usually in the next few days, show those days as chips and keep a date input for any other day.
+- Size each input to its expected answer. Mark the optional fields, not the required ones. Use a placeholder only for an example answer that starts with "e.g.".
+- In a long form, put each section title and one sentence about what the answers change in a column beside the fields. Stack the column above the fields on narrow screens.
+- When the answers make a record that users meet later, show a live preview of that record beside the form.
+- Keep the submit action and a short live summary, such as a count or an estimate, in a footer that stays at the bottom of the window.
+- Put errors next to the field when one field caused the error. The message names the field and says how to fix the problem: "Enter the floor in 3 characters or fewer, like 12 or B2."
+- Show a message after the user changes a field and leaves it, or after a submit attempt. Do not show it while the user types a first answer.
+- Put a summary above the form when users need to locate multiple errors. Its title counts the problems, it takes focus after a failed submit, and each item links to its field.
+- Do not disable the submit button while the form is invalid, because users then cannot find the problem. Disable it only while the submit runs.
+- After a successful submit, name the new record, say what happens next, and offer the next task.
 - Use multi-page forms only when the sections form a meaningful sequence.
 
 ## Navigation
