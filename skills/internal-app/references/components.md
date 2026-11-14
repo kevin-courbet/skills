@@ -9,7 +9,10 @@ pipeline, activity, and detail-card patterns; `WorkspaceShowcase`
 (`src/components/kit/showcase-workspace.tsx`) shows traces, boards, trees,
 sortable lists, code, calendars, schedules, and panels; and `ControlsShowcase`
 (`src/components/kit/showcase-controls.tsx`) shows items, field add-ons,
-toggles, sliders, hover cards, and context menus.
+toggles, sliders, hover cards, and context menus. The `/design-kit/form` route
+renders `FormShowcase` (`src/components/kit/showcase-form.tsx`), a long form
+that uses every form component. Copy its structure for a new form; see Forms
+below.
 
 Several primitives re-implement the behavior and design of free ReUI
 components. `THIRD_PARTY_NOTICES.md` in this skill lists them with the ReUI
@@ -28,7 +31,7 @@ All primitives take typed props, render visible labels, and accept a
 | `button.tsx` | `Button`, `LinkButton`, `ButtonGroup` | Intents `primary`, `secondary` (default), `ghost`, `danger`. Sizes `sm`, `md`, `lg`. Without `size`, a button takes the control size of its row. Do not set `size` inside a `Toolbar`. `iconOnly` needs `aria-label`. `LinkButton` is a router `Link`. `Button` accepts `type="submit"` and `form` for dialog footers. `ButtonGroup` joins buttons into one control with a `label`: a split button (an action and a `MenuTrigger` with an icon-only Button), zoom out and in, or previous and next. Use one intent in a group. |
 | `surface-button.tsx` | `SurfaceButton` | A custom surface that is one control: a card title, a list row, or an object on a canvas. `style` gives the surface its full look after a reset; the kit adds only the focus ring. It keeps native pointer, click, and key events, so drag, pan, and delegated listeners on ancestors continue to work. `Button` uses react-aria press handling, which stops these events. It is always `type="button"`. Use `Button` for all other actions and for form submission. |
 | `menu.tsx` | `Menu`, `MenuItem`, `MenuSeparator`, `MenuTrigger`, `ContextMenu` | Row and overflow actions. `MenuItem` takes `icon`, `shortcut`, `isDestructive`. In a `Menu` with `selectionMode`, each item shows a check mark when selected. `ContextMenu` wraps an area, such as a list row or a card, and opens its `menu` items at the pointer on a right click, or at the focused element with Shift+F10 or the context menu key. Give each `MenuItem` an `id` and handle `onAction`. Every action must also be reachable from a visible control, such as a row menu button. |
-| `toggle-group.tsx` | `ToggleGroup`, `ToggleOption` | Buttons that each turn an option on or off, such as the days a job runs or the channels that get an alert. `value` is the array of pressed ids. A pressed text option shows a check mark; `iconOnly` keeps the labels as accessible names. For one choice among views, use `SegmentedControl`. |
+| `toggle-group.tsx` | `ToggleGroup`, `ToggleOption` | Buttons that each turn an option on or off and apply at once, such as the days a job runs in a `SettingRow` or the levels a log shows in a toolbar. `value` is the array of pressed ids. A pressed text option shows a check mark; `iconOnly` keeps the labels as accessible names. It has no hint and no error. For several choices that a form submits, use `CheckboxGroup appearance="chips"`. For one choice among views, use `SegmentedControl`. |
 | `hover-card.tsx` | `HoverCard`, `HoverCardLink` | A preview that opens on hover, focus, or long press, such as a person or a record named in a table. The trigger is a `HoverCardLink` (an inline link with an optional `href`) or a kit `Button`. The card may hold links and buttons; never put information there that the page does not show or link to. |
 | `command-palette.tsx` | `CommandPalette`, `useCommandPalette`, `Command`, `CommandGroup` | Search for pages and app actions in a modal. `AppShell` mounts the only palette and binds Command-K and Control-K. A `Command` has `href` or `onAction`, never both, plus optional `icon`, `keywords`, and `shortcut`. `useCommandPalette().open()` opens it from a page. |
 | `segmented-control.tsx` | `SegmentedControl` | Two to five views or modes of the same content. Typed `value` and `onChange`. It takes the control size of its row. |
@@ -40,23 +43,31 @@ All primitives take typed props, render visible labels, and accept a
 
 | File | Exports | Use |
 |---|---|---|
-| `field.tsx` | `field`, `control`, `inputText` styles | Shared label, description, error, and control box styles. `control.base` plus `control.textInput` style an input that is itself the box. `inputText.base` resets an input nested inside a box. Never put both on one element; the reset removes the box. `field.hiddenLabel` keeps a label for screen readers only. |
-| `text-field.tsx` | `TextField` | Single line or `multiline`. `hideLabel` where a `SettingRow` already names the field. `prefix` and `suffix` put content inside the box of a single-line field: a fixed part of the value ("https://", ".example.com"), a lucide icon, a `Kbd` hint, a `Spinner` while a value is checked, or one small button such as a `CopyButton`. |
+| `field.tsx` | `FieldLabel`, `FieldDescription`, `FieldErrorMessage`, `FieldErrorIcon`, `FieldWidth`, `fieldWidth`, and the `field`, `control`, `inputText` styles | The parts of every kit field. `FieldLabel` shows a quiet "optional" with `isOptional`. `FieldDescription` (the hint) goes between the label and the control. `FieldErrorMessage` goes under the control and starts with an icon. `fieldWidth` sizes a control from `FieldWidth`. Use these parts only in a new kit field. `control.base` plus `control.textInput` style an input that is itself the box. `inputText.base` resets an input nested inside a box. Never put both on one element; the reset removes the box. `field.hiddenLabel` keeps a label for screen readers only. |
+| `text-field.tsx` | `TextField` | Single line or `multiline`. `hideLabel` where a `SettingRow` already names the field. `prefix` and `suffix` put content inside the box of a single-line field: a fixed part of the value ("https://", ".example.com"), a lucide icon, a `Kbd` hint, a `Spinner` while a value is checked, or one small button such as a `CopyButton`. `placeholder` is an example answer that starts with "e.g.". |
 | `number-field.tsx` | `NumberField` | Number value with locale formatting and right-aligned tabular figures. `unit` shows a unit after the number ("seconds", "%"); use `formatOptions` for currency. `showStepper` adds decrement and increment buttons; arrow keys step without them. `hideLabel` in a `SettingRow`. |
 | `time-field.tsx` | `TimeField` | Time of day, such as a daily run time. `value` and `onChange` use ISO time strings (`"02:00"`) or `null`; `granularity="second"` adds seconds. `minValue` and `maxValue` mark earlier or later times as invalid. `zoneLabel` names the time zone after the time, such as "UTC". Type the digits or use the arrow keys on each part, or open the clock button: a popover lists hours and minutes in two columns. The hour list takes focus on the current hour, Tab moves to the minutes, and choosing a minute closes the popover and returns focus to the button. `minuteStep` (default 5, must divide 60) sets the minutes the popover offers; typed values keep any minute. |
 | `slider.tsx` | `Slider`, `RangeSlider` | A number or a range picked on a track, such as a sampling rate, a threshold, or a latency band. `minValue`, `maxValue`, `step`, and `formatOptions` for the value text; `marks` labels values under the track. `RangeSlider` takes `thumbLabels` for the two thumbs. Arrow keys step, Page Up and Page Down move a tenth, Home and End jump to the ends. Use `NumberField` when people type exact values. |
 | `search-field.tsx` | `SearchField` | Search with a clear button; Escape clears. `hideLabel` in a toolbar. `focusShortcut` binds "/" to the main list search. |
-| `select.tsx` | `Select` | Single choice from a short fixed list. `options: { id, label, description? }[]`. `hideLabel` in a toolbar. |
+| `select.tsx` | `Select` | Single choice from a fixed list of more than about seven options, or from a short list where a row has no space for chips, such as a toolbar or a `SettingRow`. `options: { id, label, description? }[]`. `hideLabel` in a toolbar. In a form, a short list is a `RadioGroup` (see Forms). |
 | `combo-box.tsx` | `ComboBox` | Single choice from a long list; typing filters. `value` is an option id or `null`. |
-| `date-picker.tsx` | `DatePicker` | Calendar date. `value` and `onChange` use ISO strings (`"2026-10-12"`) or `null`. |
+| `date-picker.tsx` | `DatePicker`, `DateQuickPick`, `dayQuickPicks` | Calendar date. `value` and `onChange` use ISO strings (`"2026-10-12"`) or `null`. `width` defaults to `sm`. `quickPicks` puts a row of day chips before the date input for the dates that people pick most; the input stays for any other date. Build them with `dayQuickPicks({ today, count, skip? })`: "Today" and "Tomorrow" with the weekday as meta, then weekday names, at most a week ahead. `skip` leaves out days such as weekends. Pass `today` from the loader. Arrow keys move through the chips, and Tab moves on to the input. |
 | `date-range-picker.tsx` | `DateRangePicker`, `DateRange` | Start and end date in one field, such as a report period. `value` is `{ start, end }` with ISO strings, or `null`. `presets` lists quick ranges next to the calendar; compute them from a stable reference date. |
 | `multi-select.tsx` | `MultiSelect` | Several choices from a fixed list. `value` is an array of option ids. The trigger names the first choice and counts the rest. `showTags` lists the choices as removable tags under the field in forms. |
 | `tag-group.tsx` | `TagGroup` | A labeled set of short values, such as labels or recipients. `onRemove` adds remove buttons and Delete-key removal. For list filters, use `Filters`. |
 | `cascader.tsx` | `Cascader`, `CascaderOption` | Single choice from a tree, such as region, country, and city. `value` is the path of ids from the root, or `null`. Columns open as people move: arrow keys move in a column, Right opens a branch, Left goes back, Enter chooses. `allowsBranchSelection` lets a branch be the value. A search box finds options at every level; it shows by default above 12 options. |
 | `file-upload.tsx` | `FileUpload`, `UploadFile` | Drop zone with a file dialog button and the chosen files. It only selects files: the app validates and uploads them and passes each file's `status` (`queued`, `uploading` with `progress`, `done`, `failed` with `error`). `acceptedFileTypes` takes exact MIME types. |
-| `radio-group.tsx` | `RadioGroup` | Up to about five visible choices that users compare. |
-| `checkbox.tsx` | `Checkbox`, `CheckboxGroup`, `CheckboxOption` | `Checkbox` is one independent on/off choice and supports indeterminate. `CheckboxGroup` picks several values from a short fixed list, such as the checks to run before a deploy. It is a labelled group of tiles in a grid that fills the width. Each tile has an optional `description` and a trailing `meta`, such as a duration or a price. The group also takes `description` and `errorMessage`. `onChange` returns the values in option order. Use `MultiSelect` for a long or searchable list. |
+| `radio-group.tsx` | `RadioGroup` | One visible choice from up to about seven options. `appearance` is `list` (default: small marks, for a dense panel or a dialog), `cards` (tiles with a `description`, for choices that people compare, such as a priority), or `chips` (pills in a wrapping row, for short labels, such as a building or a person). `orientation` applies to `list` only. `noneOption={{ label, description? }}` adds a last choice whose value is `null`, such as "Decide later"; then `value` and `onChange` take `null` too. Arrow keys move and choose; Tab leaves the group. |
+| `checkbox.tsx` | `Checkbox`, `CheckboxGroup` | `Checkbox` is one independent on/off choice and supports indeterminate. `CheckboxGroup` picks several values from a short fixed list, such as the kinds of work in a request. `appearance` is `cards` (default), `chips`, or `list`, as in `RadioGroup`. A selected chip shows a check. `isOptional` marks the label when people may choose nothing. The group also takes `description` and `errorMessage`. `value` and `onChange` use arrays; `onChange` returns the values in option order. Each option is a tab stop and Space toggles it. Use `MultiSelect` for a long or searchable list. |
+| `choice.tsx` | `ChoiceOption`, `ChoiceNoneOption`, `ChoiceAppearance` | The option type of `RadioGroup` and `CheckboxGroup`: `id`, `label`, and optional `description` (list and cards), `meta` (a quiet fact after the label, such as "3 open", "1 h", or a price), `icon` (a lucide icon) or `avatar` (`{ src? }`, initials when it is missing), and `isDisabled`. A field that the appearance cannot show throws an error, such as a `description` on a chip. Chips take the control size of their row. |
+| `form-layout.tsx` | `FormLayout`, `FieldRow`, `FormPreview`, `FormFooter`, `ErrorSummary`, `FormError` | The parts of a long form on its own route. `FormLayout` (`id`, `onSubmit`, `aria-label`, `preview`, `footer`) renders the `<form>` without browser validation. The sections take the main column, and `preview` stays beside them while the form is wider than the `lg` breakpoint and goes under them otherwise. `FieldRow` puts related fields on one line, such as a floor and a room; it wraps when it is narrow. `FormPreview` (`label`, `description`) shows the record that the answers make, such as a `DescriptionList`, with a dash for each empty answer. `FormFooter` (`summary`, children) sticks to the bottom of the window with live facts on the left, then a cancel action and the submit button; a focused field never goes under it. `ErrorSummary` (`title`, `errors`, `submitCount`) lists the problems with a link to each field, takes focus on each new submit attempt, and renders nothing without errors. Build `errors` with `formErrors` from `src/lib/form.ts`. |
 | `switch.tsx` | `Switch` | Settings that apply immediately. |
+
+The text-like fields (`TextField`, `NumberField`, `Select`, `ComboBox`,
+`MultiSelect`, `Cascader`, `DatePicker`, `DateRangePicker`, and `TimeField`)
+take `width` and `isOptional`. `FileUpload` takes `isOptional`. `width` is
+`xs`, `sm`, `md`, `lg`, or `full` (the default, except `DatePicker`); see
+Forms. A field with both `isOptional` and `isRequired` throws an error.
 | `list-box.tsx` | `OptionList`, `ListOption` | Option list inside Select, MultiSelect, ComboBox, and Filters popovers. An option with `intent` shows a status dot. Not used directly in pages. |
 | `calendar.tsx` | `DateSegments`, `CalendarButton`, `CalendarHeader`, `RangeCalendarView`, `calendar` styles | Shared parts of DatePicker, DateRangePicker, and the Filters date editor. Not used directly in pages. |
 
@@ -64,7 +75,7 @@ All primitives take typed props, render visible labels, and accept a
 
 | File | Exports | Use |
 |---|---|---|
-| `layout.tsx` | `Page`, `PageHeader`, `Section`, `Toolbar`, `Card`, `CardSection`, `StatTile`, `StatStrip`, `DescriptionList`, `SettingsCard`, `SettingRow`, `Code`, `Kbd`, `Separator` | Page structure, filter rows, overview numbers, and read-only facts. `Page width="reading"` makes a detail or form page narrower. `Page density="touch"` makes controls and text larger for a shared tablet or kiosk (see Touch density in `styling.md`). `PageHeader` `title` and `description` take rich content like `Card`: the title is the page's only `<h1>` and its parts wrap as one heading line, such as an `Identifier size="lg"` followed by a `StatusDot` or a `Badge size="lg"`; the description flows as text and can hold `Code`, links, or a small `Identifier`. Put a `{" "}` between the parts of a title so the heading reads with a space. `Card` takes `title`, `description`, `actions` (a total, a link, or one button), and `footer`; `layout="sections"` stacks `CardSection` rows divided by lines (see Cards below). `StatTile` deltas take `tone` when "down" is good; `chart` takes the kit `Sparkline` (`src/components/charts/sparkline.tsx`) and `footnote` names the source. `StatStrip` is a divided row of key facts for detail headers and peeks; `variant="status"` shows one status word per cell with a `detail` line (CI, artifact, traffic), and `framed={false}` drops its border inside a `CardSection`. An item `link` makes the whole cell open the records that it counts, such as the list filtered to them. The link name is the label and the value, such as "Overdue 12". `DescriptionList layout="grid"` puts labels above values in columns for the key facts of a record; an item with `span="wide"` takes two columns. `SettingsCard` with `SettingRow` puts the label left and the value or control right. `Toolbar` sets the control size of its row. It is `sm` (28px) inside a `DataTable` frame and `md` (32px) elsewhere; `size` changes it. Its `actions` hold trailing icon buttons. `Code` shows inline code and commands. |
+| `layout.tsx` | `Page`, `PageHeader`, `Section`, `Toolbar`, `Card`, `CardSection`, `StatTile`, `StatStrip`, `DescriptionList`, `SettingsCard`, `SettingRow`, `Code`, `Kbd`, `Separator` | Page structure, filter rows, overview numbers, and read-only facts. `Page width="reading"` makes a detail or form page narrower. `Section layout="split"` puts the `title` and a one-sentence `description` in a column on the left and the content on the right, with a line between consecutive split sections. It needs a `title` and takes no `actions`. Use it for the parts of a long form or a settings page. It stacks when the section is narrower than the `md` breakpoint. `Page density="touch"` makes controls and text larger for a shared tablet or kiosk (see Touch density in `styling.md`). `PageHeader` `title` and `description` take rich content like `Card`: the title is the page's only `<h1>` and its parts wrap as one heading line, such as an `Identifier size="lg"` followed by a `StatusDot` or a `Badge size="lg"`; the description flows as text and can hold `Code`, links, or a small `Identifier`. Put a `{" "}` between the parts of a title so the heading reads with a space. `Card` takes `title`, `description`, `actions` (a total, a link, or one button), and `footer`; `layout="sections"` stacks `CardSection` rows divided by lines (see Cards below). `StatTile` deltas take `tone` when "down" is good; `chart` takes the kit `Sparkline` (`src/components/charts/sparkline.tsx`) and `footnote` names the source. `StatStrip` is a divided row of key facts for detail headers and peeks; `variant="status"` shows one status word per cell with a `detail` line (CI, artifact, traffic), and `framed={false}` drops its border inside a `CardSection`. An item `link` makes the whole cell open the records that it counts, such as the list filtered to them. The link name is the label and the value, such as "Overdue 12". `DescriptionList layout="grid"` puts labels above values in columns for the key facts of a record; an item with `span="wide"` takes two columns. `SettingsCard` with `SettingRow` puts the label left and the value or control right. `Toolbar` sets the control size of its row. It is `sm` (28px) inside a `DataTable` frame and `md` (32px) elsewhere; `size` changes it. Its `actions` hold trailing icon buttons. `Code` shows inline code and commands. |
 | `control-size.tsx` | `ControlSizeProvider`, `useControlSize`, `ControlSize` | The control size of a row: `sm` (`size.controlSm`, 28px) or `md` (`size.controlMd`, 32px, the default). Every kit control inside the provider takes this height, so a row cannot mix heights. `Toolbar`, the `DataTable` toolbar row and footer, and the `LogViewer` and `EventCalendar` headers set it. Dialogs, sheets, and popovers set `md` again, because React context passes into portals. A primitive with a control height reads `useControlSize()` and has no `size` prop. |
 | `data-table.tsx` | `DataTable`, `DataTableColumn`, `DataTableSelection`, `DataTableExpansion`, `DataTablePinning`, `DataTablePagination`, `DataTableRowAction`, `DataTableColumnVisibility`, `TwoLineCell`, `MeterCell` | Server-sorted table on semantic `<table>` with `aria-sort`, sticky header, numeric columns, and an empty-state slot. `toolbar` renders a `Toolbar` inside the frame. The toolbar row, the bulk-action bar, and the pagination footer use the `sm` control size. `rowAction` opens a row: `{ link: (row) => ({ to, params }) }` or `{ onAction }`. The `rowHeader` column (default: the first data column) becomes a `<th scope="row">` with that link or button, so Tab and Enter open the row, and a click anywhere else on the row does the same. `pinnedColumns={{ start, end }}` keeps columns in view while the table scrolls sideways, such as the name and a row menu. `expansion` adds a toggle column and a full-width detail row. `density="compact"` uses 28px rows. `isLoading` shows `loadingRows` skeleton rows for client-triggered loads. `pagination` adds a footer in the frame with the row range, page buttons, and rows per page. A column `footer` adds a summary row. `activeRowId` marks the row open in a peek. `selection` adds a checkbox column and a bulk-action bar that replaces the toolbar while rows are selected. `columnVisibility` adds a column menu. `resizableColumns` adds drag and arrow-key handles on header edges; set `size` on each column. `virtualize={{ visibleRows }}` renders only the rows in view; it cannot combine with `expansion`. `responsiveColumns` makes a table read on a phone: `{ [columnId]: { hideBelow: "sm" \| "md" \| "lg", stack?: boolean } }` removes a column while the table frame is narrower than the breakpoint (`sm` 640px, `md` 768px, `lg` 1024px). The frame width decides through a container query on the scroller, so a table in a narrow panel adapts too. With `stack`, the cell shows under the row header while its column is hidden, for short values such as a region or an owner. Keep the row header and the status; hide secondary facts such as the source, the author, or the date. Below `sm` cell text also wraps and the padding tightens, so the columns that stay fit the frame. The row header column cannot be responsive. `TwoLineCell` holds a primary line and a quiet second line. `MeterCell` adds a bar that compares a number with the column maximum. |
 | `pagination.tsx` | `Pagination` | Previous and next for server-paged lists that are not tables, such as card grids. Tables use the `DataTable` `pagination` footer. Renders nothing for one page. |
@@ -149,7 +160,8 @@ The template contains one working example of each:
 | Overview | `_app/index.tsx` | `PageHeader`, `StatTile` grid with a source `footnote`, `TrendChart` in a `Section`. |
 | List | `_app/items/index.tsx` | `PageHeader` with one primary action. A page `Toolbar` above the `DataTable` (`SearchField`, `Filters`), a row link to the detail route, the name column pinned, `StatusDot` status, a summary footer, and the `pagination` footer. Search, filters, sort, and page live in the URL; `features/items/filters.ts` holds the filter fields and builds the server query from the search. |
 | Detail | `_app/items/$itemId.tsx` | `Page width="reading"`, `PageHeader` with quiet actions, `DescriptionList` in a `Section`, `ConfirmDialog` for delete. |
-| Create | `features/items/ui/create-item-dialog.tsx` | `Dialog` with a TanStack Form; the footer submit button uses `form={formId}`. |
+| Create | `features/items/ui/create-item-dialog.tsx` | `Dialog` with a TanStack Form; the footer submit button uses `form={formId}`. Status is a `RadioGroup appearance="chips"`. |
+| Long form | `_app/design-kit_.form.tsx` with `components/kit/showcase-form.tsx` | `FormLayout` with an `ErrorSummary`, one `Section layout="split"` for each part, a `FormPreview` beside the sections, and a `FormFooter` with the summary and the submit button. After submit, a success `Alert` names the new record and offers the next action. |
 | Settings | `_app/settings.tsx` | Reading-width page with `SettingsCard` and `SettingRow`. Identifiers use `Code` with a `CopyButton`. |
 
 Choose the container by task:
@@ -157,8 +169,81 @@ Choose the container by task:
 - Short creation or edit (up to about six fields): `Dialog`.
 - Detail or edit that benefits from the list behind it: `Sheet`.
 - Records read one after another from a list: `Sheet size="peek"` with `navigation` and an "Open page" link to the detail route. Keep the open record in a search param.
-- Long forms or multi-section records: a dedicated route.
+- Long forms (more than about six fields) or multi-section records: a dedicated route with `FormLayout`. See Forms.
 - Irreversible actions: `ConfirmDialog` that names the object and the consequence. The confirm label repeats the verb ("Delete item"). The `danger` intent is for that button, not for the entry point.
+
+## Forms
+
+Load the `form-design` skill before you design or change a form. The rules
+below tell you which kit component does each job. `FormShowcase` in
+`src/components/kit/showcase-form.tsx` uses all of them.
+
+### Choose The Control
+
+Show a small closed set of choices. A dropdown hides the options and costs
+two clicks, so use one only when the list is long or the row has no space.
+
+| Answer | Control |
+|---|---|
+| One choice from 2 to about 7 short labels, such as a building, a status, or a person | `RadioGroup appearance="chips"`. Put a fact that helps the choice in `meta`, such as the open work of a person ("3 open"). |
+| One choice from 2 to about 5 options that people compare, such as a priority or a plan | `RadioGroup appearance="cards"` with a `description` for each option. |
+| One choice in a dense panel or a dialog with no space for chips or cards | `RadioGroup` (the `list` appearance). |
+| One choice from more than about 7 options | `Select`. Use `ComboBox` when people know the name and type it, such as a customer. Use `Cascader` for a path in a hierarchy. |
+| Several choices from a short list | `CheckboxGroup appearance="chips"` for short labels, `cards` (the default) when an option needs a description or a `meta` such as a duration. |
+| Several choices from a long or searchable list | `MultiSelect`. |
+| An answer that people may skip, such as the person who takes the work | `noneOption` on the `RadioGroup`, such as "Decide later" or "Leave in queue". Do not make people press a selected chip again to clear it. |
+| A date that is usually in the next few days | `DatePicker` with `quickPicks` from `dayQuickPicks`. The date input stays for any other day. |
+| A date range with common spans, such as the last 30 days | `DateRangePicker` with `presets`. |
+| A setting that applies at once, outside a form | `ToggleGroup` for several on/off options, `SegmentedControl` for one view, `Switch` for one setting. These have no hint and no error, so do not use them for an answer that a form submits. |
+
+### Size And Mark The Fields
+
+- Set `width` from the expected answer, not from the column. A short box tells people that the answer is short.
+
+  | `width` | Holds about | Use for |
+  |---|---|---|
+  | `xs` | 4 characters | A quantity, a floor, a room number. |
+  | `sm` | 12 characters | A phone number, a date, an amount, a postal code. |
+  | `md` | 24 characters | A name, a city. |
+  | `lg` | 40 characters | An email, an address line, a URL. |
+  | `full` (default) | The column | Free text, a `multiline` description, a title. |
+
+  `DatePicker` defaults to `sm`. The `touch` density makes each width larger together with the text.
+- Put related short fields on one line in a `FieldRow`, such as a name and an email, or a floor and a room.
+- Mark the optional fields with `isOptional`, not the required ones. Most fields in a good form are required, so the marker goes where it is rare.
+- A `placeholder` is an example answer that starts with "e.g.": "e.g. sam.lee@example.com". Never put an instruction or the label in a placeholder; it goes away when people type. Put an instruction in `description`.
+- Set `autoComplete` on name, email, phone, and address fields. Set `autoFocus` on the first field of a form that opens for input.
+
+### Validate And Show Errors
+
+- Spread `formBehavior` into `useForm` and pass the schema as `validators: { onDynamic: schema }`. See Forms in `data.md`.
+- Show each field message with `fieldError(field, hasSubmitAttempt)`. A message shows after people change a field and leave it, or after a submit attempt. Before a submit attempt, it never shows while people type.
+- A message names the field and says how to fix it: "Enter the floor in 3 characters or fewer, like 12 or B2." Do not write "Invalid value" or "Required".
+- Put an `ErrorSummary` first in a `FormLayout`. Its title counts the problems and names the action: "2 things to fix before you send the request". It takes focus on each submit attempt, and each item links to its field. Build the items with `formErrors` in the order of the fields on the page, and give each field the `id` that the item names.
+- Do not disable the submit button while the form is invalid. People then cannot find out what is wrong. Disable it only while the submit runs.
+
+### Lay Out A Long Form
+
+- Use `FormLayout` on its own route for a form with more than about six fields or more than one part. Put a short form in a `Dialog`.
+- Make each part a `Section layout="split"`. The title names the part ("Where", "When"). The description is one sentence that says what the answers change: "The kinds of work set the time estimate and the tools that the technician brings."
+- Give `FormLayout` a `preview` when the answers make a record that people meet later, such as a card on a board. `FormPreview` shows the record with a dash for each empty answer.
+- Give `FormLayout` a `footer`: a `FormFooter` with live facts in `summary`, such as a count or an estimate, then the cancel action and one primary submit `Button type="submit"`. The button names the action: "Send request".
+- After a successful submit, replace the form with a success `Alert` with `announce="status"`. The title names the new record ("Request WO-2318 is in the queue"), the text says what happens next, and one action starts the next task, such as "Report another problem".
+
+```tsx
+<FormLayout id={formId} onSubmit={() => void form.handleSubmit()} aria-label="Report a building problem"
+  preview={<form.Subscribe selector={(state) => state.values}>{(values) => <RequestPreview values={values} />}</form.Subscribe>}
+  footer={<FormFooter summary={<FooterSummary />}>{cancel}<Button intent="primary" type="submit">Send request</Button></FormFooter>}>
+  <ErrorSummary title={title} errors={errors} submitCount={submissionAttempts} />
+  <Section layout="split" title="Where" description="A room number saves the technician a search of the floor.">
+    <form.Field name="building">{(field) => (
+      <RadioGroup id="request-building" label="Building" appearance="chips" options={buildingOptions}
+        noneOption={{ label: "Not sure" }} value={field.state.value} onChange={field.handleChange}
+        errorMessage={fieldError(field, hasSubmitAttempt)} />
+    )}</form.Field>
+  </Section>
+</FormLayout>
+```
 
 ## Cards
 
@@ -243,6 +328,7 @@ navigate({ search: (prev) => ({ ...prev, ...serializeFilters(itemFilterFields, n
 - Errors state the problem and the next action: "The bank rejected the file. Check the account number and run it again."
 - Omit success toasts when the UI already shows the result.
 - Metadata pairs a label and a qualifier with a middle dot: "Measured · catalog prices", "Attempt 2 · main".
+- Form text does not join separate facts with a dot or a bullet. A chip `meta` is one fact ("3 open"), a hint is one sentence, and a footer summary puts each fact in its own element.
 - Record IDs, hashes, and hosts that people paste elsewhere use `Identifier`. Inline code and commands use `Code`.
 - Confirmations name the exact object and every effect: "app.example.com serves dpl_rxt8gA84n within a minute. Automatic promotion pauses until you undo the rollback."
 
