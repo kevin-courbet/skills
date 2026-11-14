@@ -48,6 +48,8 @@ export interface ItemProps {
   readonly onAction?: () => void;
   /** `sm` for dense lists in a sheet or a popover. */
   readonly size?: "sm" | "md";
+  /** Styles for the row, such as `motionStyles.named` for a view transition. */
+  readonly style?: StyleXStyles;
 }
 
 /**
@@ -62,6 +64,7 @@ export function Item({
   actions,
   onAction,
   size: sizeKey = "md",
+  style,
 }: ItemProps) {
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -84,7 +87,12 @@ export function Item({
     <div
       ref={rowRef}
       role="listitem"
-      {...stylex.props(styles.item, sizes[sizeKey], onAction !== undefined && styles.actionable)}
+      {...stylex.props(
+        styles.item,
+        sizes[sizeKey],
+        onAction !== undefined && styles.actionable,
+        style,
+      )}
     >
       {media === undefined ? null : <span {...stylex.props(styles.media)}>{media}</span>}
       <div {...stylex.props(styles.text)}>

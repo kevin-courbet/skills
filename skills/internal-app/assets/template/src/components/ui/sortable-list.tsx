@@ -2,7 +2,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { GripVertical } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import {
   Button,
   DropIndicator,
@@ -11,6 +11,7 @@ import {
   type Key,
   useDragAndDrop,
 } from "react-aria-components";
+import { motionStyles, useDropTransition, viewTransitionName } from "@/lib/motion";
 import { renderStyles } from "@/lib/rac";
 import { color, font, media, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
 
@@ -55,6 +56,7 @@ export interface SortableListProps<Item> {
  * A list people put in order, such as an escalation chain, column order, or
  * dashboard widgets. Drag a row by the pointer, or focus its grip, press
  * Enter, move with the arrow keys, and press Enter to drop. Escape cancels.
+ * The other rows glide to make room; see `useDropTransition`.
  */
 export function SortableList<Item extends object>({
   label,
@@ -72,6 +74,8 @@ export function SortableList<Item extends object>({
   style,
 }: SortableListProps<Item>) {
   const isGrid = layout === "grid";
+  const motionScope = useId();
+  const dropTransition = useDropTransition();
   const { dragAndDropHooks } = useDragAndDrop<Item>({
     getItems: (keys) =>
       [...keys].map((key) => {
@@ -88,11 +92,13 @@ export function SortableList<Item extends object>({
       const at = rest.findIndex((item) => getItemId(item) === String(event.target.key));
       const index = event.target.dropPosition === "after" ? at + 1 : at;
       const next = [...rest.slice(0, index), ...picked, ...rest.slice(index)];
-      onReorder(next, {
-        itemId: getItemId(moved),
-        fromIndex: items.indexOf(moved),
-        toIndex: next.indexOf(moved),
-      });
+      dropTransition.commit(moving, () =>
+        onReorder(next, {
+          itemId: getItemId(moved),
+          fromIndex: items.indexOf(moved),
+          toIndex: next.indexOf(moved),
+        }),
+      );
     },
     renderDropIndicator: (target) => (
       <DropIndicator
@@ -110,7 +116,13 @@ export function SortableList<Item extends object>({
       aria-label={label}
       items={items}
       layout={isGrid ? "grid" : "stack"}
-      dependencies={[renderItem, itemActions, onItemAction, showPosition]}
+      dependencies={[
+        renderItem,
+        itemActions,
+        onItemAction,
+        showPosition,
+        dropTransition.droppedByPointer,
+      ]}
       dragAndDropHooks={dragAndDropHooks}
       onAction={
         onItemAction === undefined
@@ -135,6 +147,8 @@ export function SortableList<Item extends object>({
             (state) => [
               isGrid ? styles.tile : styles.row,
               !isGrid && styles.rowDivided,
+              !dropTransition.droppedByPointer.has(getItemId(item)) &&
+                motionStyles.named(viewTransitionName(motionScope, "item", getItemId(item))),
               onItemAction !== undefined && styles.actionable,
               state.isFocusVisible && styles.focused,
               state.isDragging === true && styles.dragging,

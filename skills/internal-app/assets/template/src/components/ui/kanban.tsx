@@ -22,6 +22,13 @@ import {
   type TextDropItem,
   useDragAndDrop,
 } from "react-aria-components";
+import {
+  motionStyles,
+  useArrivals,
+  useDropTransition,
+  viewTransitionName,
+  withViewTransition,
+} from "@/lib/motion";
 import { renderStyles } from "@/lib/rac";
 import { color, font, media, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
 import { field } from "./field";
@@ -91,6 +98,11 @@ interface ColumnDrag {
  * requests. Drag a card by the pointer, or focus its grip and press Enter,
  * move with Tab or the arrow keys, and press Enter to drop. Columns scroll
  * sideways on narrow screens.
+ *
+ * A card that moves by the keyboard glides from its old place to its new
+ * place, and the other cards and columns make room. A card that people drop
+ * with the pointer is already at its new place, so it lands there at once.
+ * Cards that arrive from the server fade in. See `withViewTransition`.
  */
 export function Kanban<Item extends object>({
   label,
@@ -106,7 +118,9 @@ export function Kanban<Item extends object>({
   onColumnsChange,
 }: KanbanProps<Item>) {
   const dragType = `application/x-kanban-${useId()}`;
+  const motionScope = useId();
   const boardRef = useRef<HTMLDivElement>(null);
+  const dropTransition = useDropTransition();
   const gripRefs = useRef(new Map<string, HTMLButtonElement>());
   const [columnDrag, setColumnDrag] = useState<ColumnDrag | null>(null);
   const [announcement, setAnnouncement] = useState("");
@@ -135,7 +149,7 @@ export function Kanban<Item extends object>({
     next.splice(toIndex, 0, moved);
     focusAfterMove.current = columnId;
     setAnnouncement(`Moved ${moved.title} column to ${position(toIndex)}.`);
-    onColumnsChange(next, { columnId, fromIndex, toIndex });
+    withViewTransition(() => onColumnsChange(next, { columnId, fromIndex, toIndex }));
   };
 
   const onGripPress = (columnId: string, pointerType: string) => {
@@ -249,7 +263,9 @@ export function Kanban<Item extends object>({
       if (at !== -1) index = target.dropPosition === "after" ? at + 1 : at;
     }
     destination.splice(index, 0, ...picked);
-    onChange(next, { itemId: first, fromColumn, toColumn, index });
+    dropTransition.commit(moving, () =>
+      onChange(next, { itemId: first, fromColumn, toColumn, index }),
+    );
   };
 
   return (
@@ -258,6 +274,8 @@ export function Kanban<Item extends object>({
         <KanbanLane
           key={column.id}
           column={column}
+          motionScope={motionScope}
+          droppedByPointer={dropTransition.droppedByPointer}
           gripRef={(element) => {
             if (element === null) gripRefs.current.delete(column.id);
             else gripRefs.current.set(column.id, element);
@@ -311,6 +329,10 @@ interface LaneReorder {
 
 interface KanbanLaneProps<Item> {
   readonly column: KanbanColumn;
+  /** Scope of the view transition names on the board. */
+  readonly motionScope: string;
+  /** Cards that the pointer dropped in the last move. They take no view transition name. */
+  readonly droppedByPointer: ReadonlySet<string>;
   readonly reorder: LaneReorder | undefined;
   readonly gripRef: (element: HTMLButtonElement | null) => void;
   readonly items: ReadonlyArray<Item>;
@@ -326,6 +348,8 @@ interface KanbanLaneProps<Item> {
 
 function KanbanLane<Item extends object>({
   column,
+  motionScope,
+  droppedByPointer,
   reorder,
   gripRef,
   items,
@@ -369,6 +393,7 @@ function KanbanLane<Item extends object>({
       />
     ),
   });
+  const arrivals = useArrivals(items.map(getItemId));
   const Icon = column.icon;
   const isOverLimit = column.limit !== undefined && items.length > column.limit;
 
@@ -376,7 +401,11 @@ function KanbanLane<Item extends object>({
     <section
       aria-labelledby={headingId}
       data-kanban-column={column.id}
-      {...stylex.props(styles.lane, reorder?.isMoving === true && styles.laneMoving)}
+      {...stylex.props(
+        styles.lane,
+        motionStyles.named(viewTransitionName(motionScope, "column", column.id)),
+        reorder?.isMoving === true && styles.laneMoving,
+      )}
     >
       {reorder?.dropSide === undefined ? null : (
         <span aria-hidden {...stylex.props(styles.columnDrop, dropSides[reorder.dropSide])} />
@@ -417,7 +446,7 @@ function KanbanLane<Item extends object>({
       <GridList
         aria-label={column.title}
         items={items}
-        dependencies={[renderItem, getItemLabel, onItemAction]}
+        dependencies={[renderItem, getItemLabel, onItemAction, droppedByPointer, arrivals]}
         dragAndDropHooks={dragAndDropHooks}
         onAction={
           onItemAction === undefined
@@ -442,6 +471,9 @@ function KanbanLane<Item extends object>({
               isDragging?: boolean;
             }>((state) => [
               styles.card,
+              !droppedByPointer.has(getItemId(item)) &&
+                motionStyles.named(viewTransitionName(motionScope, "card", getItemId(item))),
+              arrivals.has(getItemId(item)) && motionStyles.enter,
               onItemAction !== undefined && styles.cardActionable,
               state.isFocusVisible && styles.cardFocused,
               state.isDragging && styles.cardDragging,
@@ -576,7 +608,7 @@ const styles = stylex.create({
     cursor: "grab",
     outlineStyle: "none",
     transitionProperty: "border-color, opacity",
-    transitionDuration: motion.fast,
+    transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
   },
   cardActionable: { cursor: "pointer" },
   cardFocused: {
