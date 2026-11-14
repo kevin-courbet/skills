@@ -870,12 +870,12 @@ export function OperationsShowcase() {
             {
               id: "rxt8",
               label: "dpl_rxt8gA84n",
-              description: "Promoted 1d ago · Paginate audit log",
+              description: "Paginate audit log. Promoted 1 day ago.",
             },
             {
               id: "iZtx",
               label: "dpl_iZtxPSMVp",
-              description: "Promoted 2d ago · Harden session refresh",
+              description: "Harden session refresh. Promoted 2 days ago.",
             },
           ]}
         />
