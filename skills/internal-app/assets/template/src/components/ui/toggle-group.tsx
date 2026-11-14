@@ -27,9 +27,11 @@ export interface ToggleGroupProps<Value extends string> {
 }
 
 /**
- * Buttons that each turn an option on or off, such as the days a job runs or
- * the channels that get an alert. Arrow keys move between options and Space
- * toggles one. For one choice among views, use SegmentedControl.
+ * Buttons that each turn an option on or off and apply at once, such as the
+ * days a job runs in a SettingRow or the levels a log shows in a toolbar.
+ * Arrow keys move between options and Space toggles one. It has no hint and
+ * no error, so a form answer with several choices is a CheckboxGroup with
+ * `appearance="chips"`. For one choice among views, use SegmentedControl.
  */
 export function ToggleGroup<Value extends string>({
   label,
