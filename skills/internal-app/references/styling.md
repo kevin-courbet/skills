@@ -262,6 +262,7 @@ file, and line. Fix the source; there are no ignore comments.
 | `inline-style-object` | `style={{ ... }}`. Use `stylex.create`; dynamic values use a style function. |
 | `stylex-shorthand` | `border:`, `background:`, or `outline:` shorthands. Use longhands. |
 | `palette-import` | `palette.stylex` or `brand.stylex` imported outside `tokens.stylex.ts` and `themes.ts`. |
+| `toolbar-control-size` | An explicit `size` on a `Button` or `LinkButton` inside a `Toolbar`, its `actions` included. Set `size` on the `Toolbar`. |
 | `left-edge-nav` | `borderLeft`, `borderInlineStart`, or an inset shadow in shell or navigation files. |
 | `theme-media-query` | `prefers-color-scheme` in a component. Themes are a token concern. |
 | `forbidden-import`, `forbidden-dependency` | Tailwind, `clsx`, Radix, Base UI, zod, visx, heroicons, and the other replaced libraries. |

@@ -222,6 +222,15 @@ interface LineRule {
   readonly test: (line: string, next: string) => boolean;
 }
 
+/** A rule that needs the context of several lines, such as the JSX element that encloses a line. */
+interface FileRule {
+  readonly id: string;
+  readonly message: string;
+  readonly applies: (file: string) => boolean;
+  /** Returns the 0-based indexes of the lines that break the rule. */
+  readonly findings: (lines: ReadonlyArray<string>) => ReadonlyArray<number>;
+}
+
 const isUiFile = (file: string) =>
   /^src\/(components|routes|features)\//.test(file) && /\.(tsx?|jsx?)$/.test(file) && !file.endsWith(".stylex.ts");
 const isSrcCode = (file: string) => /^src\//.test(file) && /\.(tsx?|jsx?)$/.test(file) && !file.endsWith("routeTree.gen.ts");
@@ -346,6 +355,44 @@ function lineRules(manifest: Manifest): ReadonlyArray<LineRule> {
   ];
 }
 
+const sizedButtons = new Set(["Button", "LinkButton"]);
+
+/**
+ * Finds an explicit `size` on a Button or LinkButton inside a Toolbar,
+ * including its `actions`. The scan follows JSX tags across lines: each
+ * `size=` belongs to the last opened tag before it.
+ */
+function toolbarButtonSizes(lines: ReadonlyArray<string>): ReadonlyArray<number> {
+  const found: Array<number> = [];
+  let depth = 0;
+  let lastTag = "";
+  lines.forEach((line, index) => {
+    for (const match of line.matchAll(/<(\/?)([A-Za-z][\w.]*)|\bsize=/g)) {
+      const tag = match[2];
+      if (tag === undefined) {
+        if (depth > 0 && sizedButtons.has(lastTag) && found.at(-1) !== index) found.push(index);
+      } else if (match[1] === "/") {
+        if (tag === "Toolbar") depth = Math.max(0, depth - 1);
+      } else {
+        if (tag === "Toolbar") depth += 1;
+        lastTag = tag;
+      }
+    }
+  });
+  return found;
+}
+
+function fileRules(): ReadonlyArray<FileRule> {
+  return [
+    {
+      id: "toolbar-control-size",
+      message: "Explicit size on a Button inside a Toolbar. Controls take the toolbar size, so the row keeps one height. Set size on the Toolbar.",
+      applies: isUiFile,
+      findings: toolbarButtonSizes,
+    },
+  ];
+}
+
 function runCheck(appDir: string): Array<Finding> {
   const manifest = readManifest();
   const findings: Array<Finding> = [];
@@ -360,16 +407,23 @@ function runCheck(appDir: string): Array<Finding> {
     }
   }
   const rules = lineRules(manifest);
+  const blockRules = fileRules();
   for (const absolute of walk(join(appDir, "src"))) {
     const file = toPosix(relative(appDir, absolute));
     const applicable = rules.filter((rule) => rule.applies(file));
-    if (applicable.length === 0) continue;
+    const applicableBlocks = blockRules.filter((rule) => rule.applies(file));
+    if (applicable.length === 0 && applicableBlocks.length === 0) continue;
     const lines = readFileSync(absolute, "utf8").split("\n");
     lines.forEach((line, index) => {
       for (const rule of applicable) {
         if (rule.test(line, lines[index + 1] ?? "")) findings.push({ rule: rule.id, file, line: index + 1, text: line.trim() });
       }
     });
+    for (const rule of applicableBlocks) {
+      for (const index of rule.findings(lines)) {
+        findings.push({ rule: rule.id, file, line: index + 1, text: (lines[index] ?? "").trim() });
+      }
+    }
   }
   return findings;
 }
@@ -379,6 +433,7 @@ function ruleMessages(): Record<string, string> {
     "forbidden-dependency": "Dependency the stack replaces. Migrate its usages, then bun remove it.",
   };
   for (const rule of lineRules(readManifest())) messages[rule.id] = rule.message;
+  for (const rule of fileRules()) messages[rule.id] = rule.message;
   return messages;
 }
 

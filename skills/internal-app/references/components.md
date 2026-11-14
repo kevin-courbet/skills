@@ -218,7 +218,7 @@ navigate({ search: (prev) => ({ ...prev, ...serializeFilters(itemFilterFields, n
 - Controls in one row share one height. The kit controls read the control size of their row, so do not set a size on each control:
   - Put a row of filters and view controls in a `Toolbar`. Set `size` on the `Toolbar` only when the default is wrong.
   - Wrap a row that is not a toolbar, such as a card header with a `SegmentedControl` and a `Button`, in `ControlSizeProvider` when it must be `sm`.
-  - Field controls, `Filters`, `SegmentedControl`, and `ToggleGroup` have no `size` prop. A `Button` has `size` for a button that stands alone.
+  - Field controls, `Filters`, `SegmentedControl`, and `ToggleGroup` have no `size` prop. A `Button` has `size` for a button that stands alone. `check` fails on an explicit `size` on a `Button` inside a `Toolbar`.
 - Row selection is page state, not URL state. Ids on other pages stay selected; the bulk bar counts all of them. Bulk buttons name the count ("Delete 3 items"), and a destructive bulk action opens a `ConfirmDialog`.
 - Keep hidden columns in a search param when people share the view, or in page state otherwise.
 - Moves in `Kanban`, `SortableList`, `Tree`, `Gantt`, and `EventCalendar` are optimistic: apply the new value at once, persist it with a mutation, and on failure restore the previous value and show an error toast. Every drag has a keyboard path; never add a drag-only control.
