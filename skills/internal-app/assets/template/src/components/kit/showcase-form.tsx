@@ -347,7 +347,7 @@ export function FormShowcase({
         <Section
           layout="split"
           title="You"
-          description="Updates about the request go to your email. The technician calls only about urgent work."
+          description="Updates go to your email, and the technician calls only about urgent work."
         >
           <FieldRow>
             <form.Field name="name">
@@ -404,7 +404,7 @@ export function FormShowcase({
         <Section
           layout="split"
           title="Where"
-          description="The technician goes here first. A room number saves a search of the floor."
+          description="A room number saves the technician a search of the floor."
         >
           <form.Field name="building">
             {(field) => (
@@ -456,7 +456,7 @@ export function FormShowcase({
         <Section
           layout="split"
           title="What needs work"
-          description="Pick each kind of work. The time estimate adds up from them, and the technician brings the right tools."
+          description="The kinds of work set the time estimate and the tools that the technician brings."
         >
           <form.Field name="work">
             {(field) => (
