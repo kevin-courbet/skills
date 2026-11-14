@@ -145,6 +145,11 @@ export const media = stylex.defineConsts({
   lg: "@media (min-width: 1024px)",
   xl: "@media (min-width: 1280px)",
   belowMd: "@media (max-width: 767.98px)",
+  /**
+   * A mouse or a trackpad. Put hover-only feedback, such as an underline,
+   * under this key: a touch screen keeps the hover state after a tap.
+   */
+  finePointer: "@media (hover: hover) and (pointer: fine)",
   reducedMotion: "@media (prefers-reduced-motion: reduce)",
   forcedColors: "@media (forced-colors: active)",
 });

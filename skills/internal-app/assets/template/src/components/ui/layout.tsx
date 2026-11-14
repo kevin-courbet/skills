@@ -565,7 +565,15 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   pageDescription: { minWidth: 0, maxWidth: "64ch", fontSize: font.md, color: color.textMuted },
-  pageActions: { display: "flex", alignItems: "center", gap: space.sm, flexShrink: 0 },
+  // The actions keep their width beside the title, but never grow wider than the
+  // header, so a wrapping control such as a chip group wraps instead of overflowing.
+  pageActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: space.sm,
+    flexShrink: 0,
+    maxWidth: "100%",
+  },
   section: { display: "flex", flexDirection: "column", gap: space.md },
   sectionHeader: {
     display: "flex",

@@ -101,7 +101,7 @@ Other groups: `shadow` (`sm`, `md`, `lg`, `xl` for a floating surface such as a 
 `frame` for the content panel), `font` (families, sizes `xs` to `xxxl`, `display` and `displayLg` for large numerals
 and labels that people read from a distance, weights `regular` to `semibold`, `bold` for a wordmark only, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
 `size` (control heights, icon sizes, sidebar, top bar, frame gap, content widths),
-`media` (breakpoints, reduced motion, forced colors), `container` (`belowSm`,
+`media` (breakpoints, `finePointer` for feedback that only a hover shows, reduced motion, forced colors), `container` (`belowSm`,
 `belowMd`, `belowLg` container queries that resolve against the nearest
 `containerType: "inline-size"` ancestor, such as the DataTable scroller), `layer` (z-index), and
 `motion` (durations and easing curves; see Motion).
@@ -166,6 +166,17 @@ On a touch page, prefer visible choices to a list in a popover: show a short
 list in a `SegmentedControl` or a `RadioGroup`, not in a `Select`. A
 `DatePicker` takes `quickPicks`, so people tap a day instead of opening the
 calendar popover.
+
+A touch screen has no hover, and it keeps the hover state after a tap. Do not
+put an action or information behind a hover. Put feedback that only a hover
+shows, such as an underline on a link, under `media.finePointer`:
+
+```ts
+textDecorationLine: {
+  default: "none",
+  ":hover": { default: "none", [media.finePointer]: "underline" },
+},
+```
 
 ### Category Colors
 
