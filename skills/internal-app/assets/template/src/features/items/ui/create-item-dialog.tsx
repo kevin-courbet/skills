@@ -1,23 +1,24 @@
 import * as stylex from "@stylexjs/stylex";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Schema } from "effect";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { ChoiceOption } from "@/components/ui/choice";
 import { Dialog } from "@/components/ui/dialog";
 import { NumberField } from "@/components/ui/number-field";
-import { Select } from "@/components/ui/select";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { TextField } from "@/components/ui/text-field";
-import { fieldError } from "@/lib/form";
+import { fieldError, formBehavior } from "@/lib/form";
 import { failureMessage, unwrap } from "@/lib/server-result";
-import { color, font, media, space } from "@/styles/tokens.stylex";
+import { color, font, space } from "@/styles/tokens.stylex";
 import { createItemFn, itemKeys } from "../api";
 import { CreateItem, type ItemStatus } from "../schemas";
 
 const createItemSchema = Schema.toStandardSchemaV1(CreateItem);
 const formId = "create-item-form";
 
-const statusOptions: ReadonlyArray<{ id: ItemStatus; label: string }> = [
+const statusOptions: ReadonlyArray<ChoiceOption<ItemStatus>> = [
   { id: "active", label: "Active" },
   { id: "paused", label: "Paused" },
   { id: "archived", label: "Archived" },
@@ -34,8 +35,9 @@ export function CreateItemDialog() {
   });
 
   const form = useForm({
+    ...formBehavior,
     defaultValues: { name: "", owner: "", status: "active" as ItemStatus, amount: 0 },
-    validators: { onSubmit: createItemSchema },
+    validators: { onDynamic: createItemSchema },
     onSubmit: async ({ value }) => {
       setSubmitError(undefined);
       try {
@@ -47,6 +49,7 @@ export function CreateItemDialog() {
       }
     },
   });
+  const hasSubmitAttempt = useStore(form.store, (state) => state.submissionAttempts > 0);
 
   return (
     <>
@@ -67,14 +70,9 @@ export function CreateItemDialog() {
         actions={(close) => (
           <>
             <Button onPress={close}>Cancel</Button>
-            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
-              {([canSubmit, isSubmitting]) => (
-                <Button
-                  intent="primary"
-                  type="submit"
-                  form={formId}
-                  isDisabled={!canSubmit || isSubmitting}
-                >
+            <form.Subscribe selector={(state) => state.isSubmitting}>
+              {(isSubmitting) => (
+                <Button intent="primary" type="submit" form={formId} isDisabled={isSubmitting}>
                   {isSubmitting ? "Saving" : "Create item"}
                 </Button>
               )}
@@ -94,11 +92,12 @@ export function CreateItemDialog() {
             {(field) => (
               <TextField
                 label="Name"
+                autoFocus
                 name={field.name}
                 value={field.state.value}
                 onChange={field.handleChange}
                 onBlur={field.handleBlur}
-                errorMessage={fieldError(field.state.meta.errors)}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
               />
             )}
           </form.Field>
@@ -107,41 +106,43 @@ export function CreateItemDialog() {
               <TextField
                 label="Owner"
                 description="Team that maintains the item."
+                placeholder="e.g. Payments"
+                width="md"
                 name={field.name}
                 value={field.state.value}
                 onChange={field.handleChange}
                 onBlur={field.handleBlur}
-                errorMessage={fieldError(field.state.meta.errors)}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
               />
             )}
           </form.Field>
-          <div {...stylex.props(styles.row)}>
-            <form.Field name="status">
-              {(field) => (
-                <Select
-                  label="Status"
-                  options={statusOptions}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  errorMessage={fieldError(field.state.meta.errors)}
-                />
-              )}
-            </form.Field>
-            <form.Field name="amount">
-              {(field) => (
-                <NumberField
-                  label="Amount"
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  minValue={0}
-                  formatOptions={{ style: "currency", currency: "EUR", maximumFractionDigits: 0 }}
-                  errorMessage={fieldError(field.state.meta.errors)}
-                />
-              )}
-            </form.Field>
-          </div>
+          <form.Field name="status">
+            {(field) => (
+              <RadioGroup
+                label="Status"
+                appearance="chips"
+                options={statusOptions}
+                value={field.state.value}
+                onChange={field.handleChange}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
+              />
+            )}
+          </form.Field>
+          <form.Field name="amount">
+            {(field) => (
+              <NumberField
+                label="Amount"
+                name={field.name}
+                value={field.state.value}
+                onChange={field.handleChange}
+                onBlur={field.handleBlur}
+                minValue={0}
+                width="sm"
+                formatOptions={{ style: "currency", currency: "EUR", maximumFractionDigits: 0 }}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
+              />
+            )}
+          </form.Field>
           {submitError ? (
             <p role="alert" {...stylex.props(styles.submitError)}>
               {submitError}
@@ -155,10 +156,5 @@ export function CreateItemDialog() {
 
 const styles = stylex.create({
   form: { display: "flex", flexDirection: "column", gap: space.lg },
-  row: {
-    display: "grid",
-    gridTemplateColumns: { default: "1fr", [media.sm]: "1fr 1fr" },
-    gap: space.md,
-  },
   submitError: { fontSize: font.sm, color: color.danger },
 });

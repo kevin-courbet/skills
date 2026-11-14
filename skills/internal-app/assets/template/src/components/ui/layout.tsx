@@ -5,7 +5,7 @@ import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 import { touchDensity } from "@/styles/themes";
 import { type ControlSize, ControlSizeProvider, useControlSize } from "./control-size";
-import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
+import { color, container, font, media, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface PageHeaderProps {
   /**
@@ -62,23 +62,57 @@ export function Page({
   );
 }
 
+/**
+ * A titled part of a page. `stacked` puts the title over the content.
+ * `split` puts the title and the description in a column on the left and the
+ * content on the right, and stacks them when the section is narrow. Use
+ * `split` for the parts of a long form or a settings page: the description
+ * then says what the answers change. Consecutive split sections show a
+ * divider between them.
+ */
 export function Section({
   title,
   description,
   children,
   actions,
+  layout = "stacked",
 }: {
   readonly title?: string;
   readonly description?: string;
   readonly actions?: ReactNode;
+  readonly layout?: "stacked" | "split";
   readonly children: ReactNode;
 }) {
+  const titleId = useId();
+  if (layout === "split") {
+    if (title === undefined) throw new Error("Section: the split layout needs a title.");
+    if (actions !== undefined) throw new Error("Section: the split layout has no actions.");
+    return (
+      <section aria-labelledby={titleId} {...stylex.props(styles.splitSection)}>
+        <div {...stylex.props(styles.split)}>
+          <div {...stylex.props(styles.splitHeader)}>
+            <h2 id={titleId} {...stylex.props(styles.sectionTitle)}>
+              {title}
+            </h2>
+            {description ? (
+              <p {...stylex.props(styles.sectionDescription, styles.splitDescription)}>
+                {description}
+              </p>
+            ) : null}
+          </div>
+          <div {...stylex.props(styles.splitBody)}>{children}</div>
+        </div>
+      </section>
+    );
+  }
   return (
-    <section {...stylex.props(styles.section)}>
+    <section aria-labelledby={title ? titleId : undefined} {...stylex.props(styles.section)}>
       {title ? (
         <div {...stylex.props(styles.sectionHeader)}>
           <div>
-            <h2 {...stylex.props(styles.sectionTitle)}>{title}</h2>
+            <h2 id={titleId} {...stylex.props(styles.sectionTitle)}>
+              {title}
+            </h2>
             {description ? <p {...stylex.props(styles.sectionDescription)}>{description}</p> : null}
           </div>
           {actions}
@@ -537,6 +571,26 @@ const styles = stylex.create({
   },
   sectionTitle: { fontSize: font.lg, fontWeight: font.semibold, lineHeight: font.leadingTight },
   sectionDescription: { fontSize: font.md, color: color.textMuted, marginTop: space.xs },
+  // The section is its own container, so the split follows the width it gets, not the window.
+  splitSection: {
+    containerType: "inline-size",
+    paddingTop: { default: space.xxl, ":first-child": 0 },
+    borderTopWidth: { default: "1px", ":first-child": 0 },
+    borderTopStyle: "solid",
+    borderTopColor: color.borderSubtle,
+  },
+  split: {
+    display: "grid",
+    gridTemplateColumns: {
+      default: "minmax(10rem, 15rem) minmax(0, 1fr)",
+      [container.belowMd]: "minmax(0, 1fr)",
+    },
+    columnGap: space.xxxl,
+    rowGap: space.lg,
+  },
+  splitHeader: { display: "flex", flexDirection: "column", minWidth: 0 },
+  splitDescription: { lineHeight: font.leadingNormal, maxWidth: "36ch" },
+  splitBody: { display: "flex", flexDirection: "column", gap: space.xxl, minWidth: 0 },
   card: {
     display: "flex",
     flexDirection: "column",
@@ -701,10 +755,12 @@ const styles = stylex.create({
     minWidth: 0,
   },
   stripHint: { fontSize: font.sm, fontWeight: font.regular, color: color.textMuted },
-  dl: { display: "flex", flexDirection: "column", margin: 0 },
+  // The term column takes the width of the longest term, so the list also fits a narrow card.
+  dl: { display: "grid", gridTemplateColumns: "fit-content(12rem) minmax(0, 1fr)", margin: 0 },
   dlRow: {
     display: "grid",
-    gridTemplateColumns: "minmax(8rem, 12rem) 1fr",
+    gridColumn: "1 / -1",
+    gridTemplateColumns: "subgrid",
     gap: space.lg,
     paddingBlock: space.sm,
     borderBottomWidth: "1px",
