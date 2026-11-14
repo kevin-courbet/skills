@@ -4,17 +4,23 @@ import type { StyleXStyles } from "@stylexjs/stylex";
 import { Minus, Plus } from "lucide-react";
 import {
   Button,
-  FieldError,
   Group,
   Input,
-  Label,
   NumberField as AriaNumberField,
   type NumberFieldProps as AriaNumberFieldProps,
-  Text,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size } from "@/styles/tokens.stylex";
-import { control, field, inputText } from "./field";
+import {
+  control,
+  field,
+  FieldDescription,
+  FieldErrorMessage,
+  FieldLabel,
+  type FieldWidth,
+  fieldWidth,
+  inputText,
+} from "./field";
 import { useControlSize } from "./control-size";
 
 export interface NumberFieldProps extends Omit<
@@ -26,6 +32,10 @@ export interface NumberFieldProps extends Omit<
   readonly hideLabel?: boolean;
   readonly description?: string;
   readonly errorMessage?: string;
+  /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
+  readonly isOptional?: boolean;
+  /** Control width from the expected length of the answer. See FieldWidth. */
+  readonly width?: FieldWidth;
   readonly placeholder?: string;
   /** Unit after the number, such as "ms", "rows", or "%". Use `formatOptions` for currency. */
   readonly unit?: string;
@@ -40,6 +50,8 @@ export function NumberField({
   hideLabel = false,
   description,
   errorMessage,
+  isOptional = false,
+  width = "full",
   placeholder,
   unit,
   showStepper = false,
@@ -47,13 +59,19 @@ export function NumberField({
   ...props
 }: NumberFieldProps) {
   const controlSize = useControlSize();
+  if (isOptional && props.isRequired === true)
+    throw new Error("NumberField: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaNumberField {...props} isInvalid={isInvalid} {...stylex.props(field.root, style)}>
-      <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
+      <FieldLabel isOptional={isOptional} isHidden={hideLabel}>
+        {label}
+      </FieldLabel>
+      <FieldDescription>{description}</FieldDescription>
       <Group
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          fieldWidth[width],
           controlSize === "sm" && control.compact,
           showStepper && styles.groupStepper,
           state.isInvalid && control.invalid,
@@ -78,12 +96,7 @@ export function NumberField({
           </Button>
         ) : null}
       </Group>
-      {description ? (
-        <Text slot="description" {...stylex.props(field.description)}>
-          {description}
-        </Text>
-      ) : null}
-      <FieldError {...stylex.props(field.error)}>{errorMessage}</FieldError>
+      <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
     </AriaNumberField>
   );
 }

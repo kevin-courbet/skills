@@ -8,14 +8,11 @@ import {
   Button,
   Dialog,
   DialogTrigger,
-  FieldError,
   Group,
   type Key,
-  Label,
   ListBox,
   ListBoxItem,
   Popover,
-  Text,
   TimeField as AriaTimeField,
   type TimeFieldProps as AriaTimeFieldProps,
 } from "react-aria-components";
@@ -23,7 +20,15 @@ import { appLocale } from "@/lib/locale";
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { DateSegments } from "./calendar";
-import { control, field } from "./field";
+import {
+  control,
+  field,
+  FieldDescription,
+  FieldErrorMessage,
+  FieldLabel,
+  type FieldWidth,
+  fieldWidth,
+} from "./field";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
 
@@ -56,6 +61,10 @@ export interface TimeFieldProps extends Omit<
   readonly zoneLabel?: string;
   readonly description?: string;
   readonly errorMessage?: string;
+  /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
+  readonly isOptional?: boolean;
+  /** Control width from the expected length of the answer. See FieldWidth. */
+  readonly width?: FieldWidth;
   readonly style?: StyleXStyles;
 }
 
@@ -76,12 +85,16 @@ export function TimeField({
   zoneLabel,
   description,
   errorMessage,
+  isOptional = false,
+  width = "full",
   style,
   ...props
 }: TimeFieldProps) {
   const controlSize = useControlSize();
   if (!Number.isInteger(minuteStep) || minuteStep < 1 || 60 % minuteStep !== 0)
     throw new Error(`TimeField: minuteStep ${minuteStep} must be a whole number that divides 60.`);
+  if (isOptional && props.isRequired === true)
+    throw new Error("TimeField: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   const groupRef = useRef<HTMLDivElement>(null);
   const [isOpen, setOpen] = useState(false);
@@ -99,13 +112,17 @@ export function TimeField({
       maxValue={max}
       {...stylex.props(field.root, style)}
     >
-      <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
+      <FieldLabel isOptional={isOptional} isHidden={hideLabel}>
+        {label}
+      </FieldLabel>
+      <FieldDescription>{description}</FieldDescription>
       <Group
         ref={groupRef}
         isInvalid={isInvalid}
         isDisabled={props.isDisabled}
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          fieldWidth[width],
           controlSize === "sm" && control.compact,
           styles.box,
           state.isInvalid && control.invalid,
@@ -153,12 +170,7 @@ export function TimeField({
           </Popover>
         </DialogTrigger>
       </Group>
-      {description ? (
-        <Text slot="description" {...stylex.props(field.description)}>
-          {description}
-        </Text>
-      ) : null}
-      <FieldError {...stylex.props(field.error)}>{errorMessage}</FieldError>
+      <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
     </AriaTimeField>
   );
 }

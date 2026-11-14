@@ -7,7 +7,7 @@ import { appLocale } from "@/lib/locale";
 import { renderStyles } from "@/lib/rac";
 import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
-import { field } from "./field";
+import { field, FieldDescription, FieldErrorIcon, FieldLabel } from "./field";
 import { ProgressBar } from "./progress-bar";
 
 export type UploadStatus = "queued" | "uploading" | "done" | "failed";
@@ -39,6 +39,8 @@ export interface FileUploadProps {
   readonly isDisabled?: boolean;
   /** Problem with the whole selection, such as a missing required file. */
   readonly errorMessage?: string;
+  /** Marks the label "optional" when people may send the form without a file. */
+  readonly isOptional?: boolean;
   readonly style?: StyleXStyles;
 }
 
@@ -56,18 +58,27 @@ export function FileUpload({
   onRemove,
   isDisabled = false,
   errorMessage,
+  isOptional = false,
   style,
 }: FileUploadProps) {
   const labelId = useId();
+  const descriptionId = useId();
+  const errorId = useId();
+  const describedBy = [
+    description === undefined ? undefined : descriptionId,
+    errorMessage === undefined ? undefined : errorId,
+  ].filter((id) => id !== undefined);
   const isAccepted = (type: string) =>
     acceptedFileTypes === undefined || acceptedFileTypes.includes(type);
   return (
     <div {...stylex.props(field.root, styles.root, style)}>
-      <span id={labelId} {...stylex.props(field.label)}>
+      <FieldLabel id={labelId} elementType="span" isOptional={isOptional}>
         {label}
-      </span>
+      </FieldLabel>
+      <FieldDescription id={descriptionId}>{description}</FieldDescription>
       <DropZone
         aria-labelledby={labelId}
+        aria-describedby={describedBy.length === 0 ? undefined : describedBy.join(" ")}
         isDisabled={isDisabled}
         getDropOperation={(types) =>
           acceptedFileTypes === undefined || acceptedFileTypes.some((type) => types.has(type))
@@ -107,12 +118,12 @@ export function FileUpload({
           </Button>
         </FileTrigger>
       </DropZone>
-      {description ? <span {...stylex.props(field.description)}>{description}</span> : null}
-      {errorMessage ? (
-        <span role="alert" {...stylex.props(field.error)}>
-          {errorMessage}
+      {errorMessage === undefined ? null : (
+        <span id={errorId} {...stylex.props(field.error)}>
+          <FieldErrorIcon />
+          <span>{errorMessage}</span>
         </span>
-      ) : null}
+      )}
       {files.length > 0 ? (
         <ul aria-label={`${label} files`} {...stylex.props(styles.list)}>
           {files.map((file) => (

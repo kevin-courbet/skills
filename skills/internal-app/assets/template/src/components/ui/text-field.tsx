@@ -3,18 +3,24 @@ import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import {
-  FieldError,
   Group,
   Input,
-  Label,
-  Text,
   TextArea,
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, space } from "@/styles/tokens.stylex";
-import { control, field, inputText } from "./field";
+import {
+  control,
+  field,
+  FieldDescription,
+  FieldErrorMessage,
+  FieldLabel,
+  type FieldWidth,
+  fieldWidth,
+  inputText,
+} from "./field";
 import { useControlSize } from "./control-size";
 
 export interface TextFieldProps extends Omit<
@@ -24,8 +30,14 @@ export interface TextFieldProps extends Omit<
   readonly label: string;
   /** Hide the visible label where a SettingRow or toolbar names the field. Screen readers keep it. */
   readonly hideLabel?: boolean;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
   readonly errorMessage?: string;
+  /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
+  readonly isOptional?: boolean;
+  /** Control width from the expected length of the answer. See FieldWidth. */
+  readonly width?: FieldWidth;
+  /** An example answer that starts with "e.g.", such as "e.g. 3.14". Never the only instruction. */
   readonly placeholder?: string;
   readonly multiline?: boolean;
   /**
@@ -46,6 +58,8 @@ export function TextField({
   hideLabel = false,
   description,
   errorMessage,
+  isOptional = false,
+  width = "full",
   placeholder,
   multiline = false,
   prefix,
@@ -58,14 +72,20 @@ export function TextField({
   const hasAdornment = prefix !== undefined || suffix !== undefined;
   if (multiline && hasAdornment)
     throw new Error("TextField: prefix and suffix are not supported on a multiline field.");
+  if (isOptional && props.isRequired === true)
+    throw new Error("TextField: a field cannot be both optional and required.");
   return (
     <AriaTextField {...props} isInvalid={isInvalid} {...stylex.props(field.root, style)}>
-      <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
+      <FieldLabel isOptional={isOptional} isHidden={hideLabel}>
+        {label}
+      </FieldLabel>
+      <FieldDescription>{description}</FieldDescription>
       {multiline ? (
         <TextArea
           placeholder={placeholder}
           {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
             control.base,
+            fieldWidth[width],
             control.textInput,
             styles.textarea,
             state.isInvalid && control.invalid,
@@ -79,6 +99,7 @@ export function TextField({
           isDisabled={props.isDisabled}
           {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
             control.base,
+            fieldWidth[width],
             controlSize === "sm" && control.compact,
             styles.group,
             state.isInvalid && control.invalid,
@@ -95,6 +116,7 @@ export function TextField({
           placeholder={placeholder}
           {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
             control.base,
+            fieldWidth[width],
             controlSize === "sm" && control.compact,
             control.textInput,
             styles.input,
@@ -103,12 +125,7 @@ export function TextField({
           ])}
         />
       ) : null}
-      {description ? (
-        <Text slot="description" {...stylex.props(field.description)}>
-          {description}
-        </Text>
-      ) : null}
-      <FieldError {...stylex.props(field.error)}>{errorMessage}</FieldError>
+      <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
     </AriaTextField>
   );
 }

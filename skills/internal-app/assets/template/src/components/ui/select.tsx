@@ -3,17 +3,22 @@ import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronDown } from "lucide-react";
 import {
   Button,
-  FieldError,
-  Label,
   Popover,
   Select as AriaSelect,
   type SelectProps as AriaSelectProps,
   SelectValue,
-  Text,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, size, space } from "@/styles/tokens.stylex";
-import { control, field } from "./field";
+import {
+  control,
+  field,
+  FieldDescription,
+  FieldErrorMessage,
+  FieldLabel,
+  type FieldWidth,
+  fieldWidth,
+} from "./field";
 import { type ListOption, OptionList } from "./list-box";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
@@ -44,6 +49,10 @@ export interface SelectProps<Value extends string> extends AriaSingleSelectProps
   readonly onChange?: (value: Value) => void;
   readonly description?: string;
   readonly errorMessage?: string;
+  /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
+  readonly isOptional?: boolean;
+  /** Control width from the expected length of the answer. See FieldWidth. */
+  readonly width?: FieldWidth;
   readonly placeholder?: string;
   readonly style?: StyleXStyles;
 }
@@ -58,11 +67,15 @@ export function Select<Value extends string>({
   onChange,
   description,
   errorMessage,
+  isOptional = false,
+  width = "full",
   placeholder = "Select",
   style,
   ...props
 }: SelectProps<Value>) {
   const controlSize = useControlSize();
+  if (isOptional && props.isRequired === true)
+    throw new Error("Select: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaSelect
@@ -77,10 +90,14 @@ export function Select<Value extends string>({
       }}
       {...stylex.props(field.root, style)}
     >
-      <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
+      <FieldLabel isOptional={isOptional} isHidden={hideLabel}>
+        {label}
+      </FieldLabel>
+      <FieldDescription>{description}</FieldDescription>
       <Button
         {...renderStyles<{ isDisabled: boolean }>((state) => [
           control.base,
+          fieldWidth[width],
           styles.trigger,
           controlSize === "sm" && control.compact,
           isInvalid && control.invalid,
@@ -98,12 +115,7 @@ export function Select<Value extends string>({
         </SelectValue>
         <ChevronDown aria-hidden {...stylex.props(styles.chevron)} />
       </Button>
-      {description ? (
-        <Text slot="description" {...stylex.props(field.description)}>
-          {description}
-        </Text>
-      ) : null}
-      <FieldError {...stylex.props(field.error)}>{errorMessage}</FieldError>
+      <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
       <Popover
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
           overlay.popover,

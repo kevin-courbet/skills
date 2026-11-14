@@ -5,17 +5,22 @@ import {
   DateRangePicker as AriaDateRangePicker,
   type DateRangePickerProps as AriaDateRangePickerProps,
   Dialog,
-  FieldError,
   Group,
-  Label,
   Popover,
-  Text,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, media, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { CalendarButton, DateSegments, RangeCalendarView, calendar } from "./calendar";
-import { control, field } from "./field";
+import {
+  control,
+  field,
+  FieldDescription,
+  FieldErrorMessage,
+  FieldLabel,
+  type FieldWidth,
+  fieldWidth,
+} from "./field";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
 
@@ -51,6 +56,10 @@ export interface DateRangePickerProps extends Omit<
   readonly presets?: ReadonlyArray<DateRangePreset>;
   readonly description?: string;
   readonly errorMessage?: string;
+  /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
+  readonly isOptional?: boolean;
+  /** Control width from the expected length of the answer. See FieldWidth. */
+  readonly width?: FieldWidth;
   readonly style?: StyleXStyles;
 }
 
@@ -67,10 +76,14 @@ export function DateRangePicker({
   presets = [],
   description,
   errorMessage,
+  isOptional = false,
+  width = "full",
   style,
   ...props
 }: DateRangePickerProps) {
   const controlSize = useControlSize();
+  if (isOptional && props.isRequired === true)
+    throw new Error("DateRangePicker: a field cannot be both optional and required.");
   const isInvalid = props.isInvalid ?? errorMessage !== undefined;
   return (
     <AriaDateRangePicker
@@ -84,10 +97,12 @@ export function DateRangePicker({
       maxValue={maxValue === undefined ? undefined : parseDate(maxValue)}
       {...stylex.props(field.root, style)}
     >
-      <Label {...stylex.props(field.label)}>{label}</Label>
+      <FieldLabel isOptional={isOptional}>{label}</FieldLabel>
+      <FieldDescription>{description}</FieldDescription>
       <Group
         {...renderStyles<{ isInvalid: boolean; isDisabled: boolean }>((state) => [
           control.base,
+          fieldWidth[width],
           controlSize === "sm" && control.compact,
           calendar.group,
           state.isInvalid && control.invalid,
@@ -101,12 +116,7 @@ export function DateRangePicker({
         <DateSegments slot="end" />
         <CalendarButton />
       </Group>
-      {description ? (
-        <Text slot="description" {...stylex.props(field.description)}>
-          {description}
-        </Text>
-      ) : null}
-      <FieldError {...stylex.props(field.error)}>{errorMessage}</FieldError>
+      <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
       <Popover
         placement="bottom end"
         {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [

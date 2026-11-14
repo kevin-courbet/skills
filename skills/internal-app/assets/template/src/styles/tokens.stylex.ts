@@ -114,7 +114,14 @@ export const size = stylex.defineVars({
   frameGap: "0.5rem",
   contentMax: "90rem",
   readingMax: "72ch",
-  fieldMax: "28rem",
+  /**
+   * Field control widths that show the expected length of the answer. Pick
+   * one with the `width` prop of a field, not with a style.
+   */
+  fieldXs: "6rem",
+  fieldSm: "11rem",
+  fieldMd: "17rem",
+  fieldLg: "26rem",
 });
 
 /** Build-time constants. Use as media-query keys, z-index values, and motion values. */

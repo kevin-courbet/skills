@@ -117,6 +117,10 @@ const touchSize = stylex.createTheme(size, {
   iconSm: "1.125rem",
   icon: "1.25rem",
   iconLg: "1.5rem",
+  fieldXs: "8rem",
+  fieldSm: "14rem",
+  fieldMd: "22rem",
+  fieldLg: "34rem",
 });
 
 const touchFont = stylex.createTheme(font, {

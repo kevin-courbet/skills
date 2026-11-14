@@ -5,12 +5,11 @@ import { useEffect, useRef } from "react";
 import {
   Button,
   Input,
-  Label,
   SearchField as AriaSearchField,
   type SearchFieldProps as AriaSearchFieldProps,
 } from "react-aria-components";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
-import { control, field, inputText } from "./field";
+import { control, field, FieldLabel, inputText } from "./field";
 import { useControlSize } from "./control-size";
 
 export interface SearchFieldProps extends Omit<
@@ -57,7 +56,7 @@ export function SearchField({
     <AriaSearchField {...props} {...stylex.props(field.root, style)}>
       {({ isEmpty, isDisabled }) => (
         <>
-          <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
+          <FieldLabel isHidden={hideLabel}>{label}</FieldLabel>
           <div
             {...stylex.props(
               control.base,

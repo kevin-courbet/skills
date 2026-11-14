@@ -1,17 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { X } from "lucide-react";
-import {
-  Button,
-  Label,
-  Tag as AriaTag,
-  TagGroup as AriaTagGroup,
-  TagList,
-  Text,
-} from "react-aria-components";
+import { Button, Tag as AriaTag, TagGroup as AriaTagGroup, TagList } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
-import { field } from "./field";
+import { field, FieldDescription, FieldLabel } from "./field";
 
 export interface TagItem<Value extends string> {
   readonly id: Value;
@@ -52,7 +45,8 @@ export function TagGroup<Value extends string>({
       }
       {...stylex.props(field.root, style)}
     >
-      <Label {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>{label}</Label>
+      <FieldLabel isHidden={hideLabel}>{label}</FieldLabel>
+      <FieldDescription>{description}</FieldDescription>
       <TagList
         items={items}
         renderEmptyState={() => <span {...stylex.props(styles.empty)}>{emptyLabel}</span>}
@@ -86,11 +80,6 @@ export function TagGroup<Value extends string>({
           </AriaTag>
         )}
       </TagList>
-      {description ? (
-        <Text slot="description" {...stylex.props(field.description)}>
-          {description}
-        </Text>
-      ) : null}
     </AriaTagGroup>
   );
 }

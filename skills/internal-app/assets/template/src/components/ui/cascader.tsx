@@ -16,7 +16,7 @@ import {
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
-import { control, field } from "./field";
+import { control, field, FieldDescription, FieldLabel, type FieldWidth, fieldWidth } from "./field";
 import { overlay } from "./overlay";
 import { useControlSize } from "./control-size";
 
@@ -41,7 +41,12 @@ export interface CascaderProps {
   /** Shows a search box that finds options at every level. Defaults to on above 12 options. */
   readonly isSearchable?: boolean;
   readonly placeholder?: string;
+  /** Hint between the label and the control. */
   readonly description?: string;
+  /** Marks the label "optional" when people may leave the field empty. */
+  readonly isOptional?: boolean;
+  /** Control width from the expected length of the answer. See FieldWidth. */
+  readonly width?: FieldWidth;
   readonly style?: StyleXStyles;
 }
 
@@ -70,6 +75,8 @@ export function Cascader({
   isSearchable,
   placeholder = "Select",
   description,
+  isOptional = false,
+  width = "full",
   style,
 }: CascaderProps) {
   const controlSize = useControlSize();
@@ -82,14 +89,20 @@ export function Cascader({
   const searchable = isSearchable ?? flat.length > searchThreshold;
   return (
     <div {...stylex.props(field.root, style)}>
-      <span id={labelId} {...stylex.props(field.label, hideLabel && field.hiddenLabel)}>
+      <FieldLabel id={labelId} elementType="span" isOptional={isOptional} isHidden={hideLabel}>
         {label}
-      </span>
+      </FieldLabel>
+      <FieldDescription id={descriptionId}>{description}</FieldDescription>
       <DialogTrigger isOpen={isOpen} onOpenChange={setOpen}>
         <AriaButton
           aria-labelledby={`${labelId} ${valueId}`}
           aria-describedby={description ? descriptionId : undefined}
-          {...stylex.props(control.base, styles.trigger, controlSize === "sm" && control.compact)}
+          {...stylex.props(
+            control.base,
+            styles.trigger,
+            fieldWidth[width],
+            controlSize === "sm" && control.compact,
+          )}
         >
           <span
             id={valueId}
@@ -124,11 +137,6 @@ export function Cascader({
           </Dialog>
         </Popover>
       </DialogTrigger>
-      {description ? (
-        <span id={descriptionId} {...stylex.props(field.description)}>
-          {description}
-        </span>
-      ) : null}
     </div>
   );
 }
