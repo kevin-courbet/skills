@@ -23,7 +23,7 @@ import { Avatar, AvatarGroup } from "@/components/ui/avatar";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox, CheckboxGroup } from "@/components/ui/checkbox";
 import { ComboBox } from "@/components/ui/combo-box";
 import { useCommandPalette, useCommandPaletteShortcut } from "@/components/ui/command-palette";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -266,6 +266,7 @@ function TouchDensityShowcase() {
  */
 export function KitShowcase() {
   const [view, setView] = useState<"list" | "grid">("list");
+  const [checks, setChecks] = useState<ReadonlyArray<"lint" | "types" | "e2e">>(["lint", "types"]);
   const [team, setTeam] = useState<string | null>("finance");
   const [date, setDate] = useState<string | null>("2026-10-12");
   const [sorting, setSorting] = useState<SortingState>([{ id: "volume", desc: true }]);
@@ -511,6 +512,17 @@ export function KitShowcase() {
               <Switch>Maintenance mode</Switch>
             </div>
           </Specimen>
+          <CheckboxGroup
+            label="Checks"
+            options={[
+              { id: "lint", label: "Lint", meta: "40 s" },
+              { id: "types", label: "Type check", meta: "1 min" },
+              { id: "e2e", label: "End-to-end", description: "Runs in staging", meta: "12 min" },
+            ]}
+            value={checks}
+            onChange={setChecks}
+            errorMessage={checks.length === 0 ? "Pick at least one check." : undefined}
+          />
           <div {...stylex.props(styles.stack)}>
             <TagGroup
               label="Labels"
