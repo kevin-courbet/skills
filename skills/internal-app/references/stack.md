@@ -88,6 +88,7 @@ src/
     charts/                    kit. chartHost bridge, TrendChart, and Sparkline.
     kit/showcase.tsx           kit. Every primitive on one page for visual checks.
     kit/showcase-operations.tsx kit. Filter, status, pipeline, activity, and card patterns for the showcase.
+    kit/showcase-form.tsx      kit. A long form that uses every form component, on /design-kit/form.
   features/<name>/             App.
     schemas.ts                 Effect Schema for entities, inputs, and search params. Client-safe.
     api.ts                     Server functions, query keys, queryOptions. The only data module routes import.
@@ -97,7 +98,7 @@ src/
     locale.ts                  App. appLocale, appTimeZone, and the formatters.
     brand.ts                   App. defaultTheme for people without a saved theme.
     filter-params.ts           kit. Filter field types and the URL codec for the Filters chip bar.
-    form.ts                    kit. fieldError for TanStack Form fields.
+    form.ts                    kit. formBehavior, fieldError, and formErrors for TanStack Form.
     rac.ts                     kit. renderStyles adapter for react-aria render props.
     router-defaults.tsx        kit. createQueryClient, routerDefaults, react-aria router bridge.
     server-result.ts           kit. ServerResult, ServerFnError, unwrap, failureMessage.

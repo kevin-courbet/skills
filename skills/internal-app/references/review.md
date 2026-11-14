@@ -31,9 +31,10 @@ Use the `agent-browser` skill (`ab chrome --url ...`, `ab snapshot`,
 1. Each changed page in the light theme and the dark theme. Switch with the theme menu at the end of the top bar or set the `theme` cookie to `light` or `dark`.
 2. Every empty, loading, and error state the page can show.
 3. Each dialog, sheet, menu, and popover the page opens, and one invalid form field.
-4. The page at 400 px and at 1440 px wide. At 400 px, the navigation opens from the menu button in the top bar.
-5. `/design-kit` after a kit install or update, in both themes.
-6. System theme mode during hydration and after a native color-scheme change. The document theme must follow the native preference without hydration errors.
+4. Each form before and after a submit with errors. Check that the `ErrorSummary` takes focus and counts the problems, that each link moves focus to its field, and that Tab reaches every control in the order of the page. Check a long form at the `touch` density when it runs on a tablet.
+5. The page at 400 px and at 1440 px wide. At 400 px, the navigation opens from the menu button in the top bar.
+6. `/design-kit` and `/design-kit/form` after a kit install or update, in both themes.
+7. System theme mode during hydration and after a native color-scheme change. The document theme must follow the native preference without hydration errors.
 
 Compare against the tokens: surfaces, text, borders, and spacing must come
 from tokens, and the dark theme must keep hierarchy without inverting.

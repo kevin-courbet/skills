@@ -116,6 +116,7 @@ Density defaults:
 | Control height | `size.controlMd` (32px); `controlSm` 28px inside a `DataTable` frame. All controls in one row share one height (`ControlSizeProvider`). |
 | Table row | 36px total: 8px padding plus one text line |
 | Spacing between fields | `space.lg` (16px); between sections `space.xxl` (24px) |
+| Field width | `size.fieldXs`, `fieldSm`, `fieldMd`, `fieldLg` (6, 11, 17, 26rem). Set them through the field `width` prop, not in a style. |
 | Radius | `radius.md` (6px) controls, `radius.lg` (8px) sidebar items, popovers, and the table frame, `radius.xl` (12px) the content panel, cards, stat tiles, settings cards, dialogs, and the peek sheet |
 | Sidebar | `size.sidebar` (240px), items `size.controlSm` (28px) |
 | Content panel | `size.frameGap` (8px) from the window edges and the sidebar |
@@ -135,6 +136,7 @@ applies it to the full page region:
 |---|---|---|
 | `controlSm`, `controlMd`, `controlLg` | 28, 32, 36px | 44, 48, 56px |
 | `iconSm`, `icon`, `iconLg` | 14, 16, 20px | 18, 20, 24px |
+| `fieldXs`, `fieldSm`, `fieldMd`, `fieldLg` | 6, 11, 17, 26rem | 8, 14, 22, 34rem |
 | `font.md` (body) | 13px | 17px |
 | `font.sm` (labels) | 12px | 15px |
 | `font.xxl` (page title) | 20px | 26px |
@@ -147,7 +149,8 @@ desk page.
 Dialogs, popovers, menus, and toasts render in a portal outside the page, so
 they keep the default density. On a touch page, keep the flows inline: confirm
 in place, and show the choices in a `SegmentedControl` or a `RadioGroup`, not
-in a `Select`.
+in a `Select`. A `DatePicker` takes `quickPicks`, so people tap a day instead
+of opening the calendar popover.
 
 ### Category Colors
 

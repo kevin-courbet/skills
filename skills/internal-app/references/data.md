@@ -170,22 +170,37 @@ const remove = useMutation({
 
 ## Forms
 
-TanStack Form with Effect Schema through Standard Schema:
+TanStack Form with Effect Schema through Standard Schema. Load the
+`form-design` skill for the design of the form, and read Forms in
+`components.md` for the kit component of each answer.
 
 ```ts
 const form = useForm({
+  ...formBehavior,
   defaultValues: { name: "", owner: "", status: "active" as ItemStatus, amount: 0 },
-  validators: { onSubmit: Schema.toStandardSchemaV1(CreateItem) },
+  validators: { onDynamic: Schema.toStandardSchemaV1(CreateItem) },
   onSubmit: async ({ value }) => {
     await create.mutateAsync(value);
   },
 });
+const hasSubmitAttempt = useStore(form.store, (state) => state.submissionAttempts > 0);
 ```
 
-- Field errors arrive as Standard Schema issue objects. Pass `field.state.meta.errors` to `fieldError` from `src/lib/form.ts`.
-- Bind RAC fields: `value={field.state.value}`, `onChange={field.handleChange}`, `onBlur={field.handleBlur}`, `errorMessage={...}`.
+- Spread `formBehavior` from `src/lib/form.ts` first. The schema then runs on every change, and a submit always checks the current answers. Do not use `onSubmit` or `onBlur` validators: a submit then reports old errors without a new check.
+- Show each message with `errorMessage={fieldError(field, hasSubmitAttempt)}`. It shows after people change the field and leave it, or after a submit attempt. Read `hasSubmitAttempt` in the form component, because a field renders again only when its own state changes.
+- Bind RAC fields: `value={field.state.value}`, `onChange={field.handleChange}`, `onBlur={field.handleBlur}`.
 - Use `NumberField` for numbers; its value is a number and it formats with the app locale.
-- Give the `<form>` an `id`. Put the primary action in the dialog footer as `<Button type="submit" form={formId}>` inside `form.Subscribe` reading `canSubmit` and `isSubmitting`. Enter in any field submits through the native form.
+- Give the `<form>` an `id`. Put the primary action in the dialog footer as `<Button type="submit" form={formId}>`. Disable it only while `isSubmitting`, never while the form is invalid: a press on an invalid form shows every message. Enter in any field submits through the native form.
+- A long form on its own route uses `FormLayout`. Give each field the `id` that its `ErrorSummary` item names, and build the items with `formErrors(state.fieldMeta, fields)` after the first submit attempt:
+
+  ```tsx
+  <form.Subscribe selector={(state) => ({ fieldMeta: state.fieldMeta, attempts: state.submissionAttempts })}>
+    {({ fieldMeta, attempts }) => {
+      const errors = attempts === 0 ? [] : formErrors(fieldMeta, [{ name: "name", id: "request-name" }]);
+      return <ErrorSummary title={`${errors.length} things to fix before you send the request`} errors={errors} submitCount={attempts} />;
+    }}
+  </form.Subscribe>
+  ```
 - Catch the mutation failure in `onSubmit` and show `failureMessage(error)` above the footer. Keep the input.
 - Reset the form when the dialog closes.
 
