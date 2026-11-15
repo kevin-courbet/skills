@@ -1,0 +1,17 @@
+#!/usr/bin/env bun
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { run } from "./lib/cli.ts";
+
+const scriptsDir = dirname(fileURLToPath(import.meta.url));
+// The invoked path keeps the folder that the agent installed the skill in,
+// also when that folder is a symbolic link to the source repository.
+const invoked = process.argv[1] ? resolve(dirname(resolve(process.argv[1])), "..") : undefined;
+const result = run(process.argv.slice(2), {
+  skillDir: resolve(scriptsDir, ".."),
+  invokedSkillDir: invoked,
+  color: Boolean(process.stdout.isTTY) && !process.env.NO_COLOR,
+});
+process.stdout.write(result.stdout);
+process.stderr.write(result.stderr);
+process.exitCode = result.code;

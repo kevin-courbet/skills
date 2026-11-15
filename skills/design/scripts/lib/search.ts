@@ -1,0 +1,225 @@
+import type { Graph, Note, Section } from "./graph.ts";
+import { levenshtein } from "./text.ts";
+
+const STOP_WORDS = new Set(
+  (
+    "a an and are as at be best between by can do does for from get good how i in into is it its me my of on or our " +
+    "should so that the their them then there this to use using want we what when where which while who why will with " +
+    "you your"
+  ).split(" "),
+);
+
+// A small suffix stemmer. Both the index and the query use it, so "typing",
+// "types", and "type" meet at one stem without a dictionary.
+export function stem(word: string): string {
+  let result = word;
+  if (result.length <= 3 || /^\d/.test(result)) return result;
+  if (result.endsWith("ies") && result.length > 4) result = `${result.slice(0, -3)}y`;
+  else if (result.endsWith("sses")) result = result.slice(0, -2);
+  else if (/(?:ch|sh|x|z)es$/.test(result)) result = result.slice(0, -2);
+  else if (result.endsWith("s") && !/(?:ss|us|is)$/.test(result)) result = result.slice(0, -1);
+
+  let suffixRemoved = false;
+  if (result.endsWith("ing") && result.length > 5) {
+    result = result.slice(0, -3);
+    suffixRemoved = true;
+  } else if (result.endsWith("ed") && result.length > 4) {
+    result = result.slice(0, -2);
+    suffixRemoved = true;
+  } else if (result.endsWith("ly") && result.length > 4) {
+    result = result.slice(0, -2);
+  }
+  if (suffixRemoved && /([b-df-hj-np-tv-z])\1$/.test(result) && !/(?:ll|ss|zz)$/.test(result)) result = result.slice(0, -1);
+  if (result.endsWith("e") && result.length > 3) result = result.slice(0, -1);
+  return result;
+}
+
+function words(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[’']/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 0 && !STOP_WORDS.has(word));
+}
+
+export function terms(text: string): string[] {
+  return words(text).map(stem);
+}
+
+interface SectionIndex {
+  readonly section: Section;
+  readonly title: ReadonlySet<string>;
+  readonly counts: ReadonlyMap<string, number>;
+}
+
+interface NoteIndex {
+  readonly note: Note;
+  readonly id: ReadonlySet<string>;
+  readonly keywords: ReadonlySet<string>;
+  readonly phrases: ReadonlyArray<ReadonlyArray<string>>;
+  readonly summary: ReadonlySet<string>;
+  readonly title: ReadonlySet<string>;
+  readonly sectionTitles: ReadonlySet<string>;
+  readonly body: ReadonlyMap<string, number>;
+  readonly sections: ReadonlyArray<SectionIndex>;
+  readonly all: ReadonlySet<string>;
+  readonly typed: ReadonlySet<string>;
+}
+
+function counts(words: ReadonlyArray<string>): Map<string, number> {
+  const result = new Map<string, number>();
+  for (const word of words) result.set(word, (result.get(word) ?? 0) + 1);
+  return result;
+}
+
+function indexNote(note: Note): NoteIndex {
+  const keywordTerms = note.keywords.map((keyword) => terms(keyword));
+  const sections = note.sections.map((section) => ({
+    section,
+    title: new Set(terms(section.title)),
+    counts: counts(terms(section.text)),
+  }));
+  const body = counts(terms(`${note.intro}\n${note.sections.map((section) => section.text).join("\n")}`));
+  const id = new Set(terms(note.id.replaceAll("-", " ")));
+  const keywords = new Set(keywordTerms.flat());
+  const summary = new Set(terms(note.summary));
+  const title = new Set(terms(note.title));
+  const sectionTitles = new Set(sections.flatMap((section) => [...section.title]));
+  const all = new Set([...id, ...keywords, ...summary, ...title, ...sectionTitles, ...body.keys()]);
+  const typed = new Set(
+    words([note.id.replaceAll("-", " "), ...note.keywords, note.summary, note.title, note.intro, ...note.sections.map((section) => section.text)].join("\n")),
+  );
+  return {
+    note,
+    id,
+    keywords,
+    phrases: keywordTerms.filter((phrase) => phrase.length > 1),
+    summary,
+    title,
+    sectionTitles,
+    body,
+    sections,
+    all,
+    typed,
+  };
+}
+
+const indexes = new WeakMap<Graph, ReadonlyArray<NoteIndex>>();
+
+function indexGraph(graph: Graph): ReadonlyArray<NoteIndex> {
+  const cached = indexes.get(graph);
+  if (cached) return cached;
+  const built = graph.ordered.map(indexNote);
+  indexes.set(graph, built);
+  return built;
+}
+
+export interface SearchHit {
+  readonly note: Note;
+  readonly score: number;
+  readonly sections: ReadonlyArray<Section>;
+}
+
+export interface SearchResult {
+  readonly hits: ReadonlyArray<SearchHit>;
+  readonly corrections: ReadonlyArray<{ from: string; to: string }>;
+  readonly terms: ReadonlyArray<string>;
+}
+
+// Replaces a query word that no note contains with the closest word of the
+// notes, so that a typo such as "pallete" still finds the palette note. The
+// comparison uses whole words, because stems of different words can be closer
+// to each other than the words are.
+function correct(typed: string, vocabulary: ReadonlySet<string>): string | null {
+  if (typed.length < 4) return null;
+  const limit = typed.length >= 7 ? 2 : 1;
+  let best: { word: string; distance: number; sameStart: boolean } | null = null;
+  for (const candidate of vocabulary) {
+    if (Math.abs(candidate.length - typed.length) > limit) continue;
+    const distance = levenshtein(typed, candidate);
+    if (distance > limit) continue;
+    const sameStart = candidate[0] === typed[0];
+    const better =
+      best === null ||
+      distance < best.distance ||
+      (distance === best.distance && sameStart && !best.sameStart) ||
+      (distance === best.distance && sameStart === best.sameStart && candidate < best.word);
+    if (better) best = { word: candidate, distance, sameStart };
+  }
+  return best ? best.word : null;
+}
+
+const RELATIVE_FLOOR = 0.2;
+
+export function search(graph: Graph, query: string, limit: number): SearchResult {
+  const index = indexGraph(graph);
+  const vocabulary = new Set(index.flatMap((entry) => [...entry.all]));
+  const typedVocabulary = new Set(index.flatMap((entry) => [...entry.typed]));
+  const corrections: Array<{ from: string; to: string }> = [];
+  const queryTerms: string[] = [];
+  for (const typed of new Set(words(query))) {
+    const term = stem(typed);
+    if (vocabulary.has(term)) {
+      if (!queryTerms.includes(term)) queryTerms.push(term);
+      continue;
+    }
+    const replacement = correct(typed, typedVocabulary);
+    if (replacement) {
+      corrections.push({ from: typed, to: replacement });
+      const replacementTerm = stem(replacement);
+      if (!queryTerms.includes(replacementTerm)) queryTerms.push(replacementTerm);
+    }
+  }
+  if (queryTerms.length === 0) return { hits: [], corrections, terms: queryTerms };
+
+  const total = index.length;
+  const idf = new Map<string, number>();
+  for (const term of queryTerms) {
+    const frequency = index.filter((entry) => entry.all.has(term)).length;
+    idf.set(term, Math.log(1 + total / (1 + frequency)));
+  }
+  const querySet = new Set(queryTerms);
+
+  const hits: SearchHit[] = [];
+  for (const entry of index) {
+    let score = 0;
+    let matched = 0;
+    for (const term of queryTerms) {
+      let termScore = 0;
+      if (entry.id.has(term)) termScore += 8;
+      if (entry.keywords.has(term)) termScore += 6;
+      if (entry.summary.has(term)) termScore += 3;
+      if (entry.title.has(term)) termScore += 3;
+      if (entry.sectionTitles.has(term)) termScore += 2;
+      termScore += Math.min(entry.body.get(term) ?? 0, 5) * 0.4;
+      if (termScore > 0) matched += 1;
+      score += termScore * idf.get(term)!;
+    }
+    if (matched === 0) continue;
+    for (const phrase of entry.phrases) {
+      if (phrase.every((word) => querySet.has(word))) score += 3 * phrase.length;
+    }
+    const coverage = matched / queryTerms.length;
+    score *= 0.25 + 0.75 * coverage * coverage;
+
+    const sections = entry.sections
+      .map((section) => {
+        let sectionScore = 0;
+        for (const term of queryTerms) {
+          if (section.title.has(term)) sectionScore += 3 * idf.get(term)!;
+          sectionScore += Math.min(section.counts.get(term) ?? 0, 5) * 0.5 * idf.get(term)!;
+        }
+        return { section: section.section, sectionScore };
+      })
+      .filter((candidate) => candidate.sectionScore > 0)
+      .sort((left, right) => right.sectionScore - left.sectionScore)
+      .slice(0, 3)
+      .map((candidate) => candidate.section);
+    hits.push({ note: entry.note, score, sections });
+  }
+  hits.sort((left, right) => right.score - left.score || left.note.id.localeCompare(right.note.id));
+  // A hit far below the best hit matched only a common word. It costs the
+  // reader a line and rarely holds the answer.
+  const floor = (hits[0]?.score ?? 0) * RELATIVE_FLOOR;
+  return { hits: hits.filter((hit) => hit.score >= floor).slice(0, limit), corrections, terms: queryTerms };
+}
