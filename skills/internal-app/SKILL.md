@@ -80,7 +80,7 @@ The general rules for pages are notes:
 3. Replace the example `items` feature with the real features. Keep its file
    shapes. Follow the data notes in References, the notes in Components, and
    the component docs.
-4. Finish with `references/review.md`.
+4. Finish with `design read internal-app-review`.
 
 ### Upgrade an existing app
 
@@ -89,7 +89,7 @@ The general rules for pages are notes:
    wiring, kit installation next to the old UI, page-by-page migration, and
    removal of the replaced libraries.
 3. The upgrade is complete when `doctor` passes and the review in
-   `references/review.md` is done.
+   `design read internal-app-review` is done.
 
 ### Add or change pages
 
@@ -100,7 +100,7 @@ The general rules for pages are notes:
    If no component fits, stop and add one to this skill
    (`design read internal-app-adding-a-primitive`). Do not build a one-off
    control in the app.
-3. Run `check` and the review in `references/review.md`.
+3. Run `check` and the review in `design read internal-app-review`.
 
 ## References
 
@@ -125,7 +125,8 @@ The general rules for pages are notes:
 | `design read internal-app-rpc` | Connecting a separate backend with Effect 4 RPC, typed errors, SSR, or cancellation. |
 | `design read internal-app-charts` | Adding a chart or widget. Also load the `create-data-visualizations` skill. |
 | `references/upgrade.md` | Migrating an existing app. |
-| `references/review.md` | Handing off any change. |
+| `design read internal-app-review` | Handing off any change. |
+| `design read internal-app-review-checklist` | Reviewing a page before handoff. |
 
 For hierarchy, spacing, tables, and dark-theme judgement, apply the method
 of the `design` skill: run `design read method`. This skill fixes the

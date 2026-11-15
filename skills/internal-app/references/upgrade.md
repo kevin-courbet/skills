@@ -143,7 +143,7 @@ When no route imports from the legacy folder:
 ## 7. Remove Replaced Libraries
 
 Run the `bun remove` command `doctor` prints under `forbidden-dependencies`.
-Then run the full gates in `review.md`. The upgrade is complete when `doctor`
+Then run the full gates of `design read internal-app-review`. The upgrade is complete when `doctor`
 has no `FAIL` rows and the rendered checks pass.
 
 ## Apps On Another Framework

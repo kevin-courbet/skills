@@ -53,4 +53,4 @@ A string that quotes machine output, such as a test summary with a bar, also fai
 
 - A glyph next to words without a space, such as `"Q3·YTD"`, or a separator in a variable.
 - A vertical bar in JSX text on more than one line.
-- Other separators, such as a slash or a dash between separate facts. Find them in the review.
+- Other separators, such as a slash or a dash between separate facts. Find them with `design read internal-app-review-checklist#hierarchy-and-layout`.
