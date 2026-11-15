@@ -8,8 +8,8 @@
  *
  * Use it when an item moves, leaves, arrives, or changes in place, and people
  * must see where it went. Do not use it for decoration, page loads, or hover
- * effects; Motion in `references/styling.md` tells what to animate and what to
- * leave still. `Kanban`, `SortableList`, and `WorkQueue` already use these
+ * effects; `design read internal-app-motion` tells what to animate and what
+ * to leave still. `Kanban`, `SortableList`, and `WorkQueue` already use these
  * helpers, so do not add motion around them.
  *
  * ## Behavior
@@ -22,11 +22,21 @@
  * - `useHasChanged(value)` with `motionStyles.changed` marks a value that
  *   changes in place, such as a status badge.
  * - With reduced motion, every change happens at once.
+ * - When two elements have the same name, the browser skips the animation,
+ *   and `withViewTransition` reports the error to the window error handlers.
+ * - A browser without the View Transitions API runs the update without
+ *   motion.
  *
  * ## Rules
  * - Give each element that moves a name:
  *   `motionStyles.named(viewTransitionName(scope, "row", item.id))`, with
- *   `scope` from `useId()`. Two elements with the same name are a bug.
+ *   `scope` from `useId()`. Thus two boards on one page do not share names.
+ *   Two elements with the same name are a bug.
+ * - Name only the items that can move, such as the cards of a board or a
+ *   queue, and the groups that hold them. Do not name each element of a page.
+ * - The `update` of `withViewTransition` changes the state synchronously: a
+ *   state setter, a `queryClient.setQueryData`, or a router navigation. Send
+ *   the request after the update.
  * - On a failed optimistic move, restore the previous value with
  *   `withViewTransition`, so that the item goes back to its old place.
  *

@@ -108,7 +108,14 @@ The general rules for pages are notes:
 |---|---|
 | `design read internal-app-stack` | Installing anything. Packages and replaced libraries. |
 | `design read internal-app-project-layout` | Creating files. Layout, ownership, import rules, locale, scripts. |
-| `references/styling.md` | Writing any style, token, or theme code. |
+| `design read internal-app-stylex` | Writing any style. |
+| `design read internal-app-tokens` | Using a token or a color role. |
+| `design read internal-app-brand-colors` | Applying the colors of a brand. |
+| `design read internal-app-themes` | Changing theme code. |
+| `design read internal-app-density` | Building a touch page or changing a size. |
+| `design read internal-app-motion` | Animating a change. |
+| `design read internal-app-build-wiring` | Changing `vite.config.ts` or the global CSS. |
+| `design read internal-app-check-rules` | Fixing a `check` finding. |
 | `references/reui-coverage.md` | Porting a ReUI component. It lists what the kit covers and what it leaves out. |
 | `design read internal-app-routes` | Writing a route, its loader, or its search params. |
 | `design read internal-app-server-functions` | Writing a server function, a query, or a feature module. |

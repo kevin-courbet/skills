@@ -43,9 +43,26 @@
  * On a page with `density="touch"` on a touch device, which is a coarse
  * pointer or a window below `lg`, the sidebar stays in the sheet at every
  * width. The top bar, the sheet, and the top bar menus then take the touch
- * density. On a desktop with a mouse, the frame does not change, and only the
- * page content takes the touch density. See Touch density in
- * `references/styling.md`.
+ * density, so the buttons of the top bar are 44px high. On a desktop with a
+ * mouse, the frame does not change, and only the page content takes the
+ * touch density.
+ *
+ * A touch page is the work of one person at a bench or on a shared tablet.
+ * People stay on that page, so the width is for the work and not for the
+ * navigation. Also, the 28px sidebar items are smaller than the 44px tap
+ * target. A supervisor who opens the touch page at a desk keeps the same
+ * navigation as on all other pages.
+ *
+ * `Page` puts `data-page-density` on its root element. The shell reads it
+ * with the CSS `:has()` selector, so the server HTML already shows the
+ * correct shell and the layout does not move after hydration. Only the
+ * outermost `Page` in the shell sets the attribute, so a touch specimen in a
+ * default page does not change the shell. The selector cannot reach the
+ * portals of the sheet and the menus. Thus `Page` also sends its density
+ * through `ShellDensityProvider`, and the shell gives the portals the touch
+ * density only when the window matches the touch device query. The portals
+ * open only after hydration, so the media query of the browser decides.
+ * Run `design read internal-app-density` for the touch values.
  *
  * ## Rules
  * - Give each group a unique label, and each item a unique label in its

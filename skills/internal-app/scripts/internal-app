@@ -667,7 +667,7 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
     add(
       problems.length === 0
         ? { id: "vite-config", status: "pass", message: "Vite config has StyleX before React and TanStack Start." }
-        : { id: "vite-config", status: "fail", message: `${problems.join("; ")}.`, fix: "Compare with assets/template/vite.config.ts (references/styling.md, Build Wiring)." },
+        : { id: "vite-config", status: "fail", message: `${problems.join("; ")}.`, fix: "Compare with assets/template/vite.config.ts (design read internal-app-build-wiring)." },
     );
   }
 

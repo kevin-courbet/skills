@@ -217,8 +217,8 @@ export const layer = stylex.defineConsts({
 });
 
 /**
- * Durations and easing curves. See Motion in the styling reference for what
- * to animate. Every animation also sets a `media.reducedMotion` override.
+ * Durations and easing curves. Run `design read internal-app-motion` for
+ * what to animate. Every animation also sets a `media.reducedMotion` override.
  */
 export const motion = stylex.defineConsts({
   /** Feedback on the control that people touch: a press, a hover, a focus ring. */

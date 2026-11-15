@@ -15,7 +15,11 @@
  *   through `ShellDensityProvider` and `useShellPageDensity`. `AppShell` then
  *   sets the density again for its sheet and its top bar menus.
  * - Every kit dialog, sheet, popover, hover card, menu, option list, and
- *   tooltip puts `useOverlayDensity()` on its portal root.
+ *   tooltip puts `useOverlayDensity()` on its portal root. Thus it opens with
+ *   the density of the page that opens it, although it renders outside the
+ *   page.
+ * - Toasts and the command palette render in the app shell, outside every
+ *   page, and keep the default density.
  *
  * ## Rules
  * - Only `Page` and `AppShell` use `DensityProvider`, `ShellDensityProvider`,
@@ -23,7 +27,8 @@
  * - Use `useDensity()` when a component must know that it renders on a touch
  *   page.
  * - A new overlay puts `...useOverlayDensity()` first in the styles of its
- *   portal root. See Touch density in `references/styling.md`.
+ *   portal root. Run `design read internal-app-density` for the touch
+ *   values.
  *
  * ## Example
  * ```tsx
