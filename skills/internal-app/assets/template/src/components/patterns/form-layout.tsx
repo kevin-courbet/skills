@@ -16,8 +16,11 @@
  * The parts do these things. Do not build them again:
  * - `FormLayout` renders a `<form>` without browser validation and without a
  *   page reload. The sections take the main column. The `preview` stays in
- *   view beside them while the form is wider than the `lg` breakpoint, and
- *   goes under them when the form is narrower.
+ *   view beside them while the form is wider than the `md` breakpoint
+ *   (768px), and goes under them when the form is narrower. The form is a
+ *   container, so its own width decides, not the window. The preview column
+ *   is 20rem wide. It shrinks to 16rem first, so that the sections keep
+ *   their title column as long as they can.
  * - `FormFooter` sticks to the bottom of the window. A focused field never
  *   goes under it.
  * - `ErrorSummary` takes the focus on each new submit attempt, links each
@@ -301,8 +304,10 @@ const styles = stylex.create({
   grid: {
     display: "grid",
     gridTemplateColumns: {
-      default: "minmax(0, 1fr) minmax(16rem, 20rem)",
-      [container.belowLg]: "minmax(0, 1fr)",
+      // The main column keeps 40rem, the sm width at which a split section keeps its title column.
+      // The preview takes the rest, from 16rem to 20rem, and goes under the form only below md.
+      default: `minmax(0, 1fr) clamp(16rem, calc(100cqi - 40rem - ${space.xxxl}), 20rem)`,
+      [container.belowMd]: "minmax(0, 1fr)",
     },
     columnGap: space.xxxl,
     rowGap: space.xxxl,
@@ -311,7 +316,7 @@ const styles = stylex.create({
   gridSingle: { gridTemplateColumns: "minmax(0, 1fr)" },
   main: { display: "flex", flexDirection: "column", gap: space.xxl, minWidth: 0 },
   side: {
-    position: { default: "sticky", [container.belowLg]: "static" },
+    position: { default: "sticky", [container.belowMd]: "static" },
     top: space.xxl,
     minWidth: 0,
   },
