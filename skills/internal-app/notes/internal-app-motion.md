@@ -1,72 +1,87 @@
 ---
 id: internal-app-motion
 topic: internal-app
-summary: What the kit animates and with which helper, what it never animates, the motion tokens for each change, the reduced-motion behavior of the kit, and view transitions for moves, removals, arrivals, and changes in place.
-keywords: [motion, animation, animate a move, view transition, withViewTransition, viewTransitionName, useArrivals, useHasChanged, motionStyles, motion tokens, motion.move, easeInOut, easeOut, what to animate, do not animate, reduced motion, prefers-reduced-motion, keyframes, skeleton pulse, spinner, button press scale]
-specializes: [motion, easing-and-duration, reduced-motion]
+summary: What the kit animates and with which helper and token, what it never animates, the reduced-motion version of each motion, and why the kit uses view transitions for single discrete moves.
+keywords: [motion, animation, animate a move, view transition, withViewTransition, viewTransitionName, useArrivals, useHasChanged, useDropTransition, motionStyles, motion tokens, motion.move, motion.drawer, easeInOut, easeOut, what to animate, do not animate, reduced motion, prefers-reduced-motion, tooltip delay, warm tooltip, command palette animation, popover origin, skeleton pulse, spinner, button press scale]
+specializes: [motion, easing-and-duration, component-feel, reduced-motion, motion-performance]
 related: [internal-app-mutations, internal-app-stylex, internal-app-tokens]
 ---
 
 # Internal App Motion
 
-Motion helps people follow an object when the state changes. It is not decoration. Animate a change only when people can lose an object without the animation: a card that goes to a different lane, a row that leaves a list, or a status that changes while people look at a different part of the screen. [[motion]] gives the general method.
+The hub notes give the method: [[motion]], [[easing-and-duration]], [[component-feel]], [[reduced-motion]], and [[motion-performance]]. This note gives the tokens and the components of the kit that apply that method. Do not write a motion that the kit already has.
 
-`src/components/helpers/motion.ts` has the helpers. Run `internal-app docs Motion`. The overlay, button, `Kanban`, `SortableList`, and `WorkQueue` components already use them. The ApprovalList recipe uses each helper on one page: run `internal-app recipe ApprovalList`.
+`src/components/helpers/motion.ts` has the helpers. Run `internal-app docs Motion` for the rules of the update and of the names. The ApprovalList recipe uses each helper on one page: run `internal-app recipe ApprovalList`.
 
-## What To Animate
+## Tokens
 
-| Change | Use | Duration and easing |
+`motion` in `tokens.stylex.ts` holds each duration and each curve. Do not write a duration or a curve in a component.
+
+| Token | Value | Use |
 |---|---|---|
-| A card or a row moves to a different lane, group, or position after an action | `withViewTransition` around the update, and `motionStyles.named(viewTransitionName(scope, kind, id))` on each item that can move | `motion.move` (240ms), `motion.easeInOut` |
-| People remove an item or add an item | `withViewTransition`. The item fades out or in, and the other items close or open the gap. | `motion.move`, `motion.easeInOut` |
-| An item comes from the server, such as a new ticket after a refetch | `useArrivals(ids)`, and `motionStyles.enter` on each new item | `motion.normal` (180ms), `motion.easeOut` |
-| A value changes in place, such as a status badge | `useHasChanged(value)`, `key={value}`, and `motionStyles.changed` | `motion.normal`, `motion.easeOut` |
-| A dialog, a sheet, a popover, or a menu opens or closes | The kit component. Do not add motion. | Enter in `motion.normal` with `easeOut`. Exit in `motion.fast` with `ease`. A side sheet enters in `motion.slow`. |
-| People press a button | `Button` and `LinkButton` scale to 0.97 while pressed. | `motion.fast` (120ms) |
-| Hover, focus, and selection colors | `transitionDuration: motion.fast` | `motion.fast`, `motion.ease` |
+| `motion.fast` | 120ms | Press feedback, hover, focus, and the exit of a popover, a menu, or a tooltip |
+| `motion.normal` | 180ms | A popover, a menu, or a tooltip that opens. The exit of a dialog or a sheet. |
+| `motion.slow` | 260ms | A dialog or a sheet that opens |
+| `motion.move` | 240ms | An object that moves to a new place in a view transition |
+| `motion.ease` | `ease` | Hover, focus, and color changes |
+| `motion.easeOut` | `cubic-bezier(0.23, 1, 0.32, 1)` | An element that enters or exits |
+| `motion.easeInOut` | `cubic-bezier(0.77, 0, 0.175, 1)` | An object that moves on the screen, and the switch thumb |
+| `motion.drawer` | `cubic-bezier(0.32, 0.72, 0, 1)` | A side sheet that slides in or out |
+
+- Each exit is shorter than its entry, at approximately 70% of it.
+- `::view-transition-group(*)` in `app.css` repeats `motion.move` and `motion.easeInOut`. Change the two places together.
+- Do not use `linear`, except for a spinner.
+
+## What The Kit Already Animates
+
+| Component | Motion |
+|---|---|
+| `Button`, `LinkButton` | Scale to 0.97 while pressed, in `motion.fast` with `easeOut`. Colors use `ease`. |
+| `Menu`, `Popover`, `Select`, `ComboBox` | Grow from 0.97 and fade in from the point next to the trigger. `overlay` in `helpers/overlay.tsx` uses CSS transitions, so a close during the open turns back from where it is. |
+| `Tooltip` | Opens on hover after 600ms. While one tooltip is open, and for 500ms after it closes, the next tooltip opens at once and without motion. |
+| `Dialog`, `ConfirmDialog` | Fade and rise from the center of the viewport, with no trigger origin. |
+| `Sheet` | A side sheet slides with `motion.drawer`. A `peek` sheet rises with `easeOut`. |
+| `CommandPalette` | No motion. People open it from the keyboard many times each day. |
+| `Switch` | The thumb slides with `easeInOut`. The track color uses `ease`. |
+| Chevrons, such as in `Disclosure`, `Tree`, and `DataTable` | Turn with `easeOut`. |
+| `Spinner`, `Skeleton`, `ProgressBar` | The only motion that repeats. It shows that work runs. |
+
+A new overlay without the popover surface puts `overlay.transition` before `overlay.entering` and `overlay.exiting`. Do not start an entry from `scale(0)`.
+
+## What To Animate In A Feature
+
+| Change | Use |
+|---|---|
+| A card or a row moves to a different lane, group, or position after one action | `withViewTransition` around the update, and `motionStyles.named(viewTransitionName(scope, kind, id))` on each item that can move |
+| People remove an item or add an item | `withViewTransition`. The item fades out or in, and the other items close or open the gap. |
+| People drop an item in a board or a sortable list | `useDropTransition`. `Kanban` and `SortableList` already use it. |
+| An item comes from the server, such as a new ticket after a refetch | `useArrivals(ids)`, and `motionStyles.enter` on each new item |
+| A value changes in place, such as a status badge | `useHasChanged(value)`, `key={value}`, and `motionStyles.changed` |
 
 ## What Not To Animate
 
 - The first render of a page or a list. `useArrivals` returns no keys on the first render.
-- A route change. `app.css` stops the cross-fade of the page.
+- A route change. People change routes tens of times each day, so the router runs no view transition.
 - Rows that a sort, a filter, a search, or a new page replaces. People asked for a new list. They do not follow one row.
 - A refetch that changes many items at the same time.
 - Numbers that count up, text that types itself, and charts that grow on load.
-- Content that loads. Show a `Skeleton` or a `Spinner`. These are the only animations that repeat.
 - The page shell, the sidebar, and the layout of a page.
-
-## Durations And Easing
-
-[[easing-and-duration]] gives the general limits. The kit uses these tokens:
-
-- Keep the motion of the user interface at 300ms or less. People wait for a longer motion.
-- Make an exit shorter than its enter.
-- Use `easeOut` for an element that enters. Use `ease` for an exit and for a change of state. Use `easeInOut` for an object that moves from one place to a different place, so the eye can follow it.
-- Do not use `linear`, except for a spinner.
-- `::view-transition-group(*)` in `app.css` uses `motion.move` and `motion.easeInOut`. Change the two places together.
 
 ## Reduced Motion
 
-With `prefers-reduced-motion: reduce`:
+Under `prefers-reduced-motion: reduce`, nothing moves, but the fades and the functional motion stay:
 
-- `withViewTransition` runs the update at once, and `app.css` stops all view-transition animations.
-- Each `animationDuration` and each transition of a transform gets `[media.reducedMotion]: "0ms"`, or a `null` transform under `media.reducedMotion`. `motionStyles` already does this.
-- The loading animations stop: the spinner, the skeleton pulse, and the indeterminate progress bar. Their shape still shows that work runs.
+- Overlays, tooltips, dialogs, and sheets only fade.
+- In a view transition, `app.css` stops the group animation. A moved item shows at its new place at once, and its old and new images cross-fade in `motion.normal`. An item that leaves or arrives fades.
+- `motionStyles.enter` and `motionStyles.changed` only fade.
+- The press scale and the switch thumb stop. Color changes stay.
+- The spinner turns more slowly. The skeleton pulse stays. An indeterminate `ProgressBar` shows a full fill that pulses in place.
+
+Each style that moves an element sets a `[media.reducedMotion]` value: a fade keyframe, a `none` or `null` transform, or a `0ms` duration of the transform transition. Do not add a global rule that sets all durations to zero.
 
 ## View Transitions
 
 ```tsx
-function TicketList({ tickets }: { readonly tickets: ReadonlyArray<Ticket> }) {
-  const scope = useId();
-  return tickets.map((ticket) => (
-    <Item
-      key={ticket.id}
-      style={motionStyles.named(viewTransitionName(scope, "ticket", ticket.id))}
-      title={ticket.title}
-    />
-  ));
-}
-
 const close = (ticket: Ticket) => {
   withViewTransition(() =>
     queryClient.setQueryData(ticketKeys.queue, (tickets: ReadonlyArray<Ticket> = []) =>
@@ -87,7 +102,11 @@ function TicketStatus({ status }: { readonly status: TicketStatus }) {
 }
 ```
 
-- `withViewTransition(update)` captures the screen, runs `update`, and moves each named element from its old place to its new place. A named element that is only on one side fades out or in. The rest of the page changes at once.
-- While a view transition runs, the page does not take pointer input. Keep the transition at `motion.move`.
-- An item that people drop with the pointer is already at its new place. In a drop handler, use `useDropTransition`, so that the item does not fly back to its start. `Kanban` does this.
-- `internal-app docs Motion` gives the rules for the update and for the names. Run `design read internal-app-mutations#optimistic-moves` for a move that saves to the server.
+[[motion-performance#view-transitions]] keeps view transitions for navigation between views. The kit uses them for one more case: a single discrete change that one press starts, such as Approve or a card that goes to the next lane. The browser moves the few named items without code that measures them.
+
+- Use a view transition only for that case. Do not use it for a drag, for typing, or for a change that people repeat quickly. Use a CSS transition for these.
+- Only the named items move. `app.css` stops the cross-fade of `root`, so the rest of the page changes at once.
+- While a view transition runs, the page does not take pointer input. Keep it at `motion.move`.
+- A keyboard move in `Kanban` keeps its motion, because the motion shows where the card went. The rule against motion on keyboard actions in [[motion]] is about a tool that people open many times each day, such as the command palette.
+- An item that people drop with the pointer is already at its new place. `useDropTransition` gives it no name, so that it does not fly back to its start.
+- Run `design read internal-app-mutations#optimistic-moves` for a move that saves to the server.
