@@ -377,7 +377,7 @@ function TicketStatus({ status }: { readonly status: TicketStatus }) {
 ```
 
 - `withViewTransition(update)` captures the screen, runs `update`, and moves every named element from its old place to its new place. Named elements that only exist on one side fade out or in. The rest of the page changes at once.
-- `update` must change the state synchronously: a state setter, a `queryClient.setQueryData`, or a router navigation. Put the request after the update. See Optimistic moves in `data.md`.
+- `update` must change the state synchronously: a state setter, a `queryClient.setQueryData`, or a router navigation. Put the request after the update. Run `design read internal-app-mutations#optimistic-moves`.
 - A name must be unique in the document. Take the scope from `useId()`, so two boards on one page do not share names. A duplicate name is a bug: the browser skips the animation and `withViewTransition` reports the error to the window error handlers.
 - Name only the items that can move, such as the cards of a board or a queue, and the groups that contain them. Do not name every element of a page.
 - While a view transition runs, the page does not take pointer input. Keep it at `motion.move`.

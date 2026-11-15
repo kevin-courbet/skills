@@ -126,7 +126,7 @@ Map by role first; the kit is denser than Tailwind's defaults.
 |---|---|
 | visx, recharts, hand-rolled SVG charts | Aperture widgets with the chart host bridge (`charts.md`). Keep the data aggregation in the feature; replace only the rendering. |
 | zod schemas | Effect Schema in `features/<name>/schemas.ts`. Validate with `Schema.toStandardSchemaV1(schema)` in server functions, forms, and `validateSearch`. |
-| react-hook-form | TanStack Form (`data.md`, Forms) |
+| react-hook-form | TanStack Form (`design read internal-app-form-submit`) |
 | heroicons, other icon sets | lucide-react |
 | `createServerFn` handlers that call services directly, or `.inputValidator` | `.validator(Schema.toStandardSchemaV1(...))` and a dynamic import of a `.server.ts` module that calls `runServerFn` |
 | `Context.Tag`, `Effect.Service` | `Context.Service` with a static `layer` |

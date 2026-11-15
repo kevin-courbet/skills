@@ -319,7 +319,7 @@ function lineRules(manifest: Manifest): ReadonlyArray<LineRule> {
   return [
     {
       id: "forbidden-import",
-      message: "Import from a library the stack replaces. See references/stack.md.",
+      message: "Import from a library the stack replaces. Run `design read internal-app-stack#replaced-libraries`.",
       applies: isSrcCode,
       test: (line) => forbiddenImport.test(line),
     },

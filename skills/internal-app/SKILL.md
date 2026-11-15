@@ -75,7 +75,7 @@ The general rules for pages are notes:
 
 ### New app
 
-1. Read `references/stack.md`.
+1. Run `design read internal-app-stack` and `design read internal-app-project-layout`.
 2. Run `new <dir> --name "<App name>"`, then `bun install`, `bun run build`, `bun run tsc`.
 3. Replace the example `items` feature with the real features. Keep its file
    shapes. Follow the data notes in References, the notes in Components, and
@@ -106,7 +106,8 @@ The general rules for pages are notes:
 
 | File | Read before |
 |---|---|
-| `references/stack.md` | Installing anything, or creating files. Packages, forbidden libraries, layout, scripts. |
+| `design read internal-app-stack` | Installing anything. Packages and replaced libraries. |
+| `design read internal-app-project-layout` | Creating files. Layout, ownership, import rules, locale, scripts. |
 | `references/styling.md` | Writing any style, token, or theme code. |
 | `references/reui-coverage.md` | Porting a ReUI component. It lists what the kit covers and what it leaves out. |
 | `design read internal-app-routes` | Writing a route, its loader, or its search params. |
