@@ -15,7 +15,8 @@
  * - Focus moves into the dialog and stays there. Escape, the close button, and
  *   a click on the backdrop close it, and the focus goes back to the trigger.
  * - The dialog takes the density of the page and the `md` control size.
- * - It fades and rises in. Under reduced motion, it appears at once.
+ * - It fades and rises in from the center, and closes faster than it opens.
+ *   Under reduced motion, it only fades.
  *
  * ## Rules
  * - Wrap the trigger and the `Dialog` in `DialogTrigger`, or control it with
@@ -149,8 +150,8 @@ export function Dialog({
   );
 }
 
-const backdropIn = stylex.keyframes({ from: { opacity: 0 }, to: { opacity: 1 } });
-const backdropOut = stylex.keyframes({ from: { opacity: 1 }, to: { opacity: 0 } });
+const fadeIn = stylex.keyframes({ from: { opacity: 0 }, to: { opacity: 1 } });
+const fadeOut = stylex.keyframes({ from: { opacity: 1 }, to: { opacity: 0 } });
 const modalIn = stylex.keyframes({
   from: { opacity: 0, transform: "translateY(8px) scale(0.98)" },
   to: { opacity: 1, transform: "translateY(0) scale(1)" },
@@ -172,12 +173,14 @@ const styles = stylex.create({
     backgroundColor: color.backdrop,
   },
   backdropEntering: {
-    animationName: backdropIn,
-    animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
+    animationName: fadeIn,
+    animationDuration: motion.slow,
+    animationTimingFunction: motion.easeOut,
   },
   backdropExiting: {
-    animationName: backdropOut,
-    animationDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    animationName: fadeOut,
+    animationDuration: motion.normal,
+    animationTimingFunction: motion.easeOut,
   },
   modal: {
     width: "100%",
@@ -193,14 +196,14 @@ const styles = stylex.create({
     outlineStyle: "none",
   },
   modalEntering: {
-    animationName: modalIn,
-    animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
+    animationName: { default: modalIn, [media.reducedMotion]: fadeIn },
+    animationDuration: motion.slow,
     animationTimingFunction: motion.easeOut,
   },
   modalExiting: {
-    animationName: modalOut,
-    animationDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
-    animationTimingFunction: motion.ease,
+    animationName: { default: modalOut, [media.reducedMotion]: fadeOut },
+    animationDuration: motion.normal,
+    animationTimingFunction: motion.easeOut,
   },
   dialog: {
     display: "flex",

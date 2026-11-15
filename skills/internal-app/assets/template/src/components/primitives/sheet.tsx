@@ -14,8 +14,9 @@
  * ## Behavior
  * - It is modal. Focus stays inside, and Escape, the close button, or a click
  *   outside closes it.
- * - A side sheet slides in from `side`. A `peek` sheet opens over the list.
- *   Under reduced motion, a sheet appears at once.
+ * - A side sheet slides in from `side`. A `peek` sheet rises in over the
+ *   list. A sheet closes faster than it opens. Under reduced motion, a sheet
+ *   only fades.
  * - The j and k keys of `navigation` do nothing while people type in a field.
  * - It takes the density of the page and the `md` control size.
  *
@@ -255,13 +256,18 @@ const peekOut = stylex.keyframes({
   to: { opacity: 0, transform: "scale(0.99)" },
 });
 
-const enterDuration = { default: motion.slow, [media.reducedMotion]: "0ms" } as const;
-const exitDuration = { default: motion.normal, [media.reducedMotion]: "0ms" } as const;
-
 const styles = stylex.create({
   backdrop: { position: "fixed", inset: 0, zIndex: layer.modal, backgroundColor: color.backdrop },
-  backdropEntering: { animationName: fadeIn, animationDuration: enterDuration },
-  backdropExiting: { animationName: fadeOut, animationDuration: exitDuration },
+  backdropEntering: {
+    animationName: fadeIn,
+    animationDuration: motion.slow,
+    animationTimingFunction: motion.easeOut,
+  },
+  backdropExiting: {
+    animationName: fadeOut,
+    animationDuration: motion.normal,
+    animationTimingFunction: motion.easeOut,
+  },
   panel: {
     position: "fixed",
     top: 0,
@@ -290,34 +296,34 @@ const styles = stylex.create({
     borderRadius: { default: 0, [media.md]: radius.xl },
   },
   enterPeek: {
-    animationName: peekIn,
-    animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
+    animationName: { default: peekIn, [media.reducedMotion]: fadeIn },
+    animationDuration: motion.slow,
     animationTimingFunction: motion.easeOut,
   },
   exitPeek: {
-    animationName: peekOut,
-    animationDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
-    animationTimingFunction: motion.ease,
+    animationName: { default: peekOut, [media.reducedMotion]: fadeOut },
+    animationDuration: motion.normal,
+    animationTimingFunction: motion.easeOut,
   },
   enterRight: {
-    animationName: slideInRight,
-    animationDuration: enterDuration,
-    animationTimingFunction: motion.easeOut,
+    animationName: { default: slideInRight, [media.reducedMotion]: fadeIn },
+    animationDuration: motion.slow,
+    animationTimingFunction: motion.drawer,
   },
   exitRight: {
-    animationName: slideOutRight,
-    animationDuration: exitDuration,
-    animationTimingFunction: motion.ease,
+    animationName: { default: slideOutRight, [media.reducedMotion]: fadeOut },
+    animationDuration: motion.normal,
+    animationTimingFunction: motion.drawer,
   },
   enterLeft: {
-    animationName: slideInLeft,
-    animationDuration: enterDuration,
-    animationTimingFunction: motion.easeOut,
+    animationName: { default: slideInLeft, [media.reducedMotion]: fadeIn },
+    animationDuration: motion.slow,
+    animationTimingFunction: motion.drawer,
   },
   exitLeft: {
-    animationName: slideOutLeft,
-    animationDuration: exitDuration,
-    animationTimingFunction: motion.ease,
+    animationName: { default: slideOutLeft, [media.reducedMotion]: fadeOut },
+    animationDuration: motion.normal,
+    animationTimingFunction: motion.drawer,
   },
   dialog: {
     display: "flex",

@@ -14,6 +14,8 @@
  * ## Behavior
  * - Command-K or Control-K toggles the palette. The top bar of `AppShell` shows
  *   a "Search" button with the shortcut hint of the platform.
+ * - The palette opens and closes at once, without motion, because people open
+ *   it from the keyboard many times each day.
  * - Typing filters the commands by their label and `keywords`, and ignores case
  *   and accents.
  * - The arrow keys move, Enter runs a command or opens its route, and Escape
@@ -52,21 +54,9 @@ import {
   SearchField,
   useFilter,
 } from "react-aria-components";
-import { renderStyles } from "@/lib/rac";
-import {
-  color,
-  font,
-  layer,
-  media,
-  motion,
-  radius,
-  shadow,
-  size,
-  space,
-} from "@/styles/tokens.stylex";
+import { color, font, layer, media, radius, shadow, size, space } from "@/styles/tokens.stylex";
 import { Kbd } from "@/components/primitives/layout";
 import { MenuItem } from "@/components/primitives/menu";
-import { overlay } from "@/components/helpers/overlay";
 
 interface CommandBase {
   /** Unique in all groups. It is the key of the item. */
@@ -129,19 +119,9 @@ export function CommandPalette({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable
-      {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-        styles.backdrop,
-        state.isEntering && styles.backdropEntering,
-        state.isExiting && styles.backdropExiting,
-      ])}
+      {...stylex.props(styles.backdrop)}
     >
-      <Modal
-        {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
-          styles.modal,
-          state.isEntering && overlay.entering,
-          state.isExiting && overlay.exiting,
-        ])}
-      >
+      <Modal {...stylex.props(styles.modal)}>
         <Dialog aria-label="Command palette" {...stylex.props(styles.dialog)}>
           <Autocomplete filter={contains}>
             <SearchField aria-label="Search commands" autoFocus {...stylex.props(styles.search)}>
@@ -234,18 +214,7 @@ export function useCommandPaletteShortcut(): string {
   return isApple ? "⌘ K" : "Ctrl K";
 }
 
-const backdropIn = stylex.keyframes({ from: { opacity: 0 }, to: { opacity: 1 } });
-const backdropOut = stylex.keyframes({ from: { opacity: 1 }, to: { opacity: 0 } });
-
 const styles = stylex.create({
-  backdropEntering: {
-    animationName: backdropIn,
-    animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
-  },
-  backdropExiting: {
-    animationName: backdropOut,
-    animationDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
-  },
   backdrop: {
     position: "fixed",
     inset: 0,
