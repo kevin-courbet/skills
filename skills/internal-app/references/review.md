@@ -32,7 +32,7 @@ Use the `agent-browser` skill (`ab chrome --url ...`, `ab snapshot`,
 2. Every empty, loading, and error state the page can show.
 3. Each dialog, sheet, menu, and popover the page opens, and one invalid form field.
 4. Each form before and after a submit with errors. Check that the `ErrorSummary` takes focus and counts the problems, that each link moves focus to its field, and that Tab reaches every control in the order of the page. Check a long form at the `touch` density when it runs on a tablet.
-5. The page at 400 px, 768 px, and 1440 px wide. At 400 px and 768 px, the navigation opens from the menu button in the top bar. Check a touch page at 1440 px with a mouse, and at 1180 px and 768 px with touch emulation. With a mouse, the sidebar shows. With touch emulation, the sidebar is hidden at every width.
+5. The page at 400 px, 768 px, and 1440 px wide. At 400 px and 768 px, the navigation opens from the menu button in the top bar. At 400 px, the top bar shows the full page title. Check a touch page at 1440 px with a mouse, and at 1180 px and 768 px with touch emulation. With a mouse, the sidebar shows. With touch emulation, the sidebar is hidden at every width.
 6. `/design-kit` and `/design-kit/form` after a kit install or update, in both themes.
 7. System theme mode during hydration and after a native color-scheme change. The document theme must follow the native preference without hydration errors.
 

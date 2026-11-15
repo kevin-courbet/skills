@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { ChevronRight } from "lucide-react";
 import { Breadcrumb, Breadcrumbs as AriaBreadcrumbs, Link } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
-import { color, font, size, space } from "@/styles/tokens.stylex";
+import { color, font, media, size, space } from "@/styles/tokens.stylex";
 
 export interface BreadcrumbItem {
   readonly id: string;
@@ -10,13 +10,24 @@ export interface BreadcrumbItem {
   readonly href: string;
 }
 
-/** Location within a hierarchy. The last item is the current page. */
+/**
+ * Location within a hierarchy. The last item is the current page. The current
+ * page has priority: the items before it shrink first, and below the sm
+ * breakpoint they do not show.
+ */
 export function Breadcrumbs({ items }: { readonly items: ReadonlyArray<BreadcrumbItem> }) {
+  const currentId = items.at(-1)?.id;
   return (
     <nav aria-label="Breadcrumbs" {...stylex.props(styles.nav)}>
       <AriaBreadcrumbs items={items} {...stylex.props(styles.list)}>
         {(item) => (
-          <Breadcrumb id={item.id} {...stylex.props(styles.item)}>
+          <Breadcrumb
+            id={item.id}
+            {...stylex.props(
+              styles.item,
+              item.id === currentId ? styles.currentItem : styles.ancestorItem,
+            )}
+          >
             {({ isCurrent }) => (
               <>
                 <Link
@@ -53,6 +64,8 @@ const styles = stylex.create({
     minWidth: 0,
   },
   item: { display: "flex", alignItems: "center", gap: space.xs, minWidth: 0 },
+  ancestorItem: { display: { default: "none", [media.sm]: "flex" } },
+  currentItem: { flexShrink: 0, maxWidth: "100%" },
   link: {
     fontSize: font.lg,
     color: { default: color.textMuted, ":hover": color.text },

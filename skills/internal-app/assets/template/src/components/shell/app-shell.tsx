@@ -67,7 +67,11 @@ export interface AppShellProps {
    */
   readonly logo?: AppLogo;
   readonly nav: ReadonlyArray<NavGroup>;
-  /** Global actions at the end of the top bar, such as a user menu. */
+  /**
+   * Global actions at the end of the top bar, such as a user menu. Below the
+   * sm breakpoint, they move to the top of the navigation sheet, so the page
+   * title keeps the width of the top bar.
+   */
   readonly actions?: ReactNode;
   /**
    * Quiet controls at the bottom of the sidebar, such as help, system status, or a
@@ -158,6 +162,10 @@ function Brand({
  * panel holds the top bar with breadcrumbs and scrolls on its own. Below the
  * lg breakpoint the sidebar moves into a sheet opened from the top bar, so a
  * tablet in portrait gives its full width to the page.
+ *
+ * Below the sm breakpoint, the top bar shows only the current page in the
+ * breadcrumbs, and the global actions move to the top of the sheet. Thus a
+ * phone shows the full page title.
  *
  * A page with `density="touch"` is work at a bench or on a shared tablet,
  * where people stay on one page. On a touch device (a coarse pointer, or a
@@ -269,7 +277,9 @@ export function AppShell({
                     ))}
                   </span>
                 </AriaButton>
-                {actions}
+                {actions === undefined ? null : (
+                  <div {...stylex.props(styles.topbarSlot)}>{actions}</div>
+                )}
                 <ThemeSwitch />
               </div>
             </header>
@@ -288,6 +298,9 @@ export function AppShell({
       <DensityProvider density={frameDensity}>
         <Sheet isOpen={isNavOpen} onOpenChange={setNavOpen} side="left" size="sm" title={appName}>
           <div {...stylex.props(styles.sheetNav)}>
+            {actions === undefined ? null : (
+              <div {...stylex.props(styles.sheetActions)}>{actions}</div>
+            )}
             <Navigation nav={nav} onNavigate={() => setNavOpen(false)} />
             {footer}
           </div>
@@ -652,6 +665,14 @@ const styles = stylex.create({
   },
   icon: { width: size.icon, height: size.icon },
   topbarActions: { display: "flex", alignItems: "center", gap: space.sm },
+  // On a phone, the page title has priority over the global actions. They move to the sheet.
+  topbarSlot: { display: { default: "none", [media.sm]: "contents" } },
+  sheetActions: {
+    display: { default: "flex", [media.sm]: "none" },
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: space.sm,
+  },
   searchField: {
     display: "inline-flex",
     alignItems: "center",
