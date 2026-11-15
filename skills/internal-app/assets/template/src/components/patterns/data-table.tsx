@@ -120,7 +120,7 @@ import {
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { Button as AriaButton } from "react-aria-components";
 import { appLocale } from "@/lib/locale";
-import { color, container, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+import { color, container, font, media, motion, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "@/components/primitives/button";
 import { Checkbox } from "@/components/primitives/checkbox";
 import { ControlSizeProvider } from "@/components/helpers/control-size";
@@ -1348,7 +1348,8 @@ const styles = stylex.create({
     width: size.iconSm,
     height: size.iconSm,
     transitionProperty: "transform",
-    transitionDuration: motion.fast,
+    transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    transitionTimingFunction: motion.easeOut,
   },
   expandIconOpen: { transform: "rotate(90deg)" },
   detailRow: {

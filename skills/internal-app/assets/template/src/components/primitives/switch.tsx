@@ -14,7 +14,8 @@
  * ## Behavior
  * The switch does these things. Do not build them again:
  * - Space toggles the switch, and a click on the label toggles it too.
- * - The thumb slides between the two states.
+ * - The thumb slides between the two states. Under reduced motion, it moves
+ *   at once and only the color changes.
  *
  * ## Rules
  * - Apply the change at once when `onChange` runs. Do not wait for a save
@@ -33,7 +34,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import { Switch as AriaSwitch, type SwitchProps as AriaSwitchProps } from "react-aria-components";
-import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+import { color, font, media, motion, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface SwitchProps extends Omit<AriaSwitchProps, "className" | "style" | "children"> {
   /** Visible label after the switch. Without it, give an `aria-label`. */
@@ -104,8 +105,8 @@ const styles = stylex.create({
     borderRadius: radius.full,
     backgroundColor: color.raised,
     transitionProperty: "transform",
-    transitionDuration: motion.fast,
-    transitionTimingFunction: motion.ease,
+    transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    transitionTimingFunction: motion.easeInOut,
   },
   thumbSelected: { transform: `translateX(calc(${size.switchWidth} - ${size.switchHeight}))` },
   label: { color: color.text, userSelect: "none" },

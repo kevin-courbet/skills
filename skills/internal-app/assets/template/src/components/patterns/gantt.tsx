@@ -1178,6 +1178,7 @@ const styles = stylex.create({
     height: size.iconSm,
     transitionProperty: "transform",
     transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    transitionTimingFunction: motion.easeOut,
   },
   chevronOpen: { transform: "rotate(90deg)" },
   chevronSpacer: { width: "1.25rem", flexShrink: 0 },

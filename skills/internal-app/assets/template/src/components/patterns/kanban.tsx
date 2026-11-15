@@ -674,7 +674,7 @@ const styles = stylex.create({
     cursor: "grab",
     outlineStyle: "none",
     transitionProperty: "border-color, opacity",
-    transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    transitionDuration: motion.fast,
   },
   cardActionable: { cursor: "pointer" },
   cardFocused: {

@@ -218,21 +218,24 @@ export const layer = stylex.defineConsts({
 
 /**
  * Durations and easing curves. Run `design read internal-app-motion` for
- * what to animate. Every animation also sets a `media.reducedMotion` override.
+ * what to animate. Every animation that moves an element also sets a
+ * `media.reducedMotion` override that removes the movement.
  */
 export const motion = stylex.defineConsts({
   /** Feedback on the control that people touch: a press, a hover, a focus ring. */
   fast: "120ms",
-  /** Surfaces that open and close, such as a popover or a dialog. */
+  /** A popover, a menu, or a tooltip that opens. Its exit takes `fast`. */
   normal: "180ms",
+  /** A dialog or a sheet that opens. Its exit takes `normal`. */
   slow: "260ms",
   /**
    * An object that moves to a new place, such as a card that changes lanes.
    * The view transition rules in `app.css` repeat this value.
    */
   move: "240ms",
-  ease: "cubic-bezier(0.2, 0, 0, 1)",
-  /** Enter motion: a fast start that settles softly. */
+  /** Hover, focus, and color changes. */
+  ease: "ease",
+  /** An element that enters or exits: a fast start that settles softly. */
   easeOut: "cubic-bezier(0.23, 1, 0.32, 1)",
   /**
    * Motion of an object from one place to another: a slow start and a slow
@@ -240,4 +243,6 @@ export const motion = stylex.defineConsts({
    * repeat this value.
    */
   easeInOut: "cubic-bezier(0.77, 0, 0.175, 1)",
+  /** A side sheet that slides in or out, like a drawer on iOS. */
+  drawer: "cubic-bezier(0.32, 0.72, 0, 1)",
 });

@@ -138,7 +138,7 @@ const styles = stylex.create({
     color: color.textMuted,
     transitionProperty: "transform",
     transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
-    transitionTimingFunction: motion.ease,
+    transitionTimingFunction: motion.easeOut,
   },
   chevronOpen: { transform: "rotate(90deg)" },
   title: { fontWeight: font.medium, minWidth: 0 },

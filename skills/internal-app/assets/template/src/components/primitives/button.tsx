@@ -176,7 +176,7 @@ const styles = stylex.create({
     userSelect: "none",
     transitionProperty: "background-color, border-color, color, box-shadow, transform",
     transitionDuration: motion.fast,
-    transitionTimingFunction: motion.ease,
+    transitionTimingFunction: `${motion.ease}, ${motion.ease}, ${motion.ease}, ${motion.ease}, ${motion.easeOut}`,
     outlineStyle: { default: "none", ":focus-visible": "solid" },
     outlineWidth: "2px",
     outlineColor: color.focus,
