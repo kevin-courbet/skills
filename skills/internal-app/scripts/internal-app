@@ -595,7 +595,7 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
           id: "framework",
           status: "fail",
           message: "Not a TanStack Start app.",
-          fix: "Follow references/upgrade.md, section 'Apps on another framework'.",
+          fix: "Port the app to a new app: design read internal-app-framework-port.",
         },
   );
 
@@ -633,7 +633,7 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
           id: "forbidden-dependencies",
           status: "fail",
           message: `Replaced libraries: ${forbidden.join(", ")}.`,
-          fix: `Migrate their usages (references/upgrade.md), then: bun remove ${forbidden.join(" ")}`,
+          fix: `Replace their usages (design read internal-app-migration-map#libraries), then: bun remove ${forbidden.join(" ")}`,
         },
   );
 
@@ -713,7 +713,7 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
           id: "kit",
           status: "fail",
           message: `Kit files not current: ${Object.entries(counts).map(([status, count]) => `${count} ${status}`).join(", ")}.`,
-          fix: "bun \"$SKILL_DIR/scripts/internal-app\" sync --write   (add --force after reviewing modified or conflicting files)",
+          fix: "bun \"$SKILL_DIR/scripts/internal-app\" sync --write   (add --force after reviewing modified or conflicting files: design read internal-app-kit-update)",
         },
   );
 
@@ -731,7 +731,7 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
   add(
     root !== undefined && root.includes("AppDocument") && root.includes("getThemeChoice")
       ? { id: "root-route", status: "pass", message: "Root route renders AppDocument with the theme choice." }
-      : { id: "root-route", status: "fail", message: "Root route does not use AppDocument and getThemeChoice.", fix: "Replace its document markup as in assets/template/src/routes/__root.tsx (references/upgrade.md, step 4)." },
+      : { id: "root-route", status: "fail", message: "Root route does not use AppDocument and getThemeChoice.", fix: "Replace its document markup as in assets/template/src/routes/__root.tsx (design read internal-app-upgrade#wire-the-root-the-router-and-the-shell)." },
   );
 
   add(

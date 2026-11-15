@@ -85,9 +85,9 @@ The general rules for pages are notes:
 ### Upgrade an existing app
 
 1. Run `doctor` in the app root. It lists every gap with a fix.
-2. Follow `references/upgrade.md` step by step. It covers dependencies, build
-   wiring, kit installation next to the old UI, page-by-page migration, and
-   removal of the replaced libraries.
+2. Run `design read internal-app-upgrade` and follow it step by step. It
+   covers dependencies, build wiring, kit installation next to the old UI,
+   page-by-page migration, and removal of the replaced libraries.
 3. The upgrade is complete when `doctor` passes and the review in
    `design read internal-app-review` is done.
 
@@ -124,7 +124,9 @@ The general rules for pages are notes:
 | `design read internal-app-error-reporting` | Connecting an error tracker or server observability. |
 | `design read internal-app-rpc` | Connecting a separate backend with Effect 4 RPC, typed errors, SSR, or cancellation. |
 | `design read internal-app-charts` | Adding a chart or widget. Also load the `create-data-visualizations` skill. |
-| `references/upgrade.md` | Migrating an existing app. |
+| `design read internal-app-upgrade` | Migrating an existing app. |
+| `design read internal-app-migration-map` | Replacing a legacy component, class, or library. |
+| `design read internal-app-kit-update` | Updating the kit files of an app. |
 | `design read internal-app-review` | Handing off any change. |
 | `design read internal-app-review-checklist` | Reviewing a page before handoff. |
 

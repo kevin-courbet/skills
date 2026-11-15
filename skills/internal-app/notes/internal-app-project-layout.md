@@ -3,7 +3,7 @@ id: internal-app-project-layout
 topic: internal-app
 summary: The folders and files of an internal app, which files the kit owns and which the app owns, the app modules that kit files import, the import rules, the locale module, and the package scripts.
 keywords: [project layout, folder structure, file layout, where to put files, kit files, app files, ownership, app contract, import rules, locale, time zone, Intl, date strings, package scripts, routeTree, bun scripts, tsc script]
-related: [internal-app-stack, internal-app-server-functions]
+related: [internal-app-stack, internal-app-server-functions, internal-app-kit-update]
 ---
 
 # Internal App Project Layout

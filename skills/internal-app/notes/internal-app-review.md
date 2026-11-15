@@ -4,7 +4,7 @@ topic: internal-app
 summary: The definition of done for a change to an internal app, with the automated gates, the rendered checks in a real browser in both themes and at three widths, the browser pitfalls, and the handoff report.
 keywords: [review before finishing, definition of done, done, handoff, automated gates, format lint tsc build, check sync doctor, rendered checks, screenshots, both themes, agent-browser, browser pitfalls, page zoom, visibilityState, reduced motion in tests, main-content scroll, report unmet items]
 specializes: [review]
-related: [internal-app-review-checklist, internal-app-check-rules]
+related: [internal-app-review-checklist, internal-app-check-rules, internal-app-kit-update]
 ---
 
 # Internal App Review
