@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, test } from "bun:test";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -39,8 +39,17 @@ function copyHub(): { root: string; hub: string } {
   return { root, hub };
 }
 
+// A copy of the hub without its members, for the tests of the output format.
+// The real skills folder also holds members, which add their own lines.
+const HUB_ALONE = (() => {
+  const root = mkdtempSync(join(tmpdir(), "design-hub-"));
+  cpSync(SKILL_DIR, join(root, "design"), { recursive: true, filter: (source) => !source.includes(`${SKILL_DIR}/tests`) });
+  return join(root, "design");
+})();
+afterAll(() => rmSync(join(HUB_ALONE, ".."), { recursive: true, force: true }));
+
 function cli(skillDir: string, ...argv: string[]): RunResult {
-  return run(argv, { skillDir });
+  return run(argv, { skillDir, cwd: skillDir });
 }
 
 function edit(file: string, change: (text: string) => string): void {
@@ -61,24 +70,26 @@ const memberSkill = (name: string, body: string) => `---\nname: ${name}\ndescrip
 const memberNote = (id: string, extra = "") =>
   `---\nid: ${id}\ntopic: forms\nsummary: The forms of the demo product.\nkeywords: [demo forms, demo, product forms]\nspecializes: [forms]\n${extra}---\n\n# Demo Forms\n\nThe demo product uses one column.\n\n## One Column\n\nPut every field in one column. See [[form-layout]].\n`;
 
+// The golden queries measure the hub alone. The hub must work without its
+// members, and each member tests its own notes and entries.
 describe("golden queries", () => {
-  const graph = loadGraph({ skillDir: SKILL_DIR });
+  const hubNotes = loadGraph({ skillDir: SKILL_DIR }).ordered.filter((note) => note.skill.hub);
   for (const entry of golden.queries) {
     test(`"${entry.query}" finds ${entry.expect.join(" or ")} in the top 3 with a strong match`, () => {
-      const result = search(graph, entry.query, 3);
-      expect(entry.expect.some((id) => result.hits.some((hit) => hit.note.id === id))).toBe(true);
+      const result = search(hubNotes, entry.query, 3);
+      expect(entry.expect.some((id) => result.hits.some((hit) => hit.doc.id === id))).toBe(true);
       expect(result.strong).toBe(true);
     });
   }
   for (const entry of golden.paraphrases) {
     test(`paraphrase "${entry.query}" finds ${entry.expect.join(" or ")} in the top 3`, () => {
-      const top = search(graph, entry.query, 3).hits.map((hit) => hit.note.id);
+      const top = search(hubNotes, entry.query, 3).hits.map((hit) => hit.doc.id);
       expect(entry.expect.some((id) => top.includes(id))).toBe(true);
     });
   }
   for (const entry of golden.weak) {
     test(`"${entry.query}" has no strong match`, () => {
-      expect(search(graph, entry.query, 3).strong).toBe(false);
+      expect(search(hubNotes, entry.query, 3).strong).toBe(false);
     });
   }
 });
@@ -100,7 +111,7 @@ describe("the real graph", () => {
 
 describe("read", () => {
   test("prints the note, the required notes with summaries, and the other ids on one line", () => {
-    const result = cli(SKILL_DIR, "read", "form-errors");
+    const result = cli(HUB_ALONE, "read", "form-errors");
     expect(result.code).toBe(0);
     expect(result.stdout).toStartWith("form-errors (topic forms,");
     expect(result.stdout).toContain("## Error Summary");
@@ -110,7 +121,7 @@ describe("read", () => {
   });
 
   test("prints one section", () => {
-    const result = cli(SKILL_DIR, "read", "form-errors#error-summary");
+    const result = cli(HUB_ALONE, "read", "form-errors#error-summary");
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("## Error Summary");
     expect(result.stdout).not.toContain("## Field Errors");
@@ -118,7 +129,7 @@ describe("read", () => {
   });
 
   test("prints an outline", () => {
-    const result = cli(SKILL_DIR, "read", "dark-theme", "--outline");
+    const result = cli(HUB_ALONE, "read", "dark-theme", "--outline");
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("summary: ");
     expect(result.stdout).toContain("  #surface-hierarchy");
@@ -129,7 +140,7 @@ describe("read", () => {
   });
 
   test("an unknown id fails with the nearest ids", () => {
-    const result = cli(SKILL_DIR, "read", "form-error");
+    const result = cli(HUB_ALONE, "read", "form-error");
     expect(result.code).toBe(1);
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain('no note has the id "form-error"');
@@ -137,7 +148,7 @@ describe("read", () => {
   });
 
   test("an unknown section fails with the sections of the note", () => {
-    const result = cli(SKILL_DIR, "read", "form-errors#summary-of-errors");
+    const result = cli(HUB_ALONE, "read", "form-errors#summary-of-errors");
     expect(result.code).toBe(1);
     expect(result.stderr).toContain('has no section "#summary-of-errors"');
     expect(result.stderr).toContain("#error-summary");
@@ -146,39 +157,39 @@ describe("read", () => {
 
 describe("other commands", () => {
   test("search prints ids, summaries, and sections", () => {
-    const result = cli(SKILL_DIR, "search", "error", "summary");
+    const result = cli(HUB_ALONE, "search", "error", "summary");
     expect(result.code).toBe(0);
     expect(result.stdout).toStartWith("form-errors  ");
     expect(result.stdout).toContain("#error-summary");
   });
 
   test("search warns before results that cover only part of the question", () => {
-    const result = cli(SKILL_DIR, "search", "kanban board columns");
+    const result = cli(HUB_ALONE, "search", "kanban board columns");
     expect(result.code).toBe(0);
     expect(result.stdout).toStartWith(
-      '(no note contains: kanban, board)\nNo strong match for "kanban board columns". The best note contains 1 of 3 query words.',
+      '(no note or entry contains: kanban, board)\nNo strong match for "kanban board columns". The best result contains 1 of 3 query words.',
     );
   });
 
   test("search does not warn for a strong match", () => {
-    const result = cli(SKILL_DIR, "search", "popover transform origin");
+    const result = cli(HUB_ALONE, "search", "popover transform origin");
     expect(result.stdout).toStartWith("component-feel  ");
     expect(result.stdout).not.toContain("No strong match");
   });
 
   test("search without a match fails", () => {
-    const result = cli(SKILL_DIR, "search", "zzzz qqqq");
+    const result = cli(HUB_ALONE, "search", "zzzz qqqq");
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain("No note matches");
+    expect(result.stderr).toContain('Nothing matches "zzzz qqqq"');
   });
 
   test("search respects --limit", () => {
-    const result = cli(SKILL_DIR, "search", "form", "--limit", "2");
+    const result = cli(HUB_ALONE, "search", "form", "--limit", "2");
     expect(result.stdout.split("\n").filter((line) => /^[a-z]/.test(line))).toHaveLength(2);
   });
 
   test("links prints both directions", () => {
-    const result = cli(SKILL_DIR, "links", "forms");
+    const result = cli(HUB_ALONE, "links", "forms");
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("Links from this note:\n  method");
     expect(result.stdout).toContain("SKILL.md of the design skill");
@@ -187,9 +198,9 @@ describe("other commands", () => {
 
   test("usage errors exit with status 2", () => {
     expect(cli(SKILL_DIR).code).toBe(2);
-    expect(cli(SKILL_DIR, "graph").code).toBe(2);
-    expect(cli(SKILL_DIR, "fly").stderr).toContain('unknown command "fly"');
-    expect(cli(SKILL_DIR, "help").code).toBe(0);
+    expect(cli(HUB_ALONE, "graph").code).toBe(2);
+    expect(cli(HUB_ALONE, "fly").stderr).toContain('unknown command "fly"');
+    expect(cli(HUB_ALONE, "help").code).toBe(0);
   });
 });
 
@@ -289,7 +300,7 @@ describe("graph membership", () => {
       "SKILL.md": memberSkill("demo-skill", "Run `design read demo-skill-forms`."),
       "notes/demo-skill-forms.md": memberNote("demo-skill-forms"),
     });
-    const result = run(["graph", "--check"], { skillDir: hub, invokedSkillDir: join(install, "design") });
+    const result = run(["graph", "--check"], { skillDir: hub, invokedSkillDir: join(install, "design"), cwd: hub });
     expect(result.stdout).toContain("2 skills (design, demo-skill)");
     expect(result.code).toBe(0);
   });
@@ -341,6 +352,111 @@ describe("graph membership", () => {
     const result = cli(hub, "graph", "--check");
     expect(result.code).toBe(1);
     expect(result.stdout).toContain("the hub must work without its members");
+  });
+});
+
+// A member script that prints entries for the project in the working folder.
+// It reads the project name from the folder, so a test can see that the CLI
+// runs it in the folder of the agent.
+const entriesScript = (entries: string, extra = "") => `
+const { existsSync, readFileSync } = require("node:fs");
+const project = existsSync("project.txt") ? readFileSync("project.txt", "utf8").trim() : "no project";
+${extra}
+console.log(JSON.stringify({
+  read: "demo-cli docs {id}",
+  source: "Source: " + project + ".",
+  problems: [],
+  entries: ${entries},
+}));
+`;
+
+const boardEntry = (links = '["forms"]') => `[{
+  id: "Board", kind: "component", label: "pattern", title: "Board",
+  summary: "Columns of cards that people drag between stages.",
+  keywords: ["board", "drag cards between columns", "stages"],
+  intro: "Use it when the stage of an item is the main fact.",
+  sections: [{ title: "Rules", text: "Persist each move optimistically." }],
+  links: ${links},
+}]`;
+
+function addEntriesMember(root: string, script: string, graph = '{ "notes": "notes", "entries": ["entries.js"] }\n'): string {
+  return addMember(join(root, "skills"), "demo-skill", {
+    "design-graph.json": graph,
+    "SKILL.md": memberSkill("demo-skill", "Before a form, run `design read demo-skill-forms`."),
+    "notes/demo-skill-forms.md": memberNote("demo-skill-forms"),
+    "entries.js": script,
+  });
+}
+
+describe("member entries", () => {
+  test("search ranks the entries of a member with the notes and prints their read command", () => {
+    const { root, hub } = copyHub();
+    addEntriesMember(root, entriesScript(boardEntry()));
+    const project = join(root, "app");
+    mkdirSync(project);
+    writeFileSync(join(project, "project.txt"), "the demo app");
+
+    const found = run(["search", "drag cards between columns"], { skillDir: hub, cwd: project });
+    expect(found.code).toBe(0);
+    expect(found.stdout).toStartWith("Board [demo-skill component, pattern]");
+    expect(found.stdout).toContain("  read: demo-cli docs Board");
+    expect(found.stdout).toContain("Source: the demo app.");
+
+    const read = run(["read", "Board"], { skillDir: hub, cwd: project });
+    expect(read.code).toBe(1);
+    expect(read.stderr).toContain('"Board" is not a note. It is a component of the demo-skill skill. Read it with:\n  demo-cli docs Board');
+
+    const forms = run(["read", "forms"], { skillDir: hub, cwd: project });
+    expect(forms.stdout).toContain("Implemented by:");
+    expect(forms.stdout).toContain("Board [demo-skill component, pattern]");
+
+    const check = run(["graph", "--check"], { skillDir: hub, cwd: project });
+    expect(check.code).toBe(0);
+    expect(check.stdout).toContain("1 entries");
+  });
+
+  test("an entry link to an unknown note fails the check", () => {
+    const { root, hub } = copyHub();
+    addEntriesMember(root, entriesScript(boardEntry('["form"]')));
+    const result = cli(hub, "graph", "--check");
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain('"form"');
+    expect(result.stdout).toContain("forms");
+  });
+
+  test("a failed entries command is a warning in search and a failure in the check", () => {
+    const { root, hub } = copyHub();
+    addEntriesMember(root, entriesScript(boardEntry(), 'console.error("no kit here"); process.exit(3);'));
+    const found = cli(hub, "search", "forms");
+    expect(found.code).toBe(0);
+    expect(found.stderr).toContain("failed with exit status 3: no kit here");
+    const check = cli(hub, "graph", "--check");
+    expect(check.code).toBe(1);
+    expect(check.stdout).toContain("failed with exit status 3: no kit here");
+  });
+
+  test("output that is not the entries JSON fails the check", () => {
+    const { root, hub } = copyHub();
+    addEntriesMember(root, 'console.log("[]");');
+    const result = cli(hub, "graph", "--check");
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain('must print { "read": "<command with {id}>"');
+  });
+
+  test("an entry id that is not PascalCase fails the check", () => {
+    const { root, hub } = copyHub();
+    addEntriesMember(root, entriesScript(boardEntry().replace('id: "Board"', 'id: "board"')));
+    const result = cli(hub, "graph", "--check");
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain('entry 1 needs an "id" in PascalCase');
+  });
+
+  test("an entries script outside the skill folder fails the check", () => {
+    const { root, hub } = copyHub();
+    addEntriesMember(root, entriesScript(boardEntry()), '{ "notes": "notes", "entries": ["../entries.js"] }\n');
+    const result = cli(hub, "graph", "--check");
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("entries");
   });
 });
 

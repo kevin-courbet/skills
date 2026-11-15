@@ -1,10 +1,14 @@
 import { relative } from "node:path";
 import { checkGraph } from "./check.ts";
+import { entriesFor, findEntry, isEntry, loadEntries, type Entry, type EntrySet } from "./entries.ts";
 import { backlinks, findSection, loadGraph, NOTE_WORD_LIMIT, type Graph, type Link, type LoadOptions, type Note } from "./graph.ts";
 import { search } from "./search.ts";
 import { nearest, unique } from "./text.ts";
 
 export interface RunOptions extends LoadOptions {
+  // The folder that the agent works in. A member skill finds its project, such
+  // as an app, from this folder when it prints its search entries.
+  readonly cwd: string;
   readonly color?: boolean;
 }
 
@@ -17,8 +21,9 @@ export interface RunResult {
 export const USAGE = `design <command> [arguments]
 
 Commands:
-  search <query> [--limit <n>]   Rank notes for a question. Default limit: 8.
-                                 Warns when the best note has under half the words.
+  search <query> [--limit <n>]   Rank notes and member entries, such as the
+                                 components of a kit, for a question. Default limit: 8.
+                                 Warns when the best result has under half the words.
   read <id>                      Print a note, the notes to read first, and the
                                  ids of the other linked notes.
   read <id>#<section>            Print one section of a note.
@@ -28,7 +33,8 @@ Commands:
   graph --check                  Validate the note graph. Exit status 1 on a problem.
   help                           Print this text.
 
-[[id]] in a note is a link: run "design read <id>" to follow it.`;
+[[id]] in a note is a link: run "design read <id>" to follow it.
+A member entry, such as a kit component, prints the command that reads it.`;
 
 class UsageError extends Error {}
 class LookupError extends Error {}
@@ -47,15 +53,45 @@ function owner(note: Note): string {
   return note.skill.hub ? "" : ` [${note.skill.name}]`;
 }
 
-function lookup(graph: Graph, id: string): Note {
+// Loads the entries of the members only when a command needs them, because
+// each member runs a process to print them.
+class Context {
+  private set: EntrySet | null = null;
+  constructor(
+    readonly graph: Graph,
+    private readonly cwd: string,
+  ) {}
+  entries(): EntrySet {
+    this.set ??= loadEntries(this.graph, this.cwd);
+    return this.set;
+  }
+  // A warning for the problems of the entries, which the command prints on stderr.
+  entryWarning(): string {
+    if (this.set === null || this.set.problems.length === 0) return "";
+    const shown = this.set.problems.slice(0, 3).map((problem) => `  ${problem.message}`);
+    const more = this.set.problems.length > 3 ? [`  and ${this.set.problems.length - 3} more`] : [];
+    return [`warning: the member entries have ${this.set.problems.length} ${this.set.problems.length === 1 ? "problem" : "problems"}. Run "design graph --check".`, ...shown, ...more, ""].join("\n");
+  }
+}
+
+function entryOwner(entry: Entry): string {
+  return ` [${entry.skill.name} ${entry.kind}${entry.label === "" ? "" : `, ${entry.label}`}]`;
+}
+
+function lookup(context: Context, id: string): Note {
+  const graph = context.graph;
   const duplicate = graph.duplicates.get(id);
   if (duplicate) {
     throw new LookupError(`the id "${id}" is not unique in the graph:\n${duplicate.map((file) => `  ${file}`).join("\n")}\nRun "design graph --check".`);
   }
   const note = graph.notes.get(id);
   if (note) return note;
+  const entry = findEntry(context.entries(), id);
+  if (entry) {
+    throw new LookupError(`"${entry.id}" is not a note. It is a ${entry.kind} of the ${entry.skill.name} skill. Read it with:\n  ${entry.read}`);
+  }
   const close = nearest(id, [...graph.notes.keys()], 5);
-  const found = search(graph, id.replaceAll("-", " "), 5).hits.map((hit) => hit.note.id);
+  const found = search(graph.ordered, id.replaceAll("-", " "), 5).hits.map((hit) => hit.doc.id);
   const suggestions = [...new Set([...close, ...found])].slice(0, 5);
   const hint = suggestions.length > 0 ? `\nNearest: ${suggestions.join(", ")}` : "";
   throw new LookupError(`no note has the id "${id}".${hint}\nRun "design search <words>" or "design list".`);
@@ -90,7 +126,8 @@ function summaryLines(graph: Graph, links: ReadonlyArray<Link>, s: Style): strin
 // The full read prints summaries only for the notes that the reader must read
 // first. The body already names the sections of the other links, so their ids
 // fit on one line.
-function readLinkLines(graph: Graph, note: Note, s: Style): string[] {
+function readLinkLines(context: Context, note: Note, s: Style): string[] {
+  const graph = context.graph;
   const outgoing = outgoingLinks(note);
   const first = outgoing.filter((link) => link.type === "requires" || link.type === "specializes");
   const targetId = (link: Link) => (link.kind === "skill" ? `skill:${link.id}` : link.id);
@@ -99,13 +136,30 @@ function readLinkLines(graph: Graph, note: Note, s: Style): string[] {
   const lines: string[] = [];
   if (first.length > 0) lines.push("Read first:", ...summaryLines(graph, first, s));
   if (others.length > 0) lines.push(`See also: ${others.map((id) => s.id(id)).join(", ")}`);
-  return [...lines, ...specializationLines(graph, note, s)];
+  return [...lines, ...specializationLines(graph, note, s), ...implementationLines(context, note, s)];
 }
 
-function linkLines(graph: Graph, note: Note, s: Style): string[] {
+function linkLines(context: Context, note: Note, s: Style): string[] {
   const outgoing = outgoingLinks(note);
-  const lines = outgoing.length > 0 ? ["Links:", ...summaryLines(graph, outgoing, s)] : [];
-  return [...lines, ...specializationLines(graph, note, s)];
+  const lines = outgoing.length > 0 ? ["Links:", ...summaryLines(context.graph, outgoing, s)] : [];
+  return [...lines, ...specializationLines(context.graph, note, s), ...implementationLines(context, note, s)];
+}
+
+// The member entries that apply the note, such as the kit components that
+// implement a form rule.
+function implementationLines(context: Context, note: Note, s: Style): string[] {
+  const entries = entriesFor(context.entries(), note.id);
+  if (entries.length === 0) return [];
+  const width = Math.max(...entries.map((entry) => (entry.id + entryOwner(entry)).length));
+  const lines = ["Implemented by:"];
+  for (const entry of entries) {
+    const name = entry.id + entryOwner(entry);
+    lines.push(`  ${s.id(entry.id)}${entryOwner(entry)}${" ".repeat(width - name.length)}  ${entry.summary}`);
+  }
+  for (const source of context.entries().sources.filter((candidate) => entries.some((entry) => entry.skill === candidate.skill))) {
+    lines.push(`  Read one ${source.skill.name} entry with: ${source.read.replaceAll("{id}", "<id>")}`);
+  }
+  return lines;
 }
 
 function specializationLines(graph: Graph, note: Note, s: Style): string[] {
@@ -129,14 +183,14 @@ function header(note: Note, s: Style): string[] {
   return lines;
 }
 
-function commandRead(graph: Graph, args: string[], s: Style): string {
+function commandRead(context: Context, args: string[], s: Style): string {
   const outline = args.includes("--outline");
   const rest = args.filter((arg) => arg !== "--outline");
   const unknownFlag = rest.find((arg) => arg.startsWith("--"));
   if (unknownFlag) throw new UsageError(`read: unknown option ${unknownFlag}`);
   if (rest.length !== 1) throw new UsageError("read: give one note id, such as: design read forms");
   const [id, sectionName] = rest[0]!.split("#", 2) as [string, string | undefined];
-  const note = lookup(graph, id);
+  const note = lookup(context, id);
 
   if (sectionName !== undefined) {
     if (outline) throw new UsageError("read: use --outline with a note id, not with a section");
@@ -163,18 +217,18 @@ function commandRead(graph: Graph, args: string[], s: Style): string {
     if (note.sections.length === 0) lines.push("  (none)");
     const width = Math.max(0, ...note.sections.map((section) => section.slug.length + 1));
     for (const section of note.sections) lines.push(`  ${`#${section.slug}`.padEnd(width)}  ${section.words} words`);
-    const links = linkLines(graph, note, s);
+    const links = linkLines(context, note, s);
     if (links.length > 0) lines.push("", ...links);
     return lines.join("\n");
   }
 
   const lines = [...header(note, s), "", note.body];
-  const links = readLinkLines(graph, note, s);
+  const links = readLinkLines(context, note, s);
   if (links.length > 0) lines.push("", ...links);
   return lines.join("\n");
 }
 
-function commandSearch(graph: Graph, args: string[], s: Style): { text: string; found: boolean } {
+function commandSearch(context: Context, args: string[], s: Style): { text: string; found: boolean } {
   let limit = 8;
   const words: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
@@ -192,28 +246,39 @@ function commandSearch(graph: Graph, args: string[], s: Style): { text: string; 
   }
   const query = words.join(" ").trim();
   if (query === "") throw new UsageError('search: give a query, such as: design search "error summary"');
-  const result = search(graph, query, limit);
+  const entries = context.entries();
+  const result = search<Note | Entry>([...context.graph.ordered, ...entries.entries], query, limit);
   const lines: string[] = [];
   for (const correction of result.corrections) lines.push(`(searched "${correction.from}" as "${correction.to}")`);
-  if (result.unmatched.length > 0) lines.push(`(no note contains: ${result.unmatched.join(", ")})`);
+  if (result.unmatched.length > 0) lines.push(`(no note or entry contains: ${result.unmatched.join(", ")})`);
   if (result.hits.length === 0) {
-    return { text: [...lines, `No note matches "${query}". Run "design list" to see every note.`].join("\n"), found: false };
+    return { text: [...lines, `Nothing matches "${query}". Run "design list" to see every note.`].join("\n"), found: false };
   }
   if (!result.strong) {
     lines.push(
-      `No strong match for "${query}". The best note contains ${result.hits[0]!.matched} of ${result.words} query words. These notes cover only part of the question:`,
+      `No strong match for "${query}". The best result contains ${result.hits[0]!.matched} of ${result.words} query words. These results cover only part of the question:`,
       "",
     );
   }
   for (const hit of result.hits) {
-    lines.push(`${s.id(hit.note.id)}${owner(hit.note)}  ${hit.note.summary}`);
+    const doc = hit.doc;
+    if (isEntry(doc)) {
+      lines.push(`${s.id(doc.id)}${entryOwner(doc)}  ${doc.summary}`, `  read: ${doc.read}`);
+      continue;
+    }
+    lines.push(`${s.id(doc.id)}${owner(doc)}  ${doc.summary}`);
     if (hit.sections.length > 0) lines.push(`  sections: ${hit.sections.map((section) => `#${section.slug}`).join(" ")}`);
   }
-  lines.push("", "Next: design read <id>, design read <id>#<section>, or design read <id> --outline");
+  const skills = new Set(result.hits.map((hit) => hit.doc).filter(isEntry).map((entry) => entry.skill));
+  const sources = entries.sources.filter((source) => skills.has(source.skill));
+  lines.push("");
+  for (const source of sources) lines.push(`${source.skill.name} entries: ${source.source}`);
+  lines.push("Next: design read <id> for a note, design read <id>#<section> for one section, or the read command of an entry.");
   return { text: lines.join("\n"), found: true };
 }
 
-function commandList(graph: Graph, s: Style): string {
+function commandList(context: Context, s: Style): string {
+  const graph = context.graph;
   const topics = new Map<string, Note[]>();
   for (const note of graph.ordered) topics.set(note.topic, [...(topics.get(note.topic) ?? []), note]);
   const width = Math.max(...graph.ordered.map((note) => (note.id + owner(note)).length));
@@ -225,12 +290,18 @@ function commandList(graph: Graph, s: Style): string {
       lines.push(`  ${s.id(name)}${" ".repeat(width - name.length)}  ${note.summary}`);
     }
   }
+  const sources = context.entries().sources;
+  if (sources.length > 0) {
+    lines.push("", s.heading("member entries"), "  Search finds them with the notes:");
+    for (const source of sources) lines.push(`  ${source.skill.name}: ${source.count} entries. ${source.source}`);
+  }
   return lines.join("\n");
 }
 
-function commandLinks(graph: Graph, args: string[], s: Style): string {
+function commandLinks(context: Context, args: string[], s: Style): string {
+  const graph = context.graph;
   if (args.length !== 1 || args[0]!.startsWith("--")) throw new UsageError("links: give one note id, such as: design links forms");
-  const note = lookup(graph, args[0]!.split("#")[0]!);
+  const note = lookup(context, args[0]!.split("#")[0]!);
   const lines = [`${s.id(note.id)}${owner(note)}  ${note.summary}`, "", "Links from this note:"];
   const outgoing = new Map<string, { types: Set<string>; summary: string }>();
   for (const link of note.links) {
@@ -268,15 +339,17 @@ function commandLinks(graph: Graph, args: string[], s: Style): string {
   return lines.join("\n");
 }
 
-function commandCheck(graph: Graph, args: string[]): { text: string; ok: boolean } {
+function commandCheck(context: Context, args: string[]): { text: string; ok: boolean } {
+  const graph = context.graph;
   if (args.length !== 1 || args[0] !== "--check") throw new UsageError("graph: use graph --check");
-  const result = checkGraph(graph);
+  const entries = context.entries();
+  const result = checkGraph(graph, entries);
   const base = graph.hub.dir;
   const where = (file: string, line?: number) => {
     const path = relative(base, file) || file;
     return line ? `${path}:${line}` : path;
   };
-  const summary = `${graph.ordered.length} notes, ${result.links} links, ${graph.skills.length} ${graph.skills.length === 1 ? "skill" : "skills"} (${graph.skills.map((skill) => skill.name).join(", ")}), word limit ${NOTE_WORD_LIMIT}`;
+  const summary = `${graph.ordered.length} notes, ${entries.entries.length} entries, ${result.links} links, ${graph.skills.length} ${graph.skills.length === 1 ? "skill" : "skills"} (${graph.skills.map((skill) => skill.name).join(", ")}), word limit ${NOTE_WORD_LIMIT}`;
   if (result.problems.length === 0) return { text: `ok: ${summary}`, ok: true };
   const lines = result.problems.map((problem) => `${where(problem.file, problem.line)}: ${problem.message}`);
   lines.push("", `failed: ${result.problems.length} ${result.problems.length === 1 ? "problem" : "problems"} in ${summary}`);
@@ -291,26 +364,34 @@ export function run(argv: ReadonlyArray<string>, options: RunOptions): RunResult
 
   try {
     const graph = loadGraph(options);
-    const warning =
+    const context = new Context(graph, options.cwd);
+    const graphWarning =
       command !== "graph" && graph.problems.length > 0
         ? `warning: the design graph has ${graph.problems.length} load ${graph.problems.length === 1 ? "problem" : "problems"}. Run "design graph --check".\n`
         : "";
+    const warning = () => `${graphWarning}${context.entryWarning()}`;
     switch (command) {
       case "search": {
-        const result = commandSearch(graph, args, s);
+        const result = commandSearch(context, args, s);
         return result.found
-          ? { code: 0, stdout: `${result.text}\n`, stderr: warning }
-          : { code: 1, stdout: "", stderr: `${warning}${result.text}\n` };
+          ? { code: 0, stdout: `${result.text}\n`, stderr: warning() }
+          : { code: 1, stdout: "", stderr: `${warning()}${result.text}\n` };
       }
-      case "read":
-        return { code: 0, stdout: `${commandRead(graph, args, s)}\n`, stderr: warning };
-      case "list":
+      case "read": {
+        const text = commandRead(context, args, s);
+        return { code: 0, stdout: `${text}\n`, stderr: warning() };
+      }
+      case "list": {
         if (args.length > 0) throw new UsageError("list: takes no arguments");
-        return { code: 0, stdout: `${commandList(graph, s)}\n`, stderr: warning };
-      case "links":
-        return { code: 0, stdout: `${commandLinks(graph, args, s)}\n`, stderr: warning };
+        const text = commandList(context, s);
+        return { code: 0, stdout: `${text}\n`, stderr: warning() };
+      }
+      case "links": {
+        const text = commandLinks(context, args, s);
+        return { code: 0, stdout: `${text}\n`, stderr: warning() };
+      }
       case "graph": {
-        const result = commandCheck(graph, args);
+        const result = commandCheck(context, args);
         return { code: result.ok ? 0 : 1, stdout: `${result.text}\n`, stderr: "" };
       }
       default:

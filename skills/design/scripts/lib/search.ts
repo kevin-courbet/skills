@@ -1,4 +1,4 @@
-import type { Graph, Note, Section } from "./graph.ts";
+import type { Section } from "./graph.ts";
 import { levenshtein } from "./text.ts";
 
 const STOP_WORDS = new Set(
@@ -52,8 +52,18 @@ interface SectionIndex {
   readonly counts: ReadonlyMap<string, number>;
 }
 
-interface NoteIndex {
-  readonly note: Note;
+// A document that search can rank: a note or a member entry.
+export interface Searchable {
+  readonly id: string;
+  readonly keywords: ReadonlyArray<string>;
+  readonly summary: string;
+  readonly title: string;
+  readonly intro: string;
+  readonly sections: ReadonlyArray<Section>;
+}
+
+interface DocIndex<T extends Searchable> {
+  readonly doc: T;
   readonly id: ReadonlySet<string>;
   readonly keywords: ReadonlySet<string>;
   readonly phrases: ReadonlyArray<ReadonlyArray<string>>;
@@ -72,25 +82,30 @@ function counts(words: ReadonlyArray<string>): Map<string, number> {
   return result;
 }
 
-function indexNote(note: Note): NoteIndex {
-  const keywordTerms = note.keywords.map((keyword) => terms(keyword));
-  const sections = note.sections.map((section) => ({
+// "DataTable" and "date-range" give the words "data table" and "date range".
+function idWords(id: string): string {
+  return id.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replaceAll("-", " ");
+}
+
+function indexDoc<T extends Searchable>(doc: T): DocIndex<T> {
+  const keywordTerms = doc.keywords.map((keyword) => terms(keyword));
+  const sections = doc.sections.map((section) => ({
     section,
     title: new Set(terms(section.title)),
     counts: counts(terms(section.text)),
   }));
-  const body = counts(terms(`${note.intro}\n${note.sections.map((section) => section.text).join("\n")}`));
-  const id = new Set(terms(note.id.replaceAll("-", " ")));
+  const body = counts(terms(`${doc.intro}\n${doc.sections.map((section) => section.text).join("\n")}`));
+  const id = new Set(terms(idWords(doc.id)));
   const keywords = new Set(keywordTerms.flat());
-  const summary = new Set(terms(note.summary));
-  const title = new Set(terms(note.title));
+  const summary = new Set(terms(doc.summary));
+  const title = new Set(terms(doc.title));
   const sectionTitles = new Set(sections.flatMap((section) => [...section.title]));
   const all = new Set([...id, ...keywords, ...summary, ...title, ...sectionTitles, ...body.keys()]);
   const typed = new Set(
-    words([note.id.replaceAll("-", " "), ...note.keywords, note.summary, note.title, note.intro, ...note.sections.map((section) => section.text)].join("\n")),
+    words([idWords(doc.id), ...doc.keywords, doc.summary, doc.title, doc.intro, ...doc.sections.map((section) => section.text)].join("\n")),
   );
   return {
-    note,
+    doc,
     id,
     keywords,
     phrases: keywordTerms.filter((phrase) => phrase.length > 1),
@@ -104,29 +119,29 @@ function indexNote(note: Note): NoteIndex {
   };
 }
 
-const indexes = new WeakMap<Graph, ReadonlyArray<NoteIndex>>();
+const indexes = new WeakMap<ReadonlyArray<Searchable>, ReadonlyArray<DocIndex<Searchable>>>();
 
-function indexGraph(graph: Graph): ReadonlyArray<NoteIndex> {
-  const cached = indexes.get(graph);
-  if (cached) return cached;
-  const built = graph.ordered.map(indexNote);
-  indexes.set(graph, built);
+function indexAll<T extends Searchable>(docs: ReadonlyArray<T>): ReadonlyArray<DocIndex<T>> {
+  const cached = indexes.get(docs);
+  if (cached) return cached as ReadonlyArray<DocIndex<T>>;
+  const built = docs.map((doc) => indexDoc(doc));
+  indexes.set(docs, built);
   return built;
 }
 
-export interface SearchHit {
-  readonly note: Note;
+export interface SearchHit<T extends Searchable> {
+  readonly doc: T;
   readonly score: number;
-  // The number of query words that the note contains.
+  // The number of query words that the document contains.
   readonly matched: number;
   readonly sections: ReadonlyArray<Section>;
 }
 
-export interface SearchResult {
-  readonly hits: ReadonlyArray<SearchHit>;
+export interface SearchResult<T extends Searchable> {
+  readonly hits: ReadonlyArray<SearchHit<T>>;
   readonly corrections: ReadonlyArray<{ from: string; to: string }>;
   readonly terms: ReadonlyArray<string>;
-  // Query words that no note contains, also after typo correction.
+  // Query words that no document contains, also after typo correction.
   readonly unmatched: ReadonlyArray<string>;
   // The number of distinct query words, with the unmatched words.
   readonly words: number;
@@ -162,8 +177,8 @@ function correct(typed: string, vocabulary: ReadonlySet<string>): string | null 
 const RELATIVE_FLOOR = 0.2;
 const STRONG_COVERAGE = 0.5;
 
-export function search(graph: Graph, query: string, limit: number): SearchResult {
-  const index = indexGraph(graph);
+export function search<T extends Searchable>(docs: ReadonlyArray<T>, query: string, limit: number): SearchResult<T> {
+  const index = indexAll(docs);
   const vocabulary = new Set(index.flatMap((entry) => [...entry.all]));
   const typedVocabulary = new Set(index.flatMap((entry) => [...entry.typed]));
   const corrections: Array<{ from: string; to: string }> = [];
@@ -195,7 +210,7 @@ export function search(graph: Graph, query: string, limit: number): SearchResult
   }
   const querySet = new Set(queryTerms);
 
-  const hits: SearchHit[] = [];
+  const hits: SearchHit<T>[] = [];
   for (const entry of index) {
     let score = 0;
     let matched = 0;
@@ -230,9 +245,9 @@ export function search(graph: Graph, query: string, limit: number): SearchResult
       .sort((left, right) => right.sectionScore - left.sectionScore)
       .slice(0, 3)
       .map((candidate) => candidate.section);
-    hits.push({ note: entry.note, score, matched, sections });
+    hits.push({ doc: entry.doc, score, matched, sections });
   }
-  hits.sort((left, right) => right.score - left.score || left.note.id.localeCompare(right.note.id));
+  hits.sort((left, right) => right.score - left.score || left.doc.id.localeCompare(right.doc.id));
   // A hit far below the best hit matched only a common word. It costs the
   // reader a line and rarely holds the answer.
   const floor = (hits[0]?.score ?? 0) * RELATIVE_FLOOR;

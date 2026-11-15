@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { parseFrontMatter, readSkillName, type FrontValue } from "./frontmatter.ts";
 import { countWords, slugify, unique } from "./text.ts";
 
@@ -56,6 +56,9 @@ export interface SkillSource {
   readonly notesDir: string;
   readonly hub: boolean;
   readonly skillFile: string;
+  // The command that prints the search entries of a member, as an argument
+  // list. The first item is a script in the skill folder.
+  readonly entries: ReadonlyArray<string> | null;
 }
 
 export interface Reference extends Target {
@@ -296,19 +299,22 @@ function readMember(dir: string, entry: string, problems: Problem[]): SkillSourc
     problems.push({ file: membership, message: `${MEMBERSHIP_FILE} must be an object: { "notes": "notes" }` });
     return null;
   }
-  const keys = Object.keys(data);
-  const notes = (data as Record<string, unknown>)["notes"];
+  const record = data as Record<string, unknown>;
+  const notes = record["notes"];
   if (typeof notes !== "string" || notes.trim() === "") {
     problems.push({ file: membership, message: `${MEMBERSHIP_FILE} needs "notes": the note folder, relative to the skill folder` });
     return null;
   }
-  const extra = keys.filter((key) => key !== "notes");
-  if (extra.length > 0) problems.push({ file: membership, message: `${MEMBERSHIP_FILE} has unknown keys: ${extra.join(", ")}` });
+  const extra = Object.keys(record).filter((key) => !MEMBERSHIP_KEYS.has(key));
+  if (extra.length > 0) {
+    problems.push({ file: membership, message: `${MEMBERSHIP_FILE} has unknown keys: ${extra.join(", ")}; the keys are ${[...MEMBERSHIP_KEYS].join(", ")}` });
+  }
   const notesDir = resolve(dir, notes);
   if (relative(dir, notesDir).startsWith("..")) {
     problems.push({ file: membership, message: `"notes" must stay inside the skill folder: ${notes}` });
     return null;
   }
+  const entries = readEntriesCommand(dir, membership, record["entries"], problems);
   const skillFile = join(dir, "SKILL.md");
   let name = entry;
   if (existsSync(skillFile)) {
@@ -316,7 +322,28 @@ function readMember(dir: string, entry: string, problems: Problem[]): SkillSourc
   } else {
     problems.push({ file: skillFile, message: "a member skill must have a SKILL.md" });
   }
-  return { name, dir, notesDir, hub: false, skillFile };
+  return { name, dir, notesDir, hub: false, skillFile, entries };
+}
+
+const MEMBERSHIP_KEYS = new Set(["notes", "entries"]);
+
+function readEntriesCommand(dir: string, membership: string, value: unknown, problems: Problem[]): ReadonlyArray<string> | null {
+  if (value === undefined) return null;
+  const usage = `"entries" must be a list of strings: a script in the skill folder and its arguments, such as ["scripts/tool", "design-entries"]`;
+  if (!Array.isArray(value) || value.length === 0 || !value.every((item) => typeof item === "string" && item !== "")) {
+    problems.push({ file: membership, message: usage });
+    return null;
+  }
+  const script = resolve(dir, value[0] as string);
+  if (relative(dir, script).startsWith("..") || isAbsolute(value[0] as string)) {
+    problems.push({ file: membership, message: `the "entries" script must be a relative path inside the skill folder: ${value[0]}` });
+    return null;
+  }
+  if (!existsSync(script) || !statSync(script).isFile()) {
+    problems.push({ file: membership, message: `the "entries" script does not exist: ${value[0]}` });
+    return null;
+  }
+  return value as string[];
 }
 
 export interface LoadOptions {
@@ -327,7 +354,7 @@ export interface LoadOptions {
 
 function discoverSkills(options: LoadOptions, problems: Problem[]): { hub: SkillSource; skills: SkillSource[] } {
   const hubDir = resolve(options.skillDir);
-  const hub: SkillSource = { name: HUB_SKILL, dir: hubDir, notesDir: join(hubDir, "notes"), hub: true, skillFile: join(hubDir, "SKILL.md") };
+  const hub: SkillSource = { name: HUB_SKILL, dir: hubDir, notesDir: join(hubDir, "notes"), hub: true, skillFile: join(hubDir, "SKILL.md"), entries: null };
   const skills: SkillSource[] = [hub];
   const seen = new Set<string>([realpathSync(hubDir)]);
   const hubPaths = [hubDir, realpathSync(hubDir), options.invokedSkillDir ? resolve(options.invokedSkillDir) : null];

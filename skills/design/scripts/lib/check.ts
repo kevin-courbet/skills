@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { EntrySet } from "./entries.ts";
 import { NOTE_WORD_LIMIT, SKILL_WORD_LIMIT, type Graph, type Note, type Problem, type Target } from "./graph.ts";
 import { countWords, nearest } from "./text.ts";
 
@@ -39,9 +40,21 @@ function checkAssets(note: Note, problems: Problem[]): void {
   }
 }
 
-export function checkGraph(graph: Graph): CheckResult {
-  const problems: Problem[] = [...graph.problems];
+export function checkGraph(graph: Graph, entries: EntrySet): CheckResult {
+  const problems: Problem[] = [...graph.problems, ...entries.problems];
   let links = 0;
+
+  for (const entry of entries.entries) {
+    const file = join(entry.skill.dir, entry.skill.entries![0]!);
+    for (const id of entry.links) {
+      links += 1;
+      const target = graph.notes.get(id);
+      if (!target) {
+        const hint = nearest(id, [...graph.notes.keys()], 3);
+        problems.push({ file, message: `the entry ${entry.id} links to "${id}", but no note has that id${hint.length > 0 ? `; nearest: ${hint.join(", ")}` : ""}` });
+      }
+    }
+  }
 
   for (const note of graph.ordered) {
     if (note.words > NOTE_WORD_LIMIT) {
