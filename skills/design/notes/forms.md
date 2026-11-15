@@ -27,4 +27,4 @@ Use a multi-page form only when the sections make a meaningful sequence.
 
 ## Forms In An Internal App
 
-In an internal app on the house stack, also follow [[skill:internal-app]]. Its Forms section in `references/components.md` names the kit component for each rule.
+In an internal app on the house stack, also follow [[skill:internal-app]]. Its notes specialize the form notes, so `design read` lists them under "Specialized by" when that skill is installed.

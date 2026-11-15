@@ -55,7 +55,7 @@ Run `doctor`. The `root-route`, `router`, `app-shell`, `chart-provider`, `contra
 
 Migrate one route at a time, most-used first. For each route:
 
-1. Replace legacy components with kit primitives (tables below). Keep behavior; change structure only where the page patterns in `components.md` require it.
+1. Replace legacy components with kit primitives (tables below). Keep behavior; change structure only where the page patterns of `design read internal-app-page-patterns` require it.
 2. Replace utility classes with `stylex.create` styles built from tokens.
 3. Move list state into schema-validated search params.
 4. Route data through feature `api.ts`, `queryOptions`, `ensureQueryData`, and `useSuspenseQuery`.

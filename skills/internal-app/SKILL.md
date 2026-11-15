@@ -19,10 +19,41 @@ bun "$SKILL_DIR/scripts/internal-app" new <dir> --name "App name"   # scaffold
 bun "$SKILL_DIR/scripts/internal-app" doctor [dir]                  # audit and list fixes
 bun "$SKILL_DIR/scripts/internal-app" sync [dir] [--write] [--force] # install or update kit files
 bun "$SKILL_DIR/scripts/internal-app" check [dir]                   # conventions
+bun "$SKILL_DIR/scripts/internal-app" components [dir]              # kit catalog by layer
+bun "$SKILL_DIR/scripts/internal-app" docs <Id>[#part] [dir]        # docs of one kit component
 ```
 
 Add `--json` for machine-readable output. Exit status 1 means action is
 needed. Treat it as a failure, not a warning.
+
+## Components
+
+Each kit component documents itself in a doc comment at the top of its file:
+its purpose and alternative, its layer, its built-in behavior, its rules, an
+example, its props, and the related components and design notes. Read the
+docs of the installed kit, because an app can have an older kit than this
+skill. `components` and `docs` find the app from the working folder by its
+`internal-app.kit.json`. Outside an app they read the template and say so.
+
+To find a component or a rule, run `design search "<the need>"` in the app.
+It ranks the design notes and the kit components together, and prints the
+`docs` command of each component.
+
+The general rules for pages are notes:
+
+| Note | Read before |
+|---|---|
+| `design read internal-app-page-patterns` | Composing a page. It gives the pattern, the container, and the design-kit routes. |
+| `design read internal-app-composition` | Any page. Primary actions, row heights, moves, and focus. |
+| `design read internal-app-forms` | Any form. The control for each answer, widths, and errors. |
+| `design read internal-app-form-preview` | A form that makes a printed or sent thing. |
+| `design read internal-app-touch-work-view` | Work away from a desk, on a tablet or a phone. |
+| `design read internal-app-cards` | Cards with more than one block. |
+| `design read internal-app-url-filters` | List filters. |
+| `design read internal-app-states` | Loading, empty, and error states. |
+| `design read internal-app-writing` | Labels, messages, and facts on one line. |
+| `design read internal-app-icons` | Icons. |
+| `design read internal-app-adding-a-primitive` | A control that the kit does not have. |
 
 ## Ownership
 
@@ -47,7 +78,8 @@ needed. Treat it as a failure, not a warning.
 1. Read `references/stack.md`.
 2. Run `new <dir> --name "<App name>"`, then `bun install`, `bun run build`, `bun run tsc`.
 3. Replace the example `items` feature with the real features. Keep its file
-   shapes. Follow `references/data.md` and `references/components.md`.
+   shapes. Follow `references/data.md`, the notes in Components, and the
+   component docs.
 4. Finish with `references/review.md`.
 
 ### Upgrade an existing app
@@ -61,11 +93,13 @@ needed. Treat it as a failure, not a warning.
 
 ### Add or change pages
 
-1. Read `references/components.md` and `references/data.md` before writing a route.
-   For a page or a dialog with a form, run `design read forms` first.
-2. Compose kit primitives. If no primitive fits, stop and add one to this
-   skill (`references/components.md`, Adding a primitive). Do not build a
-   one-off control in the app.
+1. Run `design read internal-app-page-patterns` and read `references/data.md`
+   before writing a route. For a page or a dialog with a form, run
+   `design read forms` first.
+2. Find each component with `design search` and read it with `docs <Id>`.
+   If no component fits, stop and add one to this skill
+   (`design read internal-app-adding-a-primitive`). Do not build a one-off
+   control in the app.
 3. Run `check` and the review in `references/review.md`.
 
 ## References
@@ -74,7 +108,6 @@ needed. Treat it as a failure, not a warning.
 |---|---|
 | `references/stack.md` | Installing anything, or creating files. Packages, forbidden libraries, layout, scripts. |
 | `references/styling.md` | Writing any style, token, or theme code. |
-| `references/components.md` | Composing a page or adding a primitive. |
 | `references/reui-coverage.md` | Porting a ReUI component. It lists what the kit covers and what it leaves out. |
 | `references/data.md` | Writing a route, server function, Effect service, query, mutation, or form. |
 | `references/rpc.md` | Connecting a separate backend with Effect v4 RPC, typed errors, SSR, or cancellation. |
@@ -88,8 +121,8 @@ implementation; the `design` skill fixes the design method. In this skill,
 `design` means `bun <folder of the design skill>/scripts/design`.
 
 For any form, including a dialog with one field, run `design read forms`
-before you design it. Then read Forms in `references/components.md` for the
-kit component of each answer, and Forms in `references/data.md` for the
+before you design it. Then run `design read internal-app-forms` for the kit
+component of each answer, and read Forms in `references/data.md` for the
 validation.
 
 ## Non-Negotiables
@@ -98,7 +131,7 @@ validation.
 - **Kit first.** Pages compose kit primitives. Never put a raw `<button>`, `<input>`, `<select>`, or `<table>` in a route or feature.
 - **Tokens only.** Raw colors, font sizes, and theme media queries live in the token files. Brand colors go in the app's `brand.stylex.ts`. Density changes happen in the skill, not in an app.
 - **Both themes.** Check every page in light and dark before handoff.
-- **Dense and quiet.** Use 13 px body text, 32 px controls, and 36 px table rows. A page for a shared tablet or kiosk uses `Page density="touch"` instead. Work that people do away from a desk gets a separate touch view, not a squeezed desktop page; see Touch Work View in `references/components.md`. One primary action per view. Sentence case. No success toasts for results the UI already shows.
+- **Dense and quiet.** Use 13 px body text, 32 px controls, and 36 px table rows. A page for a shared tablet or kiosk uses `Page density="touch"` instead. Work that people do away from a desk gets a separate touch view, not a squeezed desktop page; run `design read internal-app-touch-work-view`. One primary action per view. Sentence case. No success toasts for results the UI already shows.
 - **App frame.** The sidebar sits on the `frame` color; the page sits in the raised content panel. Do not add page chrome outside the panel.
 - **Current navigation** uses a selected surface, medium weight, and `aria-current="page"`. Never a left-edge border, rail, pseudo-element, or inset shadow.
 - **Effect at the boundary.** Services are `Context.Service` classes with layers in one `ManagedRuntime`. Server functions validate input with Effect Schema and run through `runServerFn`. Expected failures travel as typed data; defects throw. Nothing is swallowed.

@@ -112,7 +112,7 @@ function ItemsPage() {
 ```
 
 - Search params are schema-validated. Every field is `optionalKey` with a default in `itemsQueryDefaults`, and `stripSearchParams` keeps the URL clean.
-- Filter params come from `filterSearchFields` (see `components.md`, Filters in the URL). `itemsQueryFromSearch` in `features/items/filters.ts` turns the validated search into the server query.
+- Filter params come from `filterSearchFields` (`design read internal-app-url-filters`). `itemsQueryFromSearch` in `features/items/filters.ts` turns the validated search into the server query.
 - The loader calls `ensureQueryData` with the same factory the component reads through `useSuspenseQuery`. SSR data never shows a loading state.
 - Return values that must be stable across SSR and hydration (for example a reference time for relative dates) from the loader.
 - Update search with `navigate({ search: (prev) => ({ ...prev, q }), replace: true })`. Reset paging when a filter changes.
@@ -154,8 +154,9 @@ const create = useMutation({
 
 ### Optimistic moves
 
-A move on a `Kanban`, a `SortableList`, or a touch work queue changes the
-screen at once and saves in the background. Write the query cache
+A move on a `Kanban`, a `SortableList`, a `Tree`, a `Gantt`, an
+`EventCalendar`, or a touch work queue changes the screen at once and saves in
+the background. Write the query cache
 synchronously in the update of the view transition. Do not write it in
 `onMutate`: `onMutate` runs after an await, after the browser captures the new
 state, so the object jumps instead of moving.
@@ -206,8 +207,8 @@ const remove = useMutation({
 ## Forms
 
 TanStack Form with Effect Schema through Standard Schema. Run
-`design read forms` for the design of the form, and read Forms in
-`components.md` for the kit component of each answer.
+`design read forms` for the design of the form, and
+`design read internal-app-forms` for the kit component of each answer.
 
 ```ts
 const form = useForm({

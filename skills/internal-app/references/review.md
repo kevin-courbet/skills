@@ -55,7 +55,7 @@ Hierarchy and layout:
 - Labels are quieter than values. Section titles are quieter than content.
 - Spacing shows grouping. Cards wrap only distinct or actionable groups. No card, framed panel, or bordered box sits inside a card; `CardSection` lines divide it.
 - Tables: text left, numbers right with tabular figures, sort state announced, rows open detail pages with the keyboard and the mouse.
-- List filters use a `Toolbar` with `Filters`, above the table or in its frame (see Composition Rules in `components.md`). Each chip names its values in words.
+- List filters use a `Toolbar` with `Filters`, above the table or in its frame (see `internal-app docs Filters`). Each chip names its values in words.
 - Controls in one row share one height. No button in a `Toolbar` sets its own `size`.
 - Record IDs and hashes people paste elsewhere use `Identifier`; inline code uses `Code`.
 - No text joins separate facts with a middle dot, a bullet, or a vertical bar. Each fact has its own element, such as a `MetaLine` item, a count badge, or a label and value pair. See `design read grouped-values`.

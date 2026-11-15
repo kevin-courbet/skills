@@ -212,8 +212,9 @@ textDecorationLine: {
 ```
 
 Touch density makes a desktop page larger. It does not make a desktop page
-into a page for work away from a desk. See Touch Work View in
-`components.md` to decide when an app needs a separate touch view.
+into a page for work away from a desk. Run
+`design read internal-app-touch-work-view` to decide when an app needs a
+separate touch view.
 
 ### Category Colors
 
