@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted. Supersedes ADR 0002.
+Accepted. Supersedes ADR 0002 and ADR 0003.
 
 ## Context
 
@@ -13,12 +13,38 @@ component pattern file. A script copied these files from `ui-design` to
 skills, such as `internal-app`, pointed to sections of the copied files by
 title, and nothing verified these pointers.
 
+Five more design skills had rules that overlapped with these files and with
+each other: `frontend-design` in this repository, and `design-engineering`,
+`fixing-motion-performance`, `design-context`, and `design-review` in the
+dotfiles. Some of their rules disagreed, such as the easing of exits and the
+reduced-motion behavior.
+
 ## Decision
 
 ### One hub skill
 
-The `design` skill is the hub of the design system. It replaces `ui-design`
-and `form-design`. Its `SKILL.md` gives the taste rules, the process, and the
+The `design` skill is the hub of the design system and the only design
+skill. It replaces these skills:
+
+| Skill | Notes that contain its rules |
+| --- | --- |
+| `ui-design`, `form-design` | The notes of the first version of the hub, such as `method`, `forms`, and `color`. |
+| `frontend-design` | `visual-direction`, `ai-slop-test`, `ux-writing`, `loading-states`, and rules in the existing notes. |
+| `design-engineering` | `motion`, `easing-and-duration`, `component-feel`, `springs-and-gestures`, `clip-path-animation`, `reduced-motion`, and the findings format of `review`. |
+| `fixing-motion-performance` | `motion-performance`. |
+| `design-context` | `project-context` and the template `assets/templates/DESIGN.md`. |
+| `design-review` | `proposal-previews` and `preview-server`. |
+
+Where a merged rule disagrees with a house rule, the house rule wins.
+Otherwise the more specific rule wins. The note `sources` gives the license
+and the credits of each source.
+
+Visual direction is a step for new products and for marketing or content
+pages. It works inside the house rules. In a functional app, the product
+system wins unless the user asks for a new direction, and
+`signature-elements` gives the expressive elements that the app may have.
+
+Its `SKILL.md` gives the taste rules, the process, and the
 note ids for each step. It has at most 900 words.
 
 ### Notes
@@ -49,7 +75,12 @@ build step, or network access. Agents run it as
 - `search <query>` ranks notes and sections by their id, summary, keywords,
   titles, and body, and corrects small typing errors.
 - `read <id>`, `read <id>#<section>`, and `read <id> --outline` print a note,
-  one section, or the section list with word counts.
+  one section, or the section list with word counts. A full read gives
+  summaries only for the `requires` and `specializes` links, and puts the
+  other linked ids on one line. The outline gives the full link list.
+- `search` prints the query words that no note contains. When the best note
+  contains less than half of the query words, it prints a "No strong match"
+  line before the results.
 - `list` prints all notes by topic.
 - `links <id>` prints the outgoing and incoming links of a note.
 - `graph --check` verifies the front matter, the links, the sections, the
@@ -80,8 +111,10 @@ note, so that the hub works without its members. The note
 - `internal-app` points to notes by id, such as `design read forms`.
   `validate-skills` runs each of these commands, so a broken pointer fails
   validation.
-- A later change can make `internal-app` a member of the graph and move
-  other design skills, such as `frontend-design`, into the hub, without a
+- A later change can make `internal-app` a member of the graph without a
   change to the note format or the CLI.
-- `validate-skills` runs the CLI tests, which include about 40 golden search
-  queries, and `design graph --check`.
+- `validate-skills` runs the CLI tests and `design graph --check`. The tests
+  include golden search queries in the words of the notes, paraphrases of
+  these queries in other words, and queries that must give no strong match.
+- The dotfiles copies of the replaced skills are removed after this change
+  merges.

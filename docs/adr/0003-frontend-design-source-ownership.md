@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded by ADR 0006. The `design` skill contains the rules of
+`frontend-design`, and the repository no longer has a `frontend-design`
+skill.
 
 ## Decision
 
