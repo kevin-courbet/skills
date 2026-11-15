@@ -9,7 +9,8 @@
  * Use it for one measure over time on an overview or a detail page. Do not use
  * it inside a `StatTile`: use `Sparkline`. For another chart form, such as bars
  * or several series, build an Aperture widget in the same way. Load the
- * `create-data-visualizations` skill and read `references/charts.md`.
+ * `create-data-visualizations` skill and run
+ * `design read internal-app-charts#build-a-widget`.
  *
  * ## Behavior
  * - Aperture owns the widget layout and the interaction: the toolbar, the

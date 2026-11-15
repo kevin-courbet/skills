@@ -123,7 +123,7 @@ The general rules for pages are notes:
 | `design read internal-app-mutations` | Writing a mutation, an optimistic move, or a delete. |
 | `design read internal-app-error-reporting` | Connecting an error tracker or server observability. |
 | `design read internal-app-rpc` | Connecting a separate backend with Effect 4 RPC, typed errors, SSR, or cancellation. |
-| `references/charts.md` | Adding a chart or widget. Also load the `create-data-visualizations` skill. |
+| `design read internal-app-charts` | Adding a chart or widget. Also load the `create-data-visualizations` skill. |
 | `references/upgrade.md` | Migrating an existing app. |
 | `references/review.md` | Handing off any change. |
 

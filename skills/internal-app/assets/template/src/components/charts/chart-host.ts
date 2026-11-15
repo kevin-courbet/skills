@@ -8,7 +8,7 @@
  *
  * Use it on every Aperture root that a new chart widget renders. Do not use it
  * for a chart that the kit already has: `TrendChart` and `Sparkline` apply it.
- * The wiring of Aperture is in `references/charts.md`.
+ * Run `design read internal-app-charts` for the wiring of Aperture.
  *
  * ## Rules
  * - Apply it to `ChartWidget.Root` and to each chart component, through

@@ -382,7 +382,7 @@ export interface StatTileProps {
   readonly hint?: string;
   /** The change since the previous period, after the value. */
   readonly delta?: StatDelta;
-  /** A compact chart under the value. Build it with Aperture; see references/charts.md. */
+  /** A compact chart under the value, such as a `Sparkline`. */
   readonly chart?: ReactNode;
   /** Source or method of the number, such as "Measured from catalog prices". */
   readonly footnote?: string;

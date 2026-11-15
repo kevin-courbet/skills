@@ -17,6 +17,9 @@
  * - It is a line, not an area, because an area must start at zero, and that
  *   flattens small changes in a large value.
  * - It applies `chartHost` and renders SVG.
+ * - It is a compact Aperture chart. A compact chart shows one series, and it
+ *   rejects axis labels, highlights, references, and the options of a
+ *   standalone table.
  *
  * ## Example
  * ```tsx

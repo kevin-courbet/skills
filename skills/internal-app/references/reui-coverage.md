@@ -73,7 +73,7 @@ These are the shadcn/ui-based component categories in the ReUI registry
 | Calendar | Covered | `calendar.tsx`, `date-picker.tsx` | Calendar grids in the pickers. |
 | Card | Covered | `layout.tsx` | `Card` and `CardSection`. |
 | Carousel | Skipped | — | Internal pages show all items in lists or grids. |
-| Chart | Covered | Aperture (`references/charts.md`) | Charts use Aperture. |
+| Chart | Covered | Aperture (`design read internal-app-charts`) | Charts use Aperture. |
 | Checkbox | Covered | `checkbox.tsx` | Includes indeterminate. |
 | Combobox | Covered | `combo-box.tsx`, `multi-select.tsx` | Single and multiple choices. |
 | Command | Covered | `command-palette.tsx` | App-wide command palette. |

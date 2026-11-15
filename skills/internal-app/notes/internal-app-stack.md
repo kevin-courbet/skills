@@ -3,7 +3,7 @@ id: internal-app-stack
 topic: internal-app
 summary: The fixed packages of an internal app for the runtime, the framework, the styles, the UI, and the tools, the libraries that the stack replaces, and the TypeScript 7 rules.
 keywords: [stack, packages, dependencies, install, which library, tanstack start, tanstack table v9, effect 4, stylex, react-aria-components, aperture, sonner, oxlint, oxfmt, typescript 7, vitest, nitro, bun, replaced libraries, forbidden library, tailwind, shadcn, zod]
-related: [internal-app-project-layout, internal-app-rpc]
+related: [internal-app-project-layout, internal-app-rpc, internal-app-build-wiring, internal-app-charts]
 ---
 
 # Internal App Stack
@@ -35,7 +35,7 @@ Use this stack for each internal web app that clients do not use. Do not use a d
 | Accessible primitives | `react-aria-components` | The base of each interactive control. Aperture uses the same package. |
 | Dates | `@internationalized/date` | Only inside the kit `DatePicker`. App code gives ISO date strings. |
 | Icons | `lucide-react` | The only icon set. |
-| Charts and widgets | `@kevin-courbet/aperture` | Bridged to the app tokens. |
+| Charts and widgets | `@kevin-courbet/aperture` | Bridged to the app tokens. Run `design read internal-app-charts`. |
 | Toasts | `sonner` | `AppShell` mounts it once, with no style of its own and classes from StyleX. |
 | Fonts | `@fontsource-variable/geist`, `@fontsource-variable/geist-mono` | `src/styles/app.css` imports them. |
 
