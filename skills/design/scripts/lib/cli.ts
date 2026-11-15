@@ -18,7 +18,9 @@ export const USAGE = `design <command> [arguments]
 
 Commands:
   search <query> [--limit <n>]   Rank notes for a question. Default limit: 8.
-  read <id>                      Print a note and its links.
+                                 Warns when the best note has under half the words.
+  read <id>                      Print a note, the notes to read first, and the
+                                 ids of the other linked notes.
   read <id>#<section>            Print one section of a note.
   read <id> --outline            Print the summary, the sections, and the links.
   list                           Print every note, grouped by topic.
@@ -64,8 +66,11 @@ function linkTargetSummary(graph: Graph, link: Link): string {
   return graph.notes.get(link.id)?.summary ?? "(missing note)";
 }
 
-function linkLines(graph: Graph, note: Note, s: Style): string[] {
-  const lines: string[] = [];
+function linkName(link: Link): string {
+  return link.kind === "skill" ? `skill:${link.id}` : link.raw;
+}
+
+function outgoingLinks(note: Note): Link[] {
   const seen = new Set<string>();
   const outgoing = note.links.filter((link) => {
     const key = `${link.type} ${link.raw}`;
@@ -74,15 +79,37 @@ function linkLines(graph: Graph, note: Note, s: Style): string[] {
     return true;
   });
   const order = ["requires", "specializes", "related", "mentions"];
-  outgoing.sort((left, right) => order.indexOf(left.type) - order.indexOf(right.type));
-  if (outgoing.length > 0) {
-    lines.push("Links:");
-    const width = Math.max(...outgoing.map((link) => (link.kind === "skill" ? `skill:${link.id}` : link.raw).length));
-    for (const link of outgoing) {
-      const name = link.kind === "skill" ? `skill:${link.id}` : link.raw;
-      lines.push(`  ${link.type.padEnd(11)} ${s.id(name.padEnd(width))}  ${linkTargetSummary(graph, link)}`);
-    }
-  }
+  return outgoing.sort((left, right) => order.indexOf(left.type) - order.indexOf(right.type));
+}
+
+function summaryLines(graph: Graph, links: ReadonlyArray<Link>, s: Style): string[] {
+  const width = Math.max(...links.map((link) => linkName(link).length));
+  return links.map((link) => `  ${link.type.padEnd(11)} ${s.id(linkName(link).padEnd(width))}  ${linkTargetSummary(graph, link)}`);
+}
+
+// The full read prints summaries only for the notes that the reader must read
+// first. The body already names the sections of the other links, so their ids
+// fit on one line.
+function readLinkLines(graph: Graph, note: Note, s: Style): string[] {
+  const outgoing = outgoingLinks(note);
+  const first = outgoing.filter((link) => link.type === "requires" || link.type === "specializes");
+  const targetId = (link: Link) => (link.kind === "skill" ? `skill:${link.id}` : link.id);
+  const firstIds = new Set(first.map(targetId));
+  const others = [...new Set(outgoing.map(targetId))].filter((id) => !firstIds.has(id));
+  const lines: string[] = [];
+  if (first.length > 0) lines.push("Read first:", ...summaryLines(graph, first, s));
+  if (others.length > 0) lines.push(`See also: ${others.map((id) => s.id(id)).join(", ")}`);
+  return [...lines, ...specializationLines(graph, note, s)];
+}
+
+function linkLines(graph: Graph, note: Note, s: Style): string[] {
+  const outgoing = outgoingLinks(note);
+  const lines = outgoing.length > 0 ? ["Links:", ...summaryLines(graph, outgoing, s)] : [];
+  return [...lines, ...specializationLines(graph, note, s)];
+}
+
+function specializationLines(graph: Graph, note: Note, s: Style): string[] {
+  const lines: string[] = [];
   const specializations = backlinks(graph, note.id).filter((entry) => entry.link.type === "specializes");
   if (specializations.length > 0) {
     lines.push("Specialized by:");
@@ -142,7 +169,7 @@ function commandRead(graph: Graph, args: string[], s: Style): string {
   }
 
   const lines = [...header(note, s), "", note.body];
-  const links = linkLines(graph, note, s);
+  const links = readLinkLines(graph, note, s);
   if (links.length > 0) lines.push("", ...links);
   return lines.join("\n");
 }
@@ -168,8 +195,15 @@ function commandSearch(graph: Graph, args: string[], s: Style): { text: string; 
   const result = search(graph, query, limit);
   const lines: string[] = [];
   for (const correction of result.corrections) lines.push(`(searched "${correction.from}" as "${correction.to}")`);
+  if (result.unmatched.length > 0) lines.push(`(no note contains: ${result.unmatched.join(", ")})`);
   if (result.hits.length === 0) {
     return { text: [...lines, `No note matches "${query}". Run "design list" to see every note.`].join("\n"), found: false };
+  }
+  if (!result.strong) {
+    lines.push(
+      `No strong match for "${query}". The best note contains ${result.hits[0]!.matched} of ${result.words} query words. These notes cover only part of the question:`,
+      "",
+    );
   }
   for (const hit of result.hits) {
     lines.push(`${s.id(hit.note.id)}${owner(hit.note)}  ${hit.note.summary}`);
