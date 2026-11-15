@@ -251,6 +251,42 @@ function forbiddenImportPattern(manifest: Manifest): RegExp {
   return new RegExp(`from ["'](?:${names})["']|import\\(["'](?:${names})["']\\)`);
 }
 
+const separatorEscape = /&middot;|&bull;|&#183;|&#8226;|&#x[bB]7;|&#x2022;|\\u00[bB]7|\\u2022|\\x[bB]7/g;
+const dotGlyph = /(?<![·•∙⋅])[·•∙⋅](?![·•∙⋅])/g;
+const joinWithSeparator = /\.join\(\s*(["'`])(?:[^"'`]*[·•∙⋅]|[^"'`]*\s\||\|\s)[^"'`]*\1\s*\)/;
+const doubleQuotedOrTemplate = /"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g;
+const barBetweenWords = /\s\|\s/;
+const barInJsxText = />[^<>{}]*\s\|\s[^<>{}]*<\//;
+
+/**
+ * Finds a middle dot, a bullet, or a vertical bar that separates two facts in
+ * UI text. A dot glyph counts when whitespace or a line end touches it, when
+ * it is the only text of an element, or when it is the argument of `join`.
+ * A dot glyph between quotes with no whitespace, such as a delta glyph, and a
+ * run of dots, such as a masked secret, do not count. A vertical bar counts
+ * only in a double-quoted string, a one-line template literal, or the JSX
+ * text of an element that closes on the same line, because elsewhere it is a
+ * union type or a bitwise operator. `join("|")` without whitespace builds a
+ * pattern, so it does not count.
+ */
+function joinsWithSeparator(rawLine: string): boolean {
+  const trimmed = rawLine.trim();
+  if (/^(?:\/\/|\/\*|\*|\{\/\*)/.test(trimmed)) return false;
+  const line = rawLine.replace(/(?:^|\s)\/\/\s.*$/, "").replace(separatorEscape, "·");
+  if (joinWithSeparator.test(line)) return true;
+  for (const match of line.matchAll(dotGlyph)) {
+    const before = line[match.index - 1];
+    const after = line[match.index + 1];
+    const touchesSpace = (char: string | undefined) => char === undefined || /\s/.test(char);
+    if (touchesSpace(before) || touchesSpace(after) || (before === ">" && after === "<")) return true;
+  }
+  if (barInJsxText.test(line)) return true;
+  for (const match of line.matchAll(doubleQuotedOrTemplate)) {
+    if (barBetweenWords.test(match[0].slice(1, -1))) return true;
+  }
+  return false;
+}
+
 function lineRules(manifest: Manifest): ReadonlyArray<LineRule> {
   const forbiddenImport = forbiddenImportPattern(manifest);
   return [
@@ -382,8 +418,35 @@ function toolbarButtonSizes(lines: ReadonlyArray<string>): ReadonlyArray<number>
   return found;
 }
 
+/**
+ * Finds separator glyphs line by line. Lines inside a multi-line template
+ * literal are skipped: such a literal holds a code sample or a file body, where
+ * a bar is a shell pipe and a dot is data. On the line that opens the literal,
+ * only the text before it is checked.
+ */
+function separatorGlyphs(lines: ReadonlyArray<string>): ReadonlyArray<number> {
+  const found: Array<number> = [];
+  let inTemplate = false;
+  lines.forEach((line, index) => {
+    const ticks = [...line.matchAll(/(?<!\\)`/g)].map((match) => match.index);
+    const startsInside = inTemplate;
+    if (ticks.length % 2 === 1) inTemplate = !inTemplate;
+    if (startsInside) return;
+    const checked = ticks.length % 2 === 1 ? line.slice(0, ticks.at(-1)) : line;
+    if (joinsWithSeparator(checked)) found.push(index);
+  });
+  return found;
+}
+
 function fileRules(): ReadonlyArray<FileRule> {
   return [
+    {
+      id: "separator-glyph",
+      message:
+        "Middle dot, bullet, or vertical bar that joins separate facts. Give each fact its own element, such as a MetaLine item, or write a sentence. See Grouped Values And Metadata in the ui-design method.",
+      applies: isSrcCode,
+      findings: separatorGlyphs,
+    },
     {
       id: "toolbar-control-size",
       message: "Explicit size on a Button inside a Toolbar. Controls take the toolbar size, so the row keeps one height. Set size on the Toolbar.",

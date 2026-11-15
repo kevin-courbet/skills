@@ -384,9 +384,39 @@ file, and line. Fix the source; there are no ignore comments.
 | `stylex-shorthand` | `border:`, `background:`, or `outline:` shorthands. Use longhands. |
 | `palette-import` | `palette.stylex` or `brand.stylex` imported outside `tokens.stylex.ts` and `themes.ts`. |
 | `toolbar-control-size` | An explicit `size` on a `Button` or `LinkButton` inside a `Toolbar`, its `actions` included. Set `size` on the `Toolbar`. |
+| `separator-glyph` | A middle dot (`·`), a bullet (`•`), or a vertical bar that joins separate facts in a string or in JSX text. See What `separator-glyph` Catches below. |
 | `left-edge-nav` | `borderLeft`, `borderInlineStart`, or an inset shadow in shell or navigation files. |
 | `theme-media-query` | `prefers-color-scheme` in a component. Themes are a token concern. |
 | `forbidden-import`, `forbidden-dependency` | Tailwind, `clsx`, Radix, Base UI, zod, visx, heroicons, and the other replaced libraries. |
 
 Structural literals such as `1px` borders, `100%`, `0`, rem widths, and
 `calc()` expressions built from tokens are allowed.
+
+### What `separator-glyph` Catches
+
+The rule reads each line of `src/`, outside comments. HTML entities and
+escapes, such as `&middot;`, `&bull;`, and `\u00b7`, count as the glyph.
+
+It fails on:
+
+- A middle dot or a bullet with whitespace or a line end next to it: `"Production · attempt 1"`, `` `${count} items · ${size}` ``, `{" · "}`, and a dot alone on a JSX line.
+- A middle dot or a bullet that is the only text of an element: `<span>·</span>`.
+- A `join` with a dot, or with a bar next to whitespace: `.join(" · ")`, `.join(" | ")`.
+- A vertical bar between spaces in a double-quoted string, in a one-line template literal, or in JSX text that closes on the same line: `"Docs | Help"`, `<p>Docs | Help</p>`.
+
+It does not fail on:
+
+- A union type or a bitwise operator, such as `"a" | "b"`. A bar counts only inside text.
+- `join("|")` without whitespace, which builds a pattern.
+- A glyph between quotes with no whitespace, such as `"•"` for a flat delta, or a run of glyphs, such as a masked secret `"••••1234"`.
+- The body of a multi-line template literal, such as a code sample or a file body.
+
+It cannot catch:
+
+- A glyph glued to words, such as `"Q3·YTD"`, or a separator that a variable holds.
+- A vertical bar in JSX text that spans several lines.
+- Other separators, such as a slash or a dash between separate facts. Review them with the checklist in `review.md`.
+
+A string that quotes machine output, such as a test summary with a bar, also
+fails. Use the output of a tool that does not use a bar, or put the sample
+in a multi-line template literal.
