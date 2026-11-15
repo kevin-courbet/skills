@@ -6,7 +6,7 @@ import { Badge, type BadgeIntent } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Identifier } from "@/components/ui/identifier";
-import { DescriptionList, Page, PageHeader, Section } from "@/components/ui/layout";
+import { DescriptionList, MetaLine, Page, PageHeader, Section } from "@/components/ui/layout";
 import { deleteItemFn, itemKeys, itemQueryOptions } from "@/features/items/api";
 import type { ItemStatus } from "@/features/items/schemas";
 import { formatCurrency, formatDateTime } from "@/lib/locale";
@@ -67,9 +67,12 @@ function ItemPage() {
           </>
         }
         description={
-          <>
-            Owned by {item.owner} · <Identifier value={item.id} label="item ID" size="sm" muted />
-          </>
+          <MetaLine
+            items={[
+              `Owned by ${item.owner}`,
+              <Identifier key="id" value={item.id} label="item ID" size="sm" muted />,
+            ]}
+          />
         }
         actions={
           <Button onPress={() => setConfirmOpen(true)}>

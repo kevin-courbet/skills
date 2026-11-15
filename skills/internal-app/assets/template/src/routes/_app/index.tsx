@@ -31,7 +31,7 @@ function OverviewPage() {
         <StatTile
           label="Items"
           value={formatInteger(data.total)}
-          footnote="Items service · UTC days"
+          footnote="Counted by the items service in UTC days"
         />
         <StatTile
           label="Active"

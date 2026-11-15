@@ -238,7 +238,7 @@ export interface StatTileProps {
   readonly delta?: StatDelta;
   /** A compact chart under the value. Build it with Aperture; see references/charts.md. */
   readonly chart?: ReactNode;
-  /** Source or method of the number, such as "Measured · catalog prices". */
+  /** Source or method of the number, such as "Measured from catalog prices". */
   readonly footnote?: string;
 }
 
@@ -505,6 +505,34 @@ export function Toolbar({
         {actions ? <div {...stylex.props(styles.toolbarActions)}>{actions}</div> : null}
       </div>
     </ControlSizeProvider>
+  );
+}
+
+export interface MetaLineProps {
+  /**
+   * One element per fact, such as a team and a time zone. Never pass a string
+   * that joins facts with a separator.
+   */
+  readonly items: ReadonlyArray<ReactNode>;
+}
+
+/**
+ * Separate facts on one line. A gap separates the facts, so no separator
+ * character is necessary. The facts take the color and size of the line around
+ * them; give the identifying fact a stronger role, such as a Code or a status
+ * word, when it needs one. The line wraps between facts, never inside one.
+ */
+export function MetaLine({ items }: MetaLineProps) {
+  return (
+    <span {...stylex.props(styles.metaLine)}>
+      {items.map((item, index) =>
+        item === null || item === undefined || item === false ? null : (
+          <span key={index} {...stylex.props(styles.metaLineItem)}>
+            {item}
+          </span>
+        ),
+      )}
+    </span>
   );
 }
 
@@ -837,6 +865,16 @@ const styles = stylex.create({
     gap: space.xs,
     marginInlineStart: "auto",
   },
+  metaLine: {
+    display: "inline-flex",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+    columnGap: space.md,
+    rowGap: "2px",
+    minWidth: 0,
+    maxWidth: "100%",
+  },
+  metaLineItem: { minWidth: 0 },
   code: {
     fontFamily: font.mono,
     fontSize: font.xs,

@@ -1661,8 +1661,10 @@ function AgendaView({
       {days.map((day) => (
         <li key={day.toString()} {...stylex.props(styles.agendaDay)}>
           <p {...stylex.props(styles.agendaDate, isSameDay(day, today) && styles.agendaToday)}>
-            {formatDay(day, { weekday: "short", day: "numeric", month: "short" })}
-            {isSameDay(day, today) ? " · Today" : null}
+            <span>{formatDay(day, { weekday: "short", day: "numeric", month: "short" })}</span>
+            {isSameDay(day, today) ? (
+              <span {...stylex.props(styles.agendaTodayLabel)}>Today</span>
+            ) : null}
           </p>
           <div {...stylex.props(styles.agendaEvents)}>
             {eventsOn(events, day).map((item) => (
@@ -1687,16 +1689,18 @@ function AgendaRow({
     item.event.meta,
     resource,
     item.event.recurrence === undefined ? undefined : recurrenceLabel(item.event.recurrence),
-  ]
-    .filter((part) => part !== undefined)
-    .join(" · ");
+  ].filter((part) => part !== undefined);
   const content: ReactNode = (
     <>
       <span {...stylex.props(styles.agendaTime)}>{timeRange(item)}</span>
       <span aria-hidden {...stylex.props(styles.dot, dotColors[item.event.intent ?? "accent"])} />
       <span {...stylex.props(styles.agendaText)}>
         <span {...stylex.props(styles.agendaTitle)}>{item.event.title}</span>
-        {meta === "" ? null : <span {...stylex.props(styles.agendaMeta)}>{meta}</span>}
+        {meta.map((part) => (
+          <span key={part} {...stylex.props(styles.agendaMeta)}>
+            {part}
+          </span>
+        ))}
       </span>
     </>
   );
@@ -2132,8 +2136,17 @@ const styles = stylex.create({
     borderBottomStyle: "solid",
     borderBottomColor: color.borderSubtle,
   },
-  agendaDate: { margin: 0, paddingBlock: space.xs, fontSize: font.sm, fontWeight: font.semibold },
+  agendaDate: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: space.sm,
+    margin: 0,
+    paddingBlock: space.xs,
+    fontSize: font.sm,
+    fontWeight: font.semibold,
+  },
   agendaToday: { color: color.accentText },
+  agendaTodayLabel: { fontWeight: font.medium },
   agendaEvents: { display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 },
   agendaRow: {
     display: "grid",
@@ -2160,7 +2173,7 @@ const styles = stylex.create({
     display: "flex",
     flexWrap: "wrap",
     alignItems: "baseline",
-    columnGap: space.sm,
+    columnGap: space.md,
     minWidth: 0,
   },
   agendaTitle: { fontWeight: font.medium },

@@ -279,11 +279,6 @@ function StatusStepContent<Id extends string>({
           ) : (
             <span {...stylex.props(field.hiddenLabel)}>{display.label}</span>
           )}
-          {showStatusWord && step.duration !== undefined ? (
-            <span aria-hidden {...stylex.props(styles.metaDot)}>
-              ·
-            </span>
-          ) : null}
           {step.duration === undefined ? null : <span>{step.duration}</span>}
         </span>
       </span>
@@ -300,9 +295,10 @@ export interface SegmentedProgressProps<Id extends string> {
 }
 
 /**
- * Compact read-only progress: one colored segment per step and the current
- * step in words, such as "Build · Running · 14s". Use it in cards and table
- * rows; use Stepper with `mode="status"` where people inspect each step.
+ * Compact read-only progress: one colored segment per step and a caption for
+ * the current step. The caption shows the step name, the status word, and the
+ * duration as separate elements. Use it in cards and table rows; use Stepper
+ * with `mode="status"` where people inspect each step.
  */
 export function SegmentedProgress<Id extends string>({
   label,
@@ -349,9 +345,10 @@ export function SegmentedProgress<Id extends string>({
         {focus === undefined ? null : (
           <span {...stylex.props(styles.caption)}>
             <span {...stylex.props(styles.stepNameCurrent)}>{focus.label}</span>
-            {" · "}
-            {focus.note ?? stepStatusDisplay[focus.status].label}
-            {focus.duration === undefined ? null : ` · ${focus.duration}`}
+            <span {...stylex.props(statusWords[focus.status])}>
+              {focus.note ?? stepStatusDisplay[focus.status].label}
+            </span>
+            {focus.duration === undefined ? null : <span>{focus.duration}</span>}
           </span>
         )}
       </span>
@@ -443,13 +440,12 @@ const styles = stylex.create({
   meta: {
     display: "flex",
     alignItems: "baseline",
-    gap: space.xs,
+    gap: space.sm,
     fontSize: font.sm,
     color: color.textMuted,
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   },
-  metaDot: { color: color.textFaint },
   connector: { backgroundColor: color.border },
   connectorAccent: { backgroundColor: color.accent },
   connectorSuccess: { backgroundColor: color.successBorder },
@@ -477,7 +473,14 @@ const styles = stylex.create({
     columnGap: space.sm,
   },
   stepNameCurrent: { fontWeight: font.medium, color: color.text },
-  caption: { fontVariantNumeric: "tabular-nums", marginInlineStart: "auto" },
+  caption: {
+    display: "inline-flex",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+    columnGap: space.sm,
+    fontVariantNumeric: "tabular-nums",
+    marginInlineStart: "auto",
+  },
 });
 
 const lists = stylex.create({

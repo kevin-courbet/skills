@@ -53,7 +53,7 @@ export interface LogViewerProps {
    * the height of its lines.
    */
   readonly maxVisibleLines?: number;
-  /** Source qualifier after the line count, such as "Runner logs · retained 30 days". */
+  /** Quiet source note after the line count, such as "Retained for 30 days". */
   readonly footnote?: string;
   /** Content at the end of the footer, such as the run and attempt in a Code. */
   readonly footerEnd?: ReactNode;
@@ -266,9 +266,9 @@ export function LogViewer({
         </div>
       )}
       <div aria-live="polite" {...stylex.props(styles.footer, isEmbedded && styles.footerEmbedded)}>
-        <span>
-          {countText}
-          {footnote ? ` · ${footnote}` : null}
+        <span {...stylex.props(styles.footerStart)}>
+          <span {...stylex.props(styles.footerCount)}>{countText}</span>
+          {footnote ? <span>{footnote}</span> : null}
         </span>
         {footerEnd === undefined ? null : (
           <span {...stylex.props(styles.footerEnd)}>{footerEnd}</span>
@@ -451,5 +451,12 @@ const styles = stylex.create({
     borderTopStyle: "solid",
     borderTopColor: color.borderSubtle,
   },
+  footerStart: {
+    display: "inline-flex",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+    columnGap: space.md,
+  },
+  footerCount: { color: color.text },
   footerEnd: { display: "inline-flex", alignItems: "center", gap: space.sm },
 });

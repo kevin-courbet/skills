@@ -43,7 +43,7 @@ import {
 import { EmptyState } from "@/components/ui/feedback";
 import { Gantt, type GanttChange, type GanttTask } from "@/components/ui/gantt";
 import { Kanban, type KanbanColumn } from "@/components/ui/kanban";
-import { Card, Code, Section } from "@/components/ui/layout";
+import { Card, Code, MetaLine, Section } from "@/components/ui/layout";
 import { ResizablePanels } from "@/components/ui/resizable-panels";
 import { Scrollspy } from "@/components/ui/scrollspy";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -338,7 +338,7 @@ function SortableShowcase() {
               <>
                 <span {...stylex.props(styles.cardTitle)}>{step.name}</span>
                 <span {...stylex.props(styles.cardService)}>
-                  {step.channel} · {step.delay}
+                  <MetaLine items={[step.channel, step.delay]} />
                 </span>
               </>
             )}
@@ -464,7 +464,7 @@ const deploySteps: ReadonlyArray<TraceStep> = [
         variant="embedded"
         label="Test output"
         code={
-          "FAIL src/ledger.test.ts > totals > rounds to cents\nExpected 104.25, received 104.2\n\nTests 1 failed | 211 passed"
+          "FAIL src/ledger.test.ts > totals > rounds to cents\nExpected 104.25, received 104.2\n\nTests: 1 failed, 211 passed, 212 total"
         }
         showLineNumbers={false}
         diagnostics={[{ line: 1, level: "error", message: "1 test failed" }]}
@@ -681,11 +681,11 @@ const scheduleEvents: ReadonlyArray<CalendarEvent> = [
   },
   {
     id: "pg-upgrade",
-    title: "Postgres 17 upgrade",
+    title: "Postgres 17 upgrade in EU West",
     start: "2026-10-14T21:00:00Z",
     end: "2026-10-14T23:30:00Z",
     intent: "warning",
-    meta: "Maintenance · EU West",
+    meta: "Maintenance",
   },
   {
     id: "standup",
@@ -1055,7 +1055,7 @@ function ResizableShowcase() {
                         content: (
                           <PanelBody title="Ledger sync">
                             <span {...stylex.props(styles.cardService)}>
-                              Runs every day at 02:00 UTC · EU West
+                              Runs every day at 02:00 UTC in EU West.
                             </span>
                           </PanelBody>
                         ),
@@ -1231,7 +1231,7 @@ jobs:
   <!-- Served while the app is down -->
   <body class="maintenance">
     <h1>Back at 06:00 UTC</h1>
-    <a href="https://status.example.com">Status page</a> &middot; ops
+    <p>Follow the work on the <a href="https://status.example.com">status page</a>.</p>
   </body>
 </html>`,
   },
@@ -1437,7 +1437,9 @@ export function WorkspaceShowcase() {
             </Card>
             <Card
               title="Trace 4bf92f35"
-              description="POST /api/checkout · 6 spans"
+              description={
+                <MetaLine items={[<Code key="route">POST /api/checkout</Code>, "6 spans"]} />
+              }
               actions="842 ms"
             >
               <SpanWaterfall label="Trace 4bf92f35" span={checkoutTrace} />

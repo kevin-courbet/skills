@@ -46,6 +46,7 @@ import {
   Code,
   DescriptionList,
   Kbd,
+  MetaLine,
   Page,
   PageHeader,
   Section,
@@ -214,7 +215,7 @@ const sampleLog: ReadonlyArray<LogLine> = [
     at: "2026-10-12T02:00:49Z",
     level: "info",
     source: "test",
-    text: "Tests 1 failed | 211 passed",
+    text: "Tests: 1 failed, 211 passed, 212 total",
   },
 ];
 
@@ -577,7 +578,7 @@ export function KitShowcase() {
                 series={jobsPerDay}
               />
             }
-            footnote="Measured · last 12 days"
+            footnote="Measured over the last 12 days"
           />
           <StatTile
             label="Failures"
@@ -918,7 +919,7 @@ export function KitShowcase() {
           <Specimen label="Disclosure">
             <div {...stylex.props(styles.stack, styles.wide)}>
               <Disclosure title="Request payload" hint="2 KB">
-                <Code>job_7f3a · dry run off</Code>
+                <MetaLine items={[<Code key="job">job_7f3a</Code>, "Dry run off"]} />
               </Disclosure>
               <Disclosure title="Advanced settings" defaultExpanded>
                 Retries and timeouts use the workspace defaults.

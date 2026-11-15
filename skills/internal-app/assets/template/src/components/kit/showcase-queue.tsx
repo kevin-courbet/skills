@@ -29,6 +29,7 @@ type Stage = "next" | "inProgress" | "waiting" | "done";
 interface WorkOrder {
   readonly id: string;
   readonly title: string;
+  /** The address of the work, from the room to the building, in natural words. */
   readonly place: string;
   readonly tasks: ReadonlyArray<string>;
   /** The words of the person who reported the problem. */
@@ -62,7 +63,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1042",
       title: "Replace the ceiling light",
-      place: "Building B · Room 2.14",
+      place: "Room 2.14, Building B",
       tasks: ["Replace the LED panel", "Test the emergency light"],
       note: "The light flickers all day and gives people headaches.",
       requester: "Front desk",
@@ -74,7 +75,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1047",
       title: "Fix the leaking tap",
-      place: "Building A · Kitchen, floor 3",
+      place: "Kitchen, floor 3, Building A",
       tasks: ["Change the cartridge", "Check the drain under the sink"],
       note: "Water drips onto the floor. We put a towel under it.",
       requester: "Mia Torres",
@@ -86,7 +87,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1051",
       title: "Mount the meeting room screen",
-      place: "Building A · Meeting room Atlas",
+      place: "Meeting room Atlas, Building A",
       tasks: ["Mount the wall bracket", "Run the HDMI cable to the table"],
       requester: "Events team",
       due: day(2),
@@ -97,7 +98,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1039",
       title: "Repair the entrance door closer",
-      place: "Building C · Main entrance",
+      place: "Main entrance, Building C",
       tasks: ["Replace the closer arm", "Adjust the closing speed"],
       requester: "Security",
       due: day(-1),
@@ -109,7 +110,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1053",
       title: "Unblock the shower drain",
-      place: "Building B · Locker room",
+      place: "Locker room, Building B",
       tasks: ["Clear the drain", "Clean the grate"],
       requester: "Noah Becker",
       due: day(1),
@@ -120,7 +121,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1044",
       title: "Service the air handling unit",
-      place: "Building A · Roof",
+      place: "Roof, Building A",
       tasks: ["Change the filters", "Check the belt tension"],
       requester: "Maintenance plan",
       due: day(1),
@@ -131,7 +132,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1049",
       title: "Replace the broken blind",
-      place: "Building C · Office 1.08",
+      place: "Office 1.08, Building C",
       tasks: ["Fit a new blind, 120 cm"],
       requester: "Ines Duarte",
       due: day(3),
@@ -142,7 +143,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
     {
       id: "WO-1050",
       title: "Reset the parking barrier",
-      place: "Car park · Gate 2",
+      place: "Gate 2, car park",
       tasks: ["Reset the controller", "Test the loop sensor"],
       requester: "Security",
       due: day(0),
@@ -156,7 +157,7 @@ function seedWorkOrders(today: string): ReadonlyArray<WorkOrder> {
 const arrivingWorkOrders: ReadonlyArray<Omit<WorkOrder, "due" | "id">> = [
   {
     title: "Replace the toilet seat",
-    place: "Building A · Floor 2, men's room",
+    place: "Men's room, floor 2, Building A",
     tasks: ["Fit a new seat"],
     requester: "Front desk",
     urgent: false,
@@ -165,7 +166,7 @@ const arrivingWorkOrders: ReadonlyArray<Omit<WorkOrder, "due" | "id">> = [
   },
   {
     title: "Fix the stuck window",
-    place: "Building B · Room 3.02",
+    place: "Room 3.02, Building B",
     tasks: ["Free the hinge", "Lubricate the handle"],
     note: "The window does not close and it rains in.",
     requester: "Omar Haddad",

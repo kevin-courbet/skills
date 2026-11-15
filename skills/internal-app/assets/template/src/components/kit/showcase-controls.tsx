@@ -27,7 +27,7 @@ import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { HoverCard, HoverCardLink } from "@/components/ui/hover-card";
 import { IconTile } from "@/components/ui/icon-tile";
 import { Item, ItemList } from "@/components/ui/item";
-import { Card, Kbd, Section } from "@/components/ui/layout";
+import { Card, Kbd, MetaLine, Section } from "@/components/ui/layout";
 import { ContextMenu, Menu, MenuItem, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { NumberField } from "@/components/ui/number-field";
 import { RangeSlider, Slider } from "@/components/ui/slider";
@@ -336,7 +336,9 @@ export function ControlsShowcase() {
                         <Avatar name="Grace Hopper" />
                         <div {...stylex.props(styles.previewText)}>
                           <span {...stylex.props(styles.previewName)}>Grace Hopper</span>
-                          <span {...stylex.props(styles.muted)}>Platform team · Europe/Paris</span>
+                          <span {...stylex.props(styles.muted)}>
+                            <MetaLine items={["Platform team", "Europe/Paris"]} />
+                          </span>
                         </div>
                       </div>
                       <span {...stylex.props(styles.muted)}>

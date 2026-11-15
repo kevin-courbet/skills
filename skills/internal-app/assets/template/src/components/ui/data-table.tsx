@@ -1017,7 +1017,10 @@ function SpacerRow({ height, columns }: { readonly height: number; readonly colu
 export interface TwoLineCellProps {
   /** The main value, such as a run name or an identifier. */
   readonly primary: ReactNode;
-  /** Quiet context under it, such as "Production · attempt 1". */
+  /**
+   * Quiet context under it, such as the environment and the attempt. Put
+   * separate facts in a MetaLine, not in one joined string.
+   */
   readonly secondary?: ReactNode;
 }
 

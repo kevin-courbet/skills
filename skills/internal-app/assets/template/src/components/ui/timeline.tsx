@@ -87,10 +87,9 @@ export function Timeline({ label, events }: TimelineProps) {
                     {event.actor.isSystem === true ? null : (
                       <Avatar name={event.actor.name} src={event.actor.src} size="xs" />
                     )}
-                    <span>{event.actor.name}</span>
+                    <span {...stylex.props(styles.actorName)}>{event.actor.name}</span>
                   </span>
                 ) : null}
-                {event.actor ? <Dot /> : null}
                 <time
                   dateTime={event.time.dateTime}
                   title={event.time.title}
@@ -98,26 +97,13 @@ export function Timeline({ label, events }: TimelineProps) {
                 >
                   {event.time.label}
                 </time>
-                {event.meta ? (
-                  <>
-                    <Dot />
-                    {event.meta}
-                  </>
-                ) : null}
+                {event.meta ?? null}
               </p>
             </div>
           </li>
         );
       })}
     </ol>
-  );
-}
-
-function Dot() {
-  return (
-    <span aria-hidden {...stylex.props(styles.dot)}>
-      ·
-    </span>
   );
 }
 
@@ -164,15 +150,15 @@ const styles = stylex.create({
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
-    columnGap: space.sm,
+    columnGap: space.md,
     rowGap: "2px",
     margin: 0,
     fontSize: font.sm,
     color: color.textMuted,
   },
   actor: { display: "inline-flex", alignItems: "center", gap: space.xs },
+  actorName: { color: color.text, fontWeight: font.medium },
   time: { fontVariantNumeric: "tabular-nums" },
-  dot: { color: color.textFaint },
 });
 
 const markers = stylex.create({

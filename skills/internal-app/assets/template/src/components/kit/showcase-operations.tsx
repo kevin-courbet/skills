@@ -35,6 +35,7 @@ import {
   CardSection,
   Code,
   DescriptionList,
+  MetaLine,
   Section,
   StatStrip,
   Toolbar,
@@ -314,8 +315,10 @@ interface Run {
   readonly id: string;
   readonly name: string;
   readonly environment: string;
+  readonly attempt?: number;
   readonly status: RunStatus;
-  readonly statusDetail: string;
+  /** Separate facts under the status, such as the stage and the duration. */
+  readonly statusDetail: ReadonlyArray<string>;
   readonly branch: string;
   readonly sha: string;
   readonly message: string;
@@ -334,9 +337,10 @@ const runs: ReadonlyArray<Run> = [
   {
     id: "r48231",
     name: "CI run #48231",
-    environment: "Production · attempt 1",
+    environment: "Production",
+    attempt: 1,
     status: "building",
-    statusDetail: "Build · 1m 12s",
+    statusDetail: ["Build", "1m 12s"],
     branch: "main",
     sha: "92127a4",
     message: "Add retry budget to sync worker",
@@ -346,9 +350,10 @@ const runs: ReadonlyArray<Run> = [
   {
     id: "r48212",
     name: "CI run #48212",
-    environment: "Production · attempt 1",
+    environment: "Production",
+    attempt: 1,
     status: "failed",
-    statusDetail: "in Test · 1m 27s",
+    statusDetail: ["In Test", "1m 27s"],
     branch: "main",
     sha: "904974a",
     message: "Bump drizzle-orm to 0.44 and regenerate migrations",
@@ -360,7 +365,7 @@ const runs: ReadonlyArray<Run> = [
     name: "dpl_RJ21Qst6J",
     environment: "Production",
     status: "ready",
-    statusDetail: "1m 53s",
+    statusDetail: ["1m 53s"],
     branch: "main",
     sha: "7bf9f3e",
     message: "Move uploads to sovereign object storage",
@@ -370,9 +375,10 @@ const runs: ReadonlyArray<Run> = [
   {
     id: "r48097",
     name: "CI run #48097",
-    environment: "Preview · attempt 2",
+    environment: "Preview",
+    attempt: 2,
     status: "queued",
-    statusDetail: "Waiting for a runner",
+    statusDetail: ["Waiting for a runner"],
     branch: "feat-maps",
     sha: "6b9aa67",
     message: "Upgrade to React 19.3",
@@ -416,7 +422,16 @@ export function OperationsShowcase() {
       cell: (info) => (
         <TwoLineCell
           primary={<span {...stylex.props(styles.mono)}>{info.row.original.name}</span>}
-          secondary={info.row.original.environment}
+          secondary={
+            <MetaLine
+              items={[
+                info.row.original.environment,
+                info.row.original.attempt === undefined
+                  ? undefined
+                  : `Attempt ${info.row.original.attempt}`,
+              ]}
+            />
+          }
         />
       ),
     },
@@ -430,7 +445,11 @@ export function OperationsShowcase() {
           <StatusDot
             intent={display.intent}
             isActive={info.row.original.status === "building"}
-            detail={density === "default" ? info.row.original.statusDetail : undefined}
+            detail={
+              density === "default" ? (
+                <MetaLine items={info.row.original.statusDetail} />
+              ) : undefined
+            }
           >
             {display.label}
           </StatusDot>
@@ -540,10 +559,10 @@ export function OperationsShowcase() {
           <Specimen label="Status label">
             <div {...stylex.props(styles.stack)}>
               <StatusDot intent="success">Ready</StatusDot>
-              <StatusDot intent="info" isActive detail="Build · 1m 12s">
+              <StatusDot intent="info" isActive detail={<MetaLine items={["Build", "1m 12s"]} />}>
                 Building
               </StatusDot>
-              <StatusDot intent="danger" detail="in Test · 1m 27s">
+              <StatusDot intent="danger" detail={<MetaLine items={["In Test", "1m 27s"]} />}>
                 Failed
               </StatusDot>
             </div>
@@ -734,7 +753,7 @@ export function OperationsShowcase() {
                   description="Output appears when the stage runs."
                 />
               }
-              footerEnd={<Code>run #48224 · attempt 1</Code>}
+              footerEnd={<MetaLine items={[<Code key="run">run #48224</Code>, "Attempt 1"]} />}
             />
           </CardSection>
         </Card>

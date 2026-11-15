@@ -57,7 +57,10 @@ export interface StatusDotProps {
   readonly intent?: BadgeIntent;
   /** The status word, such as "Building". Never leave it out: the dot alone is color only. */
   readonly children: ReactNode;
-  /** Secondary line under the status, such as "Build · 1m 12s". */
+  /**
+   * Secondary line under the status, such as the stage and its duration. Put
+   * separate facts in a MetaLine, not in one joined string.
+   */
   readonly detail?: ReactNode;
   /** Pulses the dot for work in progress. The motion stops under reduced motion. */
   readonly isActive?: boolean;
