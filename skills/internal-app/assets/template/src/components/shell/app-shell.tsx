@@ -11,6 +11,7 @@ import {
 import { type ReactNode, useMemo, useState } from "react";
 import { Button as AriaButton, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Button } from "@/components/ui/button";
+import { type Density, DensityProvider, ShellDensityProvider } from "@/components/ui/density";
 import {
   type CommandGroup,
   CommandPalette,
@@ -30,9 +31,12 @@ import {
   shadow,
   size,
   space,
+  touchFont,
+  touchSize,
 } from "@/styles/tokens.stylex";
 import { NavLink } from "./nav-link";
 import { RouteBreadcrumbs } from "./route-breadcrumbs";
+import { shellMarker } from "./shell.stylex";
 import { ThemeSwitch } from "./theme-switch";
 
 export interface NavItem {
@@ -152,7 +156,12 @@ function Brand({
 /**
  * Sidebar on the lighter frame color and the page in a recessed panel next to it. The
  * panel holds the top bar with breadcrumbs and scrolls on its own. Below the
- * md breakpoint the sidebar moves into a sheet opened from the top bar.
+ * lg breakpoint the sidebar moves into a sheet opened from the top bar, so a
+ * tablet in portrait gives its full width to the page.
+ *
+ * A page with `density="touch"` is work at a bench or on a shared tablet,
+ * where people stay on one page. The shell then keeps the sidebar in the sheet
+ * at every width, and its top bar, sheet, and menus take the touch density.
  */
 export function AppShell({
   appName,
@@ -167,6 +176,9 @@ export function AppShell({
   const [isNavOpen, setNavOpen] = useState(false);
   const [isSidebarHidden, setSidebarHidden] = useState(false);
   const [isPaletteOpen, setPaletteOpen] = useState(false);
+  // The top bar follows the page through CSS, which also works in the server render.
+  // The sheet and the menus render in portals, which only this state reaches.
+  const [pageDensity, setPageDensity] = useState<Density>("default");
   const navigate = useNavigate();
   const shortcut = useCommandPaletteShortcut();
   const paletteControls = useMemo(() => ({ open: () => setPaletteOpen(true) }), []);
@@ -190,7 +202,7 @@ export function AppShell({
       </div>
     );
   return (
-    <div {...stylex.props(styles.root, isSidebarHidden && styles.rootSidebarHidden)}>
+    <div {...stylex.props(shellMarker, styles.root, isSidebarHidden && styles.rootSidebarHidden)}>
       <aside {...stylex.props(styles.sidebar, isSidebarHidden && styles.sidebarHidden)}>
         <div {...stylex.props(styles.sidebarHeader)}>
           <Brand appName={appName} environment={environment} logo={logo} />
@@ -209,79 +221,110 @@ export function AppShell({
       </aside>
       <div {...stylex.props(styles.column, isSidebarHidden && styles.columnSidebarHidden)}>
         <div {...stylex.props(styles.panel)}>
-          <header {...stylex.props(styles.topbar)}>
-            <div {...stylex.props(styles.topbarStart)}>
-              <Button
-                intent="ghost"
-                size="sm"
-                iconOnly
-                aria-label="Open navigation"
-                onPress={() => setNavOpen(true)}
-                style={styles.mobileOnly}
-              >
-                <Menu aria-hidden {...stylex.props(styles.icon)} />
-              </Button>
-              {isSidebarHidden ? (
+          <DensityProvider density={pageDensity}>
+            <header {...stylex.props(styles.topbar)}>
+              <div {...stylex.props(styles.topbarStart)}>
                 <Button
                   intent="ghost"
                   size="sm"
                   iconOnly
-                  aria-label="Show sidebar"
-                  onPress={() => setSidebarHidden(false)}
-                  style={styles.desktopOnly}
+                  aria-label="Open navigation"
+                  onPress={() => setNavOpen(true)}
+                  style={styles.navButton}
                 >
-                  <PanelLeftOpen aria-hidden {...stylex.props(styles.icon)} />
+                  <Menu aria-hidden {...stylex.props(styles.icon)} />
                 </Button>
-              ) : null}
-              <RouteBreadcrumbs />
-            </div>
-            <div {...stylex.props(styles.topbarActions)}>
-              {/* Drawn as a field, not a ghost button, so the palette reads as search at a glance. */}
-              <AriaButton
-                aria-label="Search pages and actions"
-                aria-keyshortcuts="Meta+K Control+K"
-                onPress={() => setPaletteOpen(true)}
-                {...stylex.props(styles.searchField)}
-              >
-                <Search aria-hidden {...stylex.props(styles.icon)} />
-                <span {...stylex.props(styles.searchPlaceholder)}>Search…</span>
-                <span {...stylex.props(styles.searchKeys)}>
-                  {shortcut.split(" ").map((key) => (
-                    <Kbd key={key}>{key}</Kbd>
-                  ))}
-                </span>
-              </AriaButton>
-              {actions}
-              <ThemeSwitch />
-            </div>
-          </header>
+                {isSidebarHidden ? (
+                  <Button
+                    intent="ghost"
+                    size="sm"
+                    iconOnly
+                    aria-label="Show sidebar"
+                    onPress={() => setSidebarHidden(false)}
+                    style={styles.showSidebarButton}
+                  >
+                    <PanelLeftOpen aria-hidden {...stylex.props(styles.icon)} />
+                  </Button>
+                ) : null}
+                <RouteBreadcrumbs />
+              </div>
+              <div {...stylex.props(styles.topbarActions)}>
+                {/* Drawn as a field, not a ghost button, so the palette reads as search at a glance. */}
+                <AriaButton
+                  aria-label="Search pages and actions"
+                  aria-keyshortcuts="Meta+K Control+K"
+                  onPress={() => setPaletteOpen(true)}
+                  {...stylex.props(styles.searchField)}
+                >
+                  <Search aria-hidden {...stylex.props(styles.icon)} />
+                  <span {...stylex.props(styles.searchPlaceholder)}>Search…</span>
+                  <span {...stylex.props(styles.searchKeys)}>
+                    {shortcut.split(" ").map((key) => (
+                      <Kbd key={key}>{key}</Kbd>
+                    ))}
+                  </span>
+                </AriaButton>
+                {actions}
+                <ThemeSwitch />
+              </div>
+            </header>
+          </DensityProvider>
           <main
             id={mainContentId}
             data-scroll-restoration-id={mainContentId}
             {...stylex.props(styles.main)}
           >
-            <CommandPaletteProvider value={paletteControls}>{children}</CommandPaletteProvider>
+            <ShellDensityProvider onPageDensity={setPageDensity}>
+              <CommandPaletteProvider value={paletteControls}>{children}</CommandPaletteProvider>
+            </ShellDensityProvider>
           </main>
         </div>
       </div>
-      <Sheet isOpen={isNavOpen} onOpenChange={setNavOpen} side="left" size="sm" title={appName}>
-        <div {...stylex.props(styles.sheetNav)}>
-          <Navigation nav={nav} onNavigate={() => setNavOpen(false)} />
-          {footer}
-        </div>
-      </Sheet>
+      <DensityProvider density={pageDensity}>
+        <Sheet isOpen={isNavOpen} onOpenChange={setNavOpen} side="left" size="sm" title={appName}>
+          <div {...stylex.props(styles.sheetNav)}>
+            <Navigation nav={nav} onNavigate={() => setNavOpen(false)} />
+            {footer}
+          </div>
+        </Sheet>
+      </DensityProvider>
       <CommandPalette groups={paletteGroups} isOpen={isPaletteOpen} onOpenChange={setPaletteOpen} />
       <Toaster />
     </div>
   );
 }
 
+// Page in layout.tsx sets this attribute on the page of the shell. StyleX compiles
+// `stylex.when.ancestor` only inside `stylex.create`, so each style calls it there.
+const touchPageInShell = ':has([data-page-density="touch"])';
+
 const styles = stylex.create({
   root: {
+    // The top bar takes the control sizes and the type scale of a touch page. The page
+    // sets the same values itself.
+    [size.controlSm]: { default: null, [touchPageInShell]: touchSize.controlSm },
+    [size.controlMd]: { default: null, [touchPageInShell]: touchSize.controlMd },
+    [size.controlLg]: { default: null, [touchPageInShell]: touchSize.controlLg },
+    [size.iconSm]: { default: null, [touchPageInShell]: touchSize.iconSm },
+    [size.icon]: { default: null, [touchPageInShell]: touchSize.icon },
+    [size.iconLg]: { default: null, [touchPageInShell]: touchSize.iconLg },
+    [size.topbar]: { default: null, [touchPageInShell]: touchSize.topbar },
+    [font.xs]: { default: null, [touchPageInShell]: touchFont.xs },
+    [font.sm]: { default: null, [touchPageInShell]: touchFont.sm },
+    [font.md]: { default: null, [touchPageInShell]: touchFont.md },
+    [font.lg]: { default: null, [touchPageInShell]: touchFont.lg },
+    [font.xl]: { default: null, [touchPageInShell]: touchFont.xl },
+    [font.xxl]: { default: null, [touchPageInShell]: touchFont.xxl },
+    [font.xxxl]: { default: null, [touchPageInShell]: touchFont.xxxl },
+    [font.display]: { default: null, [touchPageInShell]: touchFont.display },
+    [font.displayLg]: { default: null, [touchPageInShell]: touchFont.displayLg },
     display: "grid",
     gridTemplateColumns: {
       default: "minmax(0, 1fr)",
-      [media.md]: `${size.sidebar} minmax(0, 1fr)`,
+      [media.lg]: {
+        default: `${size.sidebar} minmax(0, 1fr)`,
+        [touchPageInShell]: "minmax(0, 1fr)",
+      },
     },
     // One full-height row; the panel scrolls inside it, never the document.
     gridTemplateRows: "minmax(0, 1fr)",
@@ -290,7 +333,13 @@ const styles = stylex.create({
   },
   rootSidebarHidden: { gridTemplateColumns: "minmax(0, 1fr)" },
   sidebar: {
-    display: { default: "none", [media.md]: "flex" },
+    display: {
+      default: "none",
+      [media.lg]: {
+        default: "flex",
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: "none",
+      },
+    },
     flexDirection: "column",
     gap: space.lg,
     minHeight: 0,
@@ -399,6 +448,14 @@ const styles = stylex.create({
     paddingTop: { default: 0, [media.md]: size.frameGap },
     paddingBottom: { default: 0, [media.md]: size.frameGap },
     paddingInlineEnd: { default: 0, [media.md]: size.frameGap },
+    paddingInlineStart: {
+      default: 0,
+      [media.md]: size.frameGap,
+      [media.lg]: {
+        default: 0,
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: size.frameGap,
+      },
+    },
   },
   columnSidebarHidden: { paddingInlineStart: { default: 0, [media.md]: size.frameGap } },
   panel: {
@@ -429,8 +486,24 @@ const styles = stylex.create({
     borderBottomColor: color.borderSubtle,
   },
   topbarStart: { display: "flex", alignItems: "center", gap: space.xs, minWidth: 0, flex: "1" },
-  mobileOnly: { display: { default: "inline-flex", [media.md]: "none" } },
-  desktopOnly: { display: { default: "none", [media.md]: "inline-flex" } },
+  navButton: {
+    display: {
+      default: "inline-flex",
+      [media.lg]: {
+        default: "none",
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: "inline-flex",
+      },
+    },
+  },
+  showSidebarButton: {
+    display: {
+      default: "none",
+      [media.lg]: {
+        default: "inline-flex",
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: "none",
+      },
+    },
+  },
   icon: { width: size.icon, height: size.icon },
   topbarActions: { display: "flex", alignItems: "center", gap: space.sm },
   searchField: {

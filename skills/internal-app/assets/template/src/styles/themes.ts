@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { darkBrand, lightBrand } from "./brand.stylex";
 import { darkPalette, lightPalette } from "./palette.stylex";
-import { color, font, shadow, size } from "./tokens.stylex";
+import { color, font, shadow, size, touchFont, touchSize } from "./tokens.stylex";
 
 /**
  * Explicit themes for a light or dark choice, saved by the person or set as the app's
@@ -110,36 +110,37 @@ const darkShadow = stylex.createTheme(shadow, {
 
 export const darkTheme = [darkColor, darkShadow] as const;
 
-const touchSize = stylex.createTheme(size, {
-  controlSm: "2.75rem",
-  controlMd: "3rem",
-  controlLg: "3.5rem",
-  iconSm: "1.125rem",
-  icon: "1.25rem",
-  iconLg: "1.5rem",
-  toggle: "1.5rem",
-  toggleMark: "1.125rem",
-  switchWidth: "2.75rem",
-  switchHeight: "1.625rem",
-  sliderThumb: "1.75rem",
-  sliderTrack: "2.75rem",
-  togglePadding: "0.625rem",
-  fieldXs: "8rem",
-  fieldSm: "14rem",
-  fieldMd: "22rem",
-  fieldLg: "34rem",
+const touchSizeTheme = stylex.createTheme(size, {
+  controlSm: touchSize.controlSm,
+  controlMd: touchSize.controlMd,
+  controlLg: touchSize.controlLg,
+  iconSm: touchSize.iconSm,
+  icon: touchSize.icon,
+  iconLg: touchSize.iconLg,
+  toggle: touchSize.toggle,
+  toggleMark: touchSize.toggleMark,
+  switchWidth: touchSize.switchWidth,
+  switchHeight: touchSize.switchHeight,
+  sliderThumb: touchSize.sliderThumb,
+  sliderTrack: touchSize.sliderTrack,
+  togglePadding: touchSize.togglePadding,
+  topbar: touchSize.topbar,
+  fieldXs: touchSize.fieldXs,
+  fieldSm: touchSize.fieldSm,
+  fieldMd: touchSize.fieldMd,
+  fieldLg: touchSize.fieldLg,
 });
 
-const touchFont = stylex.createTheme(font, {
-  xs: "0.8125rem",
-  sm: "0.9375rem",
-  md: "1.0625rem",
-  lg: "1.1875rem",
-  xl: "1.375rem",
-  xxl: "1.625rem",
-  xxxl: "1.875rem",
-  display: "2.5rem",
-  displayLg: "3rem",
+const touchFontTheme = stylex.createTheme(font, {
+  xs: touchFont.xs,
+  sm: touchFont.sm,
+  md: touchFont.md,
+  lg: touchFont.lg,
+  xl: touchFont.xl,
+  xxl: touchFont.xxl,
+  xxxl: touchFont.xxxl,
+  display: touchFont.display,
+  displayLg: touchFont.displayLg,
 });
 
 /**
@@ -149,4 +150,4 @@ const touchFont = stylex.createTheme(font, {
  * `Page density="touch"` applies it to the page region, and `useOverlayDensity`
  * applies it to the overlays that the page opens.
  */
-export const touchDensity = [touchSize, touchFont] as const;
+export const touchDensity = [touchSizeTheme, touchFontTheme] as const;

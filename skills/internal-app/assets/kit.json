@@ -79,6 +79,7 @@
     "src/components/shell/nav-link.tsx",
     "src/components/shell/route-breadcrumbs.tsx",
     "src/components/shell/route-error.tsx",
+    "src/components/shell/shell.stylex.ts",
     "src/components/shell/theme-switch.tsx",
     "src/components/charts/chart-host.ts",
     "src/components/charts/sparkline.tsx",

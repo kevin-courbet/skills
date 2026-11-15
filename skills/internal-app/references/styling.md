@@ -118,7 +118,7 @@ Density defaults:
 | Spacing between fields | `space.lg` (16px); between sections `space.xxl` (24px) |
 | Field width | `size.fieldXs`, `fieldSm`, `fieldMd`, `fieldLg` (6, 11, 17, 26rem). Set them through the field `width` prop, not in a style. |
 | Radius | `radius.md` (6px) controls, `radius.lg` (8px) sidebar items, popovers, and the table frame, `radius.xl` (12px) the content panel, cards, stat tiles, settings cards, dialogs, and the peek sheet |
-| Sidebar | `size.sidebar` (240px), items `size.controlSm` (28px) |
+| Sidebar | `size.sidebar` (240px) from the `lg` breakpoint, items `size.controlSm` (28px) |
 | Content panel | `size.frameGap` (8px) from the window edges and the sidebar |
 | Identifiers | `Code`: `font.mono` at `font.xs` (11px), medium weight, `textMuted` |
 
@@ -128,9 +128,11 @@ and never in an app's copy of a kit file.
 ### Touch density
 
 Some pages run on a shared tablet or kiosk, where people tap the screen and
-read it from arm's length. `src/styles/themes.ts` exports `touchDensity`, a
-pair of `createTheme` overrides on `size` and `font`. `Page density="touch"`
-applies it to the full page region:
+read it from arm's length. `src/styles/tokens.stylex.ts` keeps the touch
+values in the constants `touchSize` and `touchFont`. `src/styles/themes.ts`
+exports `touchDensity`, a pair of `createTheme` overrides that put these values
+on `size` and `font`. `Page density="touch"` applies it to the full page
+region:
 
 | Token | Default | Touch |
 |---|---|---|
@@ -141,6 +143,7 @@ applies it to the full page region:
 | `switchWidth`, `switchHeight` | 28 by 16px | 44 by 26px |
 | `sliderThumb`, `sliderTrack` (track height that takes the pointer) | 16, 20px | 28, 44px |
 | `togglePadding` (above and below a checkbox, radio, or switch row) | 0px | 10px |
+| `topbar` (height of the app shell top bar) | 48px | 64px |
 | `font.md` (body) | 13px | 17px |
 | `font.sm` (labels) | 12px | 15px |
 | `font.xxl` (page title) | 20px | 26px |
@@ -161,6 +164,28 @@ page that opens it. A new overlay component must do the same: put
 `...useOverlayDensity()` first in the styles of its portal root. Toasts and the
 command palette render in the app shell, outside every page, and keep the
 default density.
+
+`AppShell` follows a touch page:
+
+- The sidebar stays in the navigation sheet at every width. The menu button in
+  the top bar opens the sheet.
+- The top bar takes the touch control sizes and type scale. Its buttons are
+  44px high.
+- The navigation sheet and the menus of the top bar open with touch density.
+
+A touch page is the work of one person at a bench or on a shared tablet.
+People stay on that page and seldom go to a different page. Thus the width is
+for the work, not for the navigation. Also, the sidebar items are 28px high,
+which is less than the 44px tap target.
+
+`Page` puts the attribute `data-page-density` on its root element. `AppShell`
+reads this attribute with the CSS `:has()` selector, so the server HTML already
+shows the correct shell and the layout does not move after hydration. Only the
+outermost `Page` in the shell sets the attribute. A touch specimen in a default
+page does not change the shell. The sheet and the menus render in portals, which
+the selector cannot reach. Thus `Page` also sends its density to `AppShell`
+through `ShellDensityProvider`. The sheet and the menus open only after
+hydration, so they always have this density.
 
 On a touch page, prefer visible choices to a list in a popover: show a short
 list in a `SegmentedControl` or a `RadioGroup`, not in a `Select`. A

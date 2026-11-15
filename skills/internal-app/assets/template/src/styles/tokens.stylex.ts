@@ -138,6 +138,45 @@ export const size = stylex.defineVars({
   fieldLg: "26rem",
 });
 
+/**
+ * The values of touch density, for a page that people tap and read from arm's
+ * length. `touchDensity` in themes.ts applies them to a touch page, and the app
+ * shell gives them to its top bar while a touch page is open. Only these two
+ * read the values. Other components read `size` and `font`.
+ */
+export const touchSize = stylex.defineConsts({
+  controlSm: "2.75rem",
+  controlMd: "3rem",
+  controlLg: "3.5rem",
+  iconSm: "1.125rem",
+  icon: "1.25rem",
+  iconLg: "1.5rem",
+  toggle: "1.5rem",
+  toggleMark: "1.125rem",
+  switchWidth: "2.75rem",
+  switchHeight: "1.625rem",
+  sliderThumb: "1.75rem",
+  sliderTrack: "2.75rem",
+  togglePadding: "0.625rem",
+  topbar: "4rem",
+  fieldXs: "8rem",
+  fieldSm: "14rem",
+  fieldMd: "22rem",
+  fieldLg: "34rem",
+});
+
+export const touchFont = stylex.defineConsts({
+  xs: "0.8125rem",
+  sm: "0.9375rem",
+  md: "1.0625rem",
+  lg: "1.1875rem",
+  xl: "1.375rem",
+  xxl: "1.625rem",
+  xxxl: "1.875rem",
+  display: "2.5rem",
+  displayLg: "3rem",
+});
+
 /** Build-time constants. Use as media-query keys, z-index values, and motion values. */
 export const media = stylex.defineConsts({
   sm: "@media (min-width: 640px)",

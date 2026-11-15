@@ -5,7 +5,12 @@ import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 import { touchDensity } from "@/styles/themes";
 import { type ControlSize, ControlSizeProvider, useControlSize } from "./control-size";
-import { type Density, DensityProvider } from "./density";
+import {
+  type Density,
+  DensityProvider,
+  ShellDensityProvider,
+  useShellPageDensity,
+} from "./density";
 import { color, container, font, media, radius, size, space } from "@/styles/tokens.stylex";
 
 export interface PageHeaderProps {
@@ -45,23 +50,30 @@ export function Page({
   /**
    * "touch" makes controls and text larger for a shared tablet or kiosk. Use it
    * for a whole page, never for one control. Dialogs, sheets, popovers, menus,
-   * and tooltips that the page opens follow it. Toasts render in the app shell
-   * and keep the default density.
+   * and tooltips that the page opens follow it. The app shell then moves its
+   * sidebar into the navigation sheet at every width, and its top bar, that
+   * sheet, and the top bar menus take the same density. Toasts and the
+   * command palette keep the default density.
    */
   readonly density?: Density;
 }) {
+  const isShellPage = useShellPageDensity(density);
   return (
     <DensityProvider density={density}>
-      <div
-        {...stylex.props(
-          density === "touch" && touchDensity,
-          styles.page,
-          width === "reading" && styles.pageReading,
-          density === "touch" && styles.pageTouch,
-        )}
-      >
-        {children}
-      </div>
+      <ShellDensityProvider onPageDensity={null}>
+        {/* AppShell reads this attribute with :has(), so the server renders the shell for the page. */}
+        <div
+          data-page-density={isShellPage ? density : undefined}
+          {...stylex.props(
+            density === "touch" && touchDensity,
+            styles.page,
+            width === "reading" && styles.pageReading,
+            density === "touch" && styles.pageTouch,
+          )}
+        >
+          {children}
+        </div>
+      </ShellDensityProvider>
     </DensityProvider>
   );
 }
