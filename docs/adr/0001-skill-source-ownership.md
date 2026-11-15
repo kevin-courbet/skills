@@ -9,7 +9,7 @@ Accepted
 The public `kevin-courbet/skills` repository is the distribution catalog for
 standalone agent skills.
 
-`ui-design` is developed and distributed from this repository.
+`design` is developed and distributed from this repository.
 
 `create-data-visualizations` remains under development in the Aperture
 repository. A catalog-owned workflow polls Aperture `main`, selects the latest

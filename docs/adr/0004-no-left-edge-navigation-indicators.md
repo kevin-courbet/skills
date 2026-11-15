@@ -6,7 +6,7 @@ Accepted
 
 ## Decision
 
-The `ui-design` skill must never use a left-edge border to highlight the current navigation item.
+The `design` skill must never use a left-edge border to highlight the current navigation item.
 This rule also prohibits equivalent rails, stripes, pseudo-elements, and inset shadows.
 
 ## Consequences

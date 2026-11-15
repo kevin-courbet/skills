@@ -16,32 +16,25 @@ Install it for later sessions:
 npx skills add kevin-courbet/skills --skill frontend-design -y
 ```
 
-## UI Design
+## Design
 
-Load the skill for one session:
+Load the design system hub for one session:
 
 ```sh
-npx skills use kevin-courbet/skills@ui-design
+npx skills use kevin-courbet/skills@design
 ```
 
 Install it for later sessions:
 
 ```sh
-npx skills add kevin-courbet/skills --skill ui-design -y
+npx skills add kevin-courbet/skills --skill design -y
 ```
 
-## Form Design
-
-Load the focused form-design entry for one session:
+The skill has a CLI that searches and reads its design notes:
 
 ```sh
-npx skills use kevin-courbet/skills@form-design
-```
-
-Install it for later sessions:
-
-```sh
-npx skills add kevin-courbet/skills --skill form-design -y
+bun skills/design/scripts/design search "error summary"
+bun skills/design/scripts/design read forms
 ```
 
 ## Internal App
@@ -73,7 +66,7 @@ Install it for later sessions:
 npx skills add kevin-courbet/skills --skill create-data-visualizations -y
 ```
 
-`frontend-design`, `ui-design`, `form-design`, and `internal-app` are developed in this repository.
+`frontend-design`, `design`, and `internal-app` are developed in this repository.
 `create-data-visualizations` is developed in
 [Aperture](https://github.com/kevin-courbet/aperture) and is published here by
 automation. Do not edit its generated distribution copy.

@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by ADR 0006. The `design` skill replaces `form-design` and
+`ui-design`.
 
 ## Decision
 

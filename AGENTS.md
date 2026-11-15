@@ -4,9 +4,10 @@ Use ASD-STE100 Simplified Technical English for user-facing text and docs.
 
 - Keep each skill self-contained under `skills/<name>/`.
 - Resolve support files with paths relative to the skill directory.
-- Develop `ui-design`, the `form-design` entry skill, and `internal-app` in this repository.
+- Develop `frontend-design`, `design`, and `internal-app` in this repository.
 - `skills/internal-app/assets/template` is the verified starter and the source of every kit file listed in `skills/internal-app/assets/kit.json`. Change it in a scaffolded working copy (`bun skills/internal-app/scripts/internal-app new <dir>`), verify there, then copy the changes back. Keep `kit.json` in sync with the template; `validate-skills` installs, builds, typechecks, lints, and checks a fresh scaffold.
-- Keep copied references and themes canonical under `ui-design`. Run `scripts/sync-form-design` after changes to those files.
-- Do not edit generated files under `skills/form-design/references/` or `skills/form-design/assets/themes/`.
+- The notes in `skills/design/notes/` are the only source of design rules. Do not copy a rule into another skill. Link to its note with `design read <id>` or `[[id]]`. The `note-format` note gives the format.
+- Do not generate or sync copies of design notes or design assets. Other skills point to a note by id. A skill that narrows the design rules joins the graph with `design-graph.json`, as the `graph-membership` note describes.
+- After a change to the design notes, run `bun skills/design/scripts/design graph --check` and `bun test skills/design/tests`.
 - Do not edit `skills/create-data-visualizations/` here. The catalog workflow publishes it from Aperture.
 - Run `bash scripts/validate-skills` before completion.

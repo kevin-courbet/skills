@@ -34,7 +34,7 @@ A bun CLI, `scripts/internal-app`, provides four commands:
 ## Consequences
 
 Agents building or upgrading internal tools load `internal-app` first.
-`ui-design` and `form-design` keep the design method.
+The `design` skill keeps the design method.
 `create-data-visualizations` keeps chart selection and data semantics.
 
 Apps do not edit kit files. Kit changes land in this repository and reach
