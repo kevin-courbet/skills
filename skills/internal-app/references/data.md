@@ -205,8 +205,8 @@ const remove = useMutation({
 
 ## Forms
 
-TanStack Form with Effect Schema through Standard Schema. Load the
-`form-design` skill for the design of the form, and read Forms in
+TanStack Form with Effect Schema through Standard Schema. Run
+`design read forms` for the design of the form, and read Forms in
 `components.md` for the kit component of each answer.
 
 ```ts

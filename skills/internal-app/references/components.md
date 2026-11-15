@@ -350,7 +350,7 @@ structure.
 
 ## Forms
 
-Load the `form-design` skill before you design or change a form. The rules
+Run `design read forms` before you design or change a form. The rules
 below tell you which kit component does each job. `FormShowcase` in
 `src/components/kit/showcase-form.tsx` uses all of them.
 
@@ -425,8 +425,8 @@ two clicks, so use one only when the list is long or the row has no space.
 
 ### Preview Of The End Result
 
-Read "Preview Of The End Result" and "Signature Elements" in
-`references/method.md` of the `form-design` skill before you build a preview.
+Run `design read form-preview` and `design read signature-elements` before
+you build a preview.
 The kit rules:
 
 - Build the thing as an app-owned component, such as `VisitorBadge` in `showcase-form.tsx`, and put it in `FormPreview`. Make it look like the real thing: its proportions, its surface, its type hierarchy, and the position of each value.
@@ -520,7 +520,7 @@ navigate({ search: (prev) => ({ ...prev, ...serializeFilters(itemFilterFields, n
 - Descriptions state the consequence: "Items appear in the list as soon as they are saved."
 - Errors state the problem and the next action: "The bank rejected the file. Check the account number and run it again."
 - Omit success toasts when the UI already shows the result.
-- Do not join separate facts into one string with a middle dot, a bullet, or a vertical bar. Give each fact its own element and type role. Put peer facts on one line in a `MetaLine`: `<MetaLine items={["Production", "Attempt 2"]} />`. Show a count as a count badge, a status summary as figures with labels, and labelled metadata as label and value pairs. When the facts must stay in running text, write a full sentence: "Measured from catalog prices". Text without layout, such as an accessible name or a native `<option>`, uses ordinary punctuation. Follow Grouped Values And Metadata in the `ui-design` method (`references/method.md`). `check` fails on the separator (rule `separator-glyph`).
+- Do not join separate facts into one string with a middle dot, a bullet, or a vertical bar. Give each fact its own element and type role. Put peer facts on one line in a `MetaLine`: `<MetaLine items={["Production", "Attempt 2"]} />`. Show a count as a count badge, a status summary as figures with labels, and labelled metadata as label and value pairs. When the facts must stay in running text, write a full sentence: "Measured from catalog prices". Text without layout, such as an accessible name or a native `<option>`, uses ordinary punctuation. Follow the grouped-values note of the `design` skill (`design read grouped-values`). `check` fails on the separator (rule `separator-glyph`).
 - A chip `meta` is one fact ("3 open"), and a hint is one sentence.
 - Record IDs, hashes, and hosts that people paste elsewhere use `Identifier`. Inline code and commands use `Code`.
 - Confirmations name the exact object and every effect: "app.example.com serves dpl_rxt8gA84n within a minute. Automatic promotion pauses until you undo the rollback."

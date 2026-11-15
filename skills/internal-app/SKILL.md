@@ -62,7 +62,7 @@ needed. Treat it as a failure, not a warning.
 ### Add or change pages
 
 1. Read `references/components.md` and `references/data.md` before writing a route.
-   For a page or a dialog with a form, load the `form-design` skill first.
+   For a page or a dialog with a form, run `design read forms` first.
 2. Compose kit primitives. If no primitive fits, stop and add one to this
    skill (`references/components.md`, Adding a primitive). Do not build a
    one-off control in the app.
@@ -82,11 +82,12 @@ needed. Treat it as a failure, not a warning.
 | `references/upgrade.md` | Migrating an existing app. |
 | `references/review.md` | Handing off any change. |
 
-For hierarchy, spacing, tables, and dark-theme judgement, apply the
-`ui-design` skill method. This skill fixes the implementation; `ui-design`
-fixes the design method.
+For hierarchy, spacing, tables, and dark-theme judgement, apply the method
+of the `design` skill: run `design read method`. This skill fixes the
+implementation; the `design` skill fixes the design method. In this skill,
+`design` means `bun <folder of the design skill>/scripts/design`.
 
-For any form, including a dialog with one field, load the `form-design` skill
+For any form, including a dialog with one field, run `design read forms`
 before you design it. Then read Forms in `references/components.md` for the
 kit component of each answer, and Forms in `references/data.md` for the
 validation.
@@ -102,7 +103,7 @@ validation.
 - **Current navigation** uses a selected surface, medium weight, and `aria-current="page"`. Never a left-edge border, rail, pseudo-element, or inset shadow.
 - **Effect at the boundary.** Services are `Context.Service` classes with layers in one `ManagedRuntime`. Server functions validate input with Effect Schema and run through `runServerFn`. Expected failures travel as typed data; defects throw. Nothing is swallowed.
 - **Separate backends.** Prefer Effect RPC for an independently running backend. Share schema-only contracts, use HTTP for both SSR and browser calls, and keep runtime ownership explicit. Use TypeScript 7 for CLI checks.
-- **Forms.** Load the `form-design` skill for every form. Show a small closed set of choices as chips or cards, size each field to its answer, and keep the submit button enabled until the submit runs. A long form uses `FormLayout` with an `ErrorSummary`, split sections, and a `FormFooter`.
+- **Forms.** Run `design read forms` for every form. Show a small closed set of choices as chips or cards, size each field to its answer, and keep the submit button enabled until the submit runs. A long form uses `FormLayout` with an `ErrorSummary`, split sections, and a `FormFooter`.
 - **URL state.** Search, sort, filter, and page live in schema-validated search params.
 - **Data states.** Loaders prefetch with `ensureQueryData`. SSR data never shows a loading state. Empty states appear only after data resolved to empty. Errors are visible and give a next action.
 - **Verify, then report.** Format, lint, typecheck, build, `check`, `sync`, `doctor`, and screenshots in both themes are part of done. Report every unmet item.

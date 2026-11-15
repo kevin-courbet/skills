@@ -443,7 +443,7 @@ function fileRules(): ReadonlyArray<FileRule> {
     {
       id: "separator-glyph",
       message:
-        "Middle dot, bullet, or vertical bar that joins separate facts. Give each fact its own element, such as a MetaLine item, or write a sentence. See Grouped Values And Metadata in the ui-design method.",
+        "Middle dot, bullet, or vertical bar that joins separate facts. Give each fact its own element, such as a MetaLine item, or write a sentence. See `design read grouped-values`.",
       applies: isSrcCode,
       findings: separatorGlyphs,
     },

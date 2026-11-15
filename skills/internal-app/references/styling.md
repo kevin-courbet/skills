@@ -258,8 +258,8 @@ with `appLocale`, so date segments and number fields format like the
 `color.scheme` feeds `color-scheme` on `<html>` so native controls and
 scrollbars match.
 
-Dark values are not inverted light values. They follow `ui-design`'s
-`dark-theme.md`: tinted near-black page, lighter raised surfaces, reduced
+Dark values are not inverted light values. They follow the dark-theme note
+of the `design` skill (`design read dark-theme`): tinted near-black page, lighter raised surfaces, reduced
 chroma on large areas, higher contrast text. Dark neutrals keep chroma
 near 0.003 so the frame, panel, and cards read as neutral grey steps:
 `page` (L 0.13) < `inset` (0.158) < `frame` (0.195) < `raised` (0.205) <
