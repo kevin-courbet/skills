@@ -51,11 +51,6 @@ export interface HoverCardProps {
   readonly delay?: number;
 }
 
-/**
- * A preview that opens when people hover, focus, or long-press a link, such
- * as a person or a record in a table. It may hold links and buttons. Never
- * put information there that the page does not also show or link to.
- */
 export function HoverCard({
   children,
   content,

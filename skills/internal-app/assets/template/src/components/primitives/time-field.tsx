@@ -109,12 +109,6 @@ export interface TimeFieldProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * Time of day, such as a daily run time or a maintenance window start. Type
- * the digits or use the arrow keys on each part, or open the popover and pick
- * the hour and the minute from two columns. The value is an ISO time string,
- * so schemas and server functions never handle time objects.
- */
 export function TimeField({
   label,
   hideLabel = false,

@@ -98,10 +98,6 @@ export function fieldError(field: ValidatedField, hasSubmitAttempt: boolean): st
   return firstMessage(errors);
 }
 
-/**
- * The entries of the ErrorSummary: the first message of each field in
- * `fields`, in their order. List the fields in the order of the page.
- */
 export function formErrors<Name extends string>(
   fieldMeta: Partial<Record<Name, { readonly errors: ReadonlyArray<unknown> } | undefined>>,
   fields: ReadonlyArray<{ readonly name: Name; readonly id: string }>,

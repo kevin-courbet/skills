@@ -56,10 +56,6 @@ export interface PopoverProps extends Pick<AriaPopoverProps, "placement" | "offs
   readonly children: ReactNode;
 }
 
-/**
- * Non-modal panel anchored to a trigger, for filters and quick details.
- * Wrap the trigger button and this popover in PopoverTrigger.
- */
 export function Popover({
   title,
   showTitle = false,

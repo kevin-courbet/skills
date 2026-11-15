@@ -110,11 +110,6 @@ const statusWord: Record<TraceStatus, string | undefined> = {
   skipped: "Skipped",
 };
 
-/**
- * A run as a column of quiet step lines: agent turns, CI jobs, checks, and
- * imports. A step with `detail` or `steps` opens in place to its output. A
- * failed step is red, a running step shimmers, and a pending step is faint.
- */
 export function Trace({
   label,
   steps,
@@ -244,12 +239,6 @@ export interface SpanWaterfallProps {
   readonly defaultExpandedIds?: ReadonlyArray<string>;
 }
 
-/**
- * A distributed trace as a waterfall: spans nest under their parent, and each
- * row has a bar on a shared time axis. Arrow keys move between spans and open
- * or close them; the selected span shows its timing and attributes below. The
- * span with the most self time is marked with its share of the trace.
- */
 export function SpanWaterfall({
   label,
   span,

@@ -61,7 +61,6 @@ export interface SegmentedControlProps<Value extends string> {
   readonly onChange: (value: Value) => void;
 }
 
-/** Switches between two to five views or modes of the same content. */
 export function SegmentedControl<Value extends string>({
   label,
   options,

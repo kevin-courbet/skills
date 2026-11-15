@@ -53,10 +53,6 @@ import { failureMessage, isServerFnError } from "@/lib/server-result";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-/**
- * Default error boundary for routes. Loader and render failures land here.
- * Invalid search params get a reset link instead of a generic failure.
- */
 export function RouteError({
   error,
   reset,

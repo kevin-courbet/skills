@@ -49,7 +49,6 @@ function loaderCrumb(loaderData: unknown): string | undefined {
   return typeof crumb === "string" ? crumb : undefined;
 }
 
-/** Breadcrumbs from the matched routes that declare staticData.crumb or return a crumb. */
 export function RouteBreadcrumbs() {
   const matches = useMatches();
   const items: Array<BreadcrumbItem> = [];

@@ -157,21 +157,6 @@ interface ColumnDrag {
   readonly mode: "pointer" | "keyboard";
 }
 
-/**
- * Columns of cards that people move between stages, such as incidents or
- * requests. Drag a card by the pointer, or focus its grip and press Enter,
- * move with Tab or the arrow keys, and press Enter to drop. Columns scroll
- * sideways on narrow screens.
- *
- * A card that moves by the keyboard glides from its old place to its new
- * place, and the other cards and columns make room. A card that people drop
- * with the pointer is already at its new place, so it lands there at once.
- * Cards that arrive from the server fade in. See `withViewTransition`.
- *
- * A moved card keeps the focus in its new column. When a card with the focus
- * leaves the board, such as after another person closes it, the focus goes to
- * the next card of its column, or to the column when it is empty.
- */
 export function Kanban<Item extends object>({
   label,
   columns,

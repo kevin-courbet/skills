@@ -105,13 +105,6 @@ export interface FiltersProps {
 /** Option lists longer than this get a search box in the value step. */
 const searchableOptionCount = 8;
 
-/**
- * Chip bar filter builder. "Add filter" walks field, then operator (only when
- * the field has more than one), then value, and adds a complete filter. Each
- * chip edits its operator and value in place and has a remove button.
- * Fields: select, multi-select, text, and date range. One filter per field.
- * The chips take the control size of the surrounding row.
- */
 export function Filters({ label, fields, value, onChange }: FiltersProps) {
   const controlSize = useControlSize();
   const barRef = useRef<HTMLDivElement>(null);

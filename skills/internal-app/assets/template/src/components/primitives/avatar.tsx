@@ -49,7 +49,6 @@ export interface AvatarProps {
   readonly size?: AvatarSize;
 }
 
-/** A person or service account. Pair it with the name in text where the name matters. */
 export function Avatar({ name, src, size = "md" }: AvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = src !== undefined && failedSrc !== src;
@@ -75,7 +74,6 @@ export interface AvatarGroupProps {
   readonly size?: AvatarSize;
 }
 
-/** Overlapping avatars for a team or the people on a record. */
 export function AvatarGroup({ label, people, max = 4, size = "sm" }: AvatarGroupProps) {
   const shown = people.slice(0, max);
   const rest = people.slice(max);

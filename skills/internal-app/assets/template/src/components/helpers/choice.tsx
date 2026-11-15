@@ -19,6 +19,7 @@
  *   `avatar`. This keeps option data from being lost.
  * - A selected option changes its surface, its border weight, and its text
  *   color, so the selection never depends on hue alone.
+ * - An invalid group marks the borders of the options that are not selected.
  * - Chips take the control size of their row through `chipSizes`.
  *
  * ## Rules
@@ -89,7 +90,6 @@ export interface ChoiceNoneOption {
   readonly description?: string;
 }
 
-/** Throws on option fields that the appearance cannot show, so no option data is lost. */
 export function assertChoiceOptions<Value extends string>(
   component: string,
   appearance: ChoiceAppearance,
@@ -144,11 +144,6 @@ export function ChoiceLeading<Value extends string>({
   return null;
 }
 
-/**
- * Shared look of choice cards and chips. Selection changes the surface, the
- * border weight, and the text color, so it never depends on hue alone. An
- * invalid group marks the borders of the options that are not selected.
- */
 export const choice = stylex.create({
   cards: {
     display: "grid",
@@ -235,7 +230,6 @@ export const choice = stylex.create({
   avatar: { display: "inline-flex", marginInlineStart: `calc(-1 * ${space.xs})` },
 });
 
-/** Chip heights follow the control size of the row, so chips line up with fields and buttons. */
 export const chipSizes = stylex.create({
   sm: { height: size.controlSm, paddingInline: space.md, fontSize: font.sm },
   md: { height: size.controlMd, paddingInline: space.lg, fontSize: font.md },

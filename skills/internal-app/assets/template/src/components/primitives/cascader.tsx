@@ -114,12 +114,6 @@ interface FlatOption {
 const searchThreshold = 12;
 const pathSeparator = " / ";
 
-/**
- * Hierarchical select, such as region, country, and city, or team and
- * service. Columns open as people move through branches: arrow keys move in
- * a column, Right opens a branch, Left goes back, Enter chooses. A search box
- * finds options at every level.
- */
 export function Cascader({
   label,
   hideLabel = false,

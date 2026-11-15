@@ -46,7 +46,6 @@ export interface TooltipProps extends Omit<AriaTooltipProps, "className" | "styl
   readonly children: ReactNode;
 }
 
-/** Wrap a focusable trigger and this tooltip in TooltipTrigger. Never put required information only here. */
 export function Tooltip({ children, offset = 6, ...props }: TooltipProps) {
   const overlayDensity = useOverlayDensity();
   return (

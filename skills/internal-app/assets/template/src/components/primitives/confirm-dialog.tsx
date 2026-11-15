@@ -18,6 +18,8 @@
  * ## Rules
  * - Only the confirm button is `danger`. The button or the menu item that opens
  *   the dialog is not.
+ * - The copy names the exact object and every effect. The confirm button
+ *   repeats the verb of the title.
  * - A destructive bulk action opens a `ConfirmDialog`, and the labels name the
  *   count: "Delete 3 items".
  *
@@ -74,10 +76,6 @@ export interface ConfirmDialogProps {
   readonly onConfirm: () => Promise<void>;
 }
 
-/**
- * Confirmation for irreversible or high-impact actions. The copy names the
- * exact object and every effect; the confirm button repeats the verb.
- */
 export function ConfirmDialog({
   isOpen,
   onOpenChange,

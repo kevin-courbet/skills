@@ -118,10 +118,6 @@ export interface DateRangePickerProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * Start and end date in one field, with a two-click range calendar. Values are
- * ISO date strings, like DatePicker. Use it for report periods and log windows.
- */
 export function DateRangePicker({
   label,
   value,

@@ -120,11 +120,6 @@ export interface CodeBlockProps {
   readonly style?: StyleXStyles;
 }
 
-/**
- * Read-only code, config, or command output with syntax colors, line numbers,
- * a copy button, and a wrap toggle. Marks added, removed, highlighted, and
- * failing lines. Use LogViewer for long or streaming logs.
- */
 export function CodeBlock({
   code,
   language = "text",

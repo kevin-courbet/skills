@@ -120,12 +120,6 @@ export interface CheckboxGroupProps<Value extends string> extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * Several visible choices from a short fixed list, such as the checks to run
- * before a deploy. Each option is its own tab stop, and Space toggles it. Use
- * `cards` when options carry a description or a `meta` (a duration or a price),
- * `chips` for short labels in a row, and MultiSelect for long or searchable lists.
- */
 export function CheckboxGroup<Value extends string>({
   label,
   options,

@@ -77,11 +77,6 @@ export interface SliderProps extends SliderBaseProps {
   readonly onChange: (value: number) => void;
 }
 
-/**
- * A number picked on a track, such as a sampling rate or an alert threshold.
- * Arrow keys step by `step`, Page Up and Page Down by a tenth, Home and End
- * jump to the ends. Use NumberField when people type exact values.
- */
 export function Slider({ value, onChange, ...props }: SliderProps) {
   return (
     <SliderFrame
@@ -105,7 +100,6 @@ export interface RangeSliderProps extends SliderBaseProps {
   readonly thumbLabels?: readonly [string, string];
 }
 
-/** A range picked on a track, such as a latency band or an amount filter. */
 export function RangeSlider({
   value,
   onChange,

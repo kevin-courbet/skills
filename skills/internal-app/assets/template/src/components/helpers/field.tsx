@@ -71,7 +71,6 @@ export interface FieldLabelProps {
   readonly elementType?: "label" | "span";
 }
 
-/** The label of every kit field. The "optional" marker is part of the accessible name. */
 export function FieldLabel({
   children,
   isOptional = false,
@@ -144,7 +143,6 @@ export function FieldErrorIcon() {
   return <CircleAlert aria-hidden {...stylex.props(field.errorIcon)} />;
 }
 
-/** Shared styles for form fields. Imported by text-field, select, and friends. */
 export const field = stylex.create({
   root: {
     display: "flex",

@@ -101,10 +101,6 @@ export interface MultiSelectProps<Value extends string> extends AriaMultipleSele
   readonly style?: StyleXStyles;
 }
 
-/**
- * Several choices from a fixed list. The popover stays open while people
- * choose. The trigger names the first choice and counts the rest.
- */
 export function MultiSelect<Value extends string>({
   label,
   options,

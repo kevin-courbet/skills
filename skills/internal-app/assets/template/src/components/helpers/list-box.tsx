@@ -55,11 +55,6 @@ export type OptionListProps<Value extends string> = Omit<
   readonly options: ReadonlyArray<ListOption<Value>>;
 };
 
-/**
- * Option list inside a Select, MultiSelect, ComboBox, or Filters popover. The
- * selection props pass through to the react-aria ListBox when the list owns
- * the selection itself.
- */
 export function OptionList<Value extends string>({ options, ...props }: OptionListProps<Value>) {
   return (
     <ListBox {...props} items={options} {...stylex.props(styles.list)}>

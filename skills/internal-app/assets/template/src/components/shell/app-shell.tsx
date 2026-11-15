@@ -261,22 +261,6 @@ function Brand({
   );
 }
 
-/**
- * Sidebar on the lighter frame color and the page in a recessed panel next to it. The
- * panel holds the top bar with breadcrumbs and scrolls on its own. Below the
- * lg breakpoint the sidebar moves into a sheet opened from the top bar, so a
- * tablet in portrait gives its full width to the page.
- *
- * Below the sm breakpoint, the top bar shows only the current page in the
- * breadcrumbs, and the global actions move to the top of the sheet. Thus a
- * phone shows the full page title.
- *
- * A page with `density="touch"` is work at a bench or on a shared tablet,
- * where people stay on one page. On a touch device (a coarse pointer, or a
- * window below lg), the shell then keeps the sidebar in the sheet at every
- * width, and its top bar, sheet, and menus take the touch density. On a desktop
- * with a mouse, the frame does not change; only the page content is larger.
- */
 export function AppShell({
   appName,
   environment,

@@ -45,15 +45,6 @@ export interface SurfaceButtonProps extends NativeButtonProps {
   readonly style?: StyleXStyles;
 }
 
-/**
- * A custom surface that acts as one control, such as a card title, a list row,
- * or an object on a canvas.
- *
- * Button handles presses through react-aria, which stops pointer and click events
- * from reaching ancestors. A surface keeps the native events, so drag, pan, and
- * delegated listeners on its ancestors keep working. Use Button for every other
- * action, and for anything that submits a form.
- */
 export function SurfaceButton({ ref, style, ...props }: SurfaceButtonProps) {
   return <button ref={ref} type="button" {...props} {...stylex.props(styles.reset, style)} />;
 }

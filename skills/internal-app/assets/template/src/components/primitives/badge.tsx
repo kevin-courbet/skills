@@ -57,7 +57,6 @@ export interface BadgeProps {
   readonly children: ReactNode;
 }
 
-/** Status label. The text carries the meaning; color only supports it. */
 export function Badge({
   intent = "neutral",
   appearance = "subtle",
@@ -105,11 +104,6 @@ export interface StatusDotProps {
   readonly isActive?: boolean;
 }
 
-/**
- * Dense status for table cells, lists, and detail headers: a colored dot and
- * the status text, with an optional secondary line. Use Badge where the
- * status stands alone.
- */
 export function StatusDot({
   intent = "neutral",
   children,

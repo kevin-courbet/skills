@@ -100,7 +100,6 @@ export interface ComboBoxProps<Value extends string> extends AriaSingleComboBoxP
   readonly style?: StyleXStyles;
 }
 
-/** Single choice from a long list. Typing filters the options. */
 export function ComboBox<Value extends string>({
   label,
   options,

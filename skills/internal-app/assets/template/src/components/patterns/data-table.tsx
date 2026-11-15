@@ -22,6 +22,8 @@
  *   does the same.
  * - The toolbar row, the bulk-action bar, and the pagination footer use the
  *   `sm` control size.
+ * - A column `footer` renders a summary row, such as the totals of the
+ *   visible page.
  * - When the frame is narrower than `sm`, the cell text wraps and the cell
  *   padding gets smaller, so the columns that stay fit the frame.
  * - It throws when a column has no `id` and no string `accessorKey`, when
@@ -299,11 +301,6 @@ const columnSizeDefaults = { size: 160, minSize: 64, maxSize: 640 } as const;
 const interactiveSelector =
   'a, button, input, select, textarea, label, summary, [role="button"], [role="checkbox"], [role="link"], [role="menuitem"], [role="switch"], [tabindex]:not([tabindex="-1"])';
 
-/**
- * Dense data table on semantic table elements. Sorting toggles through the
- * column header button and is announced with aria-sort. A column `footer`
- * renders a summary row, such as totals for the visible page.
- */
 export function DataTable<TData extends RowData>({
   columns,
   data,
@@ -1142,10 +1139,6 @@ export interface MeterCellProps {
   readonly max: number;
 }
 
-/**
- * Numeric cell with a short bar that compares the value with the column
- * maximum. The text carries the value; the bar only supports scanning.
- */
 export function MeterCell({ label, value, max }: MeterCellProps) {
   const share = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
   return (

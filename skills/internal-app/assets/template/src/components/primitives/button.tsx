@@ -65,11 +65,6 @@ export interface ButtonGroupProps {
   readonly children: ReactNode;
 }
 
-/**
- * Buttons joined into one control, such as a split button ("Deploy" and a
- * menu of targets), zoom in and out, or previous and next. Use
- * SegmentedControl for a choice of views.
- */
 export function ButtonGroup({ label, children }: ButtonGroupProps) {
   return (
     <div role="group" aria-label={label} {...stylex.props(styles.group)}>
@@ -136,7 +131,6 @@ export type LinkButtonProps = ButtonOwnProps &
     "className" | "style" | "children" | "activeProps" | "inactiveProps"
   >;
 
-/** Router link with button appearance. Use for navigation that reads as an action. */
 export function LinkButton({
   intent = "secondary",
   size: explicitSize,

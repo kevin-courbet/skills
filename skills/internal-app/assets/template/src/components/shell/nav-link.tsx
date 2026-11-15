@@ -45,10 +45,6 @@ export interface NavLinkProps {
   readonly onNavigate?: () => void;
 }
 
-/**
- * Sidebar navigation item. The current page uses a selected surface and
- * stronger text with aria-current. Never add a left-edge border or rail.
- */
 export function NavLink({
   to,
   params,

@@ -45,7 +45,6 @@ const fadeOut = stylex.keyframes({
   to: { opacity: 0 },
 });
 
-/** Shared surface styles for popovers, menus, list boxes, and tooltips. */
 export const overlay = stylex.create({
   popover: {
     backgroundColor: color.overlay,

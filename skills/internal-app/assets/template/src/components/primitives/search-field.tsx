@@ -70,7 +70,6 @@ function isEditable(target: EventTarget | null): boolean {
   return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }
 
-/** Search input with a clear button. Escape clears the value. */
 export function SearchField({
   label,
   hideLabel = false,

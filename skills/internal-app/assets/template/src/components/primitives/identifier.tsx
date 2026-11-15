@@ -39,11 +39,6 @@ export interface IdentifierProps {
   readonly copyable?: boolean;
 }
 
-/**
- * Monospaced identifier, hash, or host with a copy button. Use it for record
- * IDs, commit SHAs, and URLs that people paste elsewhere. Use Code for inline
- * code or command text.
- */
 export function Identifier({
   value,
   label,

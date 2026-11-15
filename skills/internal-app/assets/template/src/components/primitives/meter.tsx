@@ -49,10 +49,6 @@ export interface MeterProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * A level within a known range, such as quota, capacity, or disk use. Use
- * ProgressBar for a task that finishes. Use MeterCell inside a DataTable.
- */
 export function Meter({ label, valueLabel, warningAt, dangerAt, style, ...props }: MeterProps) {
   const tone = meterTone(props.value ?? 0, warningAt, dangerAt);
   return (

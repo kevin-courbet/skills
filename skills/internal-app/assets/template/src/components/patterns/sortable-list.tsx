@@ -108,16 +108,6 @@ export interface SortableListProps<Item> {
   readonly style?: StyleXStyles;
 }
 
-/**
- * A list people put in order, such as an escalation chain, column order, or
- * dashboard widgets. Drag a row by the pointer, or focus its grip, press
- * Enter, move with the arrow keys, and press Enter to drop. Escape cancels.
- * The other rows glide to make room; see `useDropTransition`.
- *
- * A moved row keeps the focus. When a row with the focus leaves the list, such
- * as after its remove button, the focus goes to the next row, or to the list
- * when it is empty.
- */
 export function SortableList<Item extends object>({
   label,
   items,

@@ -83,11 +83,6 @@ function DevStyleXRuntime() {
   return null;
 }
 
-/**
- * The HTML document for the root route: global CSS, theme classes, the
- * development StyleX stylesheet, the router head and scripts, and one locale
- * for every react-aria field so dates and numbers match the app formatters.
- */
 export function AppDocument({ theme: initialTheme, children }: AppDocumentProps) {
   const [selection, setSelection] = useState<
     | { readonly _tag: "DocumentSnapshot" }

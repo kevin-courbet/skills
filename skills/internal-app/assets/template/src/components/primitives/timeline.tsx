@@ -102,11 +102,6 @@ export interface TimelineProps {
   readonly events: ReadonlyArray<TimelineEvent>;
 }
 
-/**
- * Activity or audit feed, newest first: an icon per event type, the event
- * sentence, and the actor and time. Items are neutral by default. For steps
- * with a status, such as pipeline stages, use Stepper with `mode="status"`.
- */
 export function Timeline({ label, events }: TimelineProps) {
   return (
     <ol aria-label={label} {...stylex.props(styles.list)}>

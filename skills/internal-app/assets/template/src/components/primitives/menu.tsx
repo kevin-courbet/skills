@@ -68,7 +68,6 @@ export interface MenuProps<Item extends object> extends Omit<
   readonly placement?: "bottom start" | "bottom end" | "top start" | "top end";
 }
 
-/** Wrap the trigger button and this menu in MenuTrigger. */
 export function Menu<Item extends object>({ placement = "bottom end", ...props }: MenuProps<Item>) {
   const overlayDensity = useOverlayDensity();
   return (
@@ -98,7 +97,6 @@ export interface MenuItemProps extends Omit<AriaMenuItemProps, "className" | "st
   readonly isDestructive?: boolean;
 }
 
-/** In a menu with a `selectionMode`, each item shows a check mark when selected. */
 export function MenuItem({
   children,
   icon,
@@ -143,11 +141,6 @@ export interface ContextMenuProps<Item extends object> extends Omit<
   readonly menu: ReactNode;
 }
 
-/**
- * Actions on an area that open at the pointer on a right click, or at the
- * focused element with Shift+F10 or the context menu key. Every action must
- * also be reachable without it, such as from a row menu button.
- */
 export function ContextMenu<Item extends object>({
   label,
   children,

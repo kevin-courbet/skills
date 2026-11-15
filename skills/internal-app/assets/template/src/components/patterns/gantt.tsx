@@ -194,12 +194,6 @@ const nameWidth = "15rem";
 const nameWidthNarrow = "9.5rem";
 const rowHeight = 2.25;
 
-/**
- * Tasks on a time line, such as a migration plan or a release schedule. The
- * task list is a tree: arrow keys move between tasks, Right and Left open and
- * close groups. Bars show progress, milestones are diamonds, and arrows join
- * dependent tasks. The chart scrolls sideways; the task names stay in view.
- */
 export function Gantt({
   label,
   tasks,

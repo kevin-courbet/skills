@@ -146,7 +146,6 @@ export interface PageHeaderProps {
   readonly actions?: ReactNode;
 }
 
-/** Title row of a page. One primary action at most; secondary actions stay quiet. */
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
     <header {...stylex.props(styles.pageHeader)}>
@@ -203,14 +202,6 @@ export function Page({
   );
 }
 
-/**
- * A titled part of a page. `stacked` puts the title over the content.
- * `split` puts the title and the description in a column on the left and the
- * content on the right, and stacks them when the section is narrower than the
- * sm breakpoint. Use `split` for the parts of a long form or a settings page:
- * the description then says what the answers change. Consecutive split
- * sections show a divider between them.
- */
 export function Section({
   title,
   description,
@@ -295,11 +286,6 @@ export interface CardProps {
   readonly style?: StyleXStyles;
 }
 
-/**
- * Raised surface for a distinct, comparable, or actionable group. Content sits
- * directly on the card. Never nest a Card in a Card: divide a card with
- * CardSection rows instead.
- */
 export function Card({
   title,
   description,
@@ -402,7 +388,6 @@ function Delta({ delta }: { readonly delta: StatDelta }) {
   );
 }
 
-/** Overview number. The label stays quieter than the value. */
 export function StatTile({ label, value, hint, delta, chart, footnote }: StatTileProps) {
   return (
     <div {...stylex.props(styles.stat)}>
@@ -466,10 +451,6 @@ export interface StatStripProps {
   readonly framed?: boolean;
 }
 
-/**
- * Compact row of key facts separated by dividers. Use it at the top of a
- * detail page or a peek sheet, where StatTile cards would be too heavy.
- */
 export function StatStrip({ items, variant = "metric", framed = true }: StatStripProps) {
   return (
     <dl {...stylex.props(styles.strip, framed && styles.stripFramed)}>
@@ -577,10 +558,6 @@ export function DescriptionList({ items, layout = "rows" }: DescriptionListProps
   );
 }
 
-/**
- * Card of settings rows. Each row puts the label on the left and the value or
- * control on the right. Use it for settings and configuration pages.
- */
 export function SettingsCard({
   title,
   description,
@@ -635,7 +612,6 @@ export function SettingRow({
   );
 }
 
-/** Row of filters and view controls above a list. Every kit control in the row takes the toolbar size. */
 export function Toolbar({
   children,
   label,
@@ -679,12 +655,6 @@ export interface MetaLineProps {
   readonly items: ReadonlyArray<ReactNode>;
 }
 
-/**
- * Separate facts on one line. A gap separates the facts, so no separator
- * character is necessary. The facts take the color and size of the line around
- * them; give the identifying fact a stronger role, such as a Code or a status
- * word, when it needs one. The line wraps between facts, never inside one.
- */
 export function MetaLine({ items }: MetaLineProps) {
   return (
     <span {...stylex.props(styles.metaLine)}>
@@ -699,7 +669,6 @@ export function MetaLine({ items }: MetaLineProps) {
   );
 }
 
-/** Identifier, hash, or code value. Mono at the small size, quieter than prose. */
 export function Code({
   children,
 }: {

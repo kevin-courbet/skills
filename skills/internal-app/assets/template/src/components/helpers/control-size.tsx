@@ -43,12 +43,6 @@ export type ControlSize = "sm" | "md";
 
 const ControlSizeContext = createContext<ControlSize>("md");
 
-/**
- * Sets the height of every kit control inside it, so the controls in one row
- * share one height. Toolbar, the DataTable toolbar row, and the LogViewer and
- * EventCalendar headers set it. Overlays set `md` again, because React context
- * passes into portals.
- */
 export function ControlSizeProvider({
   size,
   children,

@@ -57,7 +57,6 @@ export interface ItemListProps {
   readonly style?: StyleXStyles;
 }
 
-/** Rows of Item divided by lines, such as integrations, members, or files. */
 export function ItemList({ label, children, framed = true, style }: ItemListProps) {
   return (
     <div
@@ -92,10 +91,6 @@ export interface ItemProps {
   readonly style?: StyleXStyles;
 }
 
-/**
- * One row of an ItemList: media, a title with a quiet description, trailing
- * meta, and actions. Use DataTable when people compare values across rows.
- */
 export function Item({
   title,
   description,

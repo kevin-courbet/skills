@@ -118,11 +118,6 @@ export interface LogViewerProps {
 /** Matches font.sm at the 1.8 line height used below. */
 const lineHeightPx = 22;
 
-/**
- * Monospaced log output with line numbers, a source column, a level filter,
- * search with match highlights, and a line count. It renders only the lines
- * in view, opens at the first error, and can follow a live stream.
- */
 export function LogViewer({
   label,
   lines,

@@ -65,11 +65,6 @@ export interface ScrollspyProps {
   readonly style?: StyleXStyles;
 }
 
-/**
- * Links to the sections of a long page, such as settings or a record with
- * many parts. The link of the section in view is marked as the current
- * location. A link scrolls its section into view and moves focus to it.
- */
 export function Scrollspy({
   label,
   items,

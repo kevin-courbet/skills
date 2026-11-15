@@ -127,10 +127,6 @@ export interface DatePickerProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * Calendar date field. Values are ISO date strings so schemas and server
- * functions never handle calendar objects. Segments follow the provider locale.
- */
 export function DatePicker({
   label,
   value,

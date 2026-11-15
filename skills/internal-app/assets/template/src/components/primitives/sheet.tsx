@@ -120,11 +120,6 @@ function NavigationKeys({ navigation }: { readonly navigation: SheetNavigation }
   return null;
 }
 
-/**
- * Edge panel for secondary detail or editing next to the page context, and
- * for navigation on narrow screens. The `peek` size opens a record from a
- * list over the list. Use Dialog for tasks that must interrupt.
- */
 export function Sheet({
   title,
   description,

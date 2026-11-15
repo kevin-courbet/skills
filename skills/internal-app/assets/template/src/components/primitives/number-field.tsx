@@ -90,7 +90,6 @@ export interface NumberFieldProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/** Numeric input with locale formatting. Value is a number, NaN when empty. */
 export function NumberField({
   label,
   hideLabel = false,

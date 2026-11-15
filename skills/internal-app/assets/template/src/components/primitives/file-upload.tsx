@@ -94,10 +94,6 @@ export interface FileUploadProps {
   readonly style?: StyleXStyles;
 }
 
-/**
- * Drop zone with a file dialog button and the list of chosen files. It only
- * selects files: the app validates, uploads, and reports each file's status.
- */
 export function FileUpload({
   label,
   description,

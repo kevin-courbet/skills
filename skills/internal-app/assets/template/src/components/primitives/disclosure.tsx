@@ -60,10 +60,6 @@ export interface DisclosureProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * A section people can show and hide, such as advanced settings or raw
- * payloads. Inside an Accordion it renders as one row of the group.
- */
 export function Disclosure({ title, hint, children, style, ...props }: DisclosureProps) {
   const inAccordion = useContext(AccordionContext);
   return (
@@ -102,11 +98,6 @@ export interface AccordionProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * A framed list of Disclosure rows. One row opens at a time unless
- * `allowsMultipleExpanded` is set. Use it for FAQs, grouped settings, or
- * per-step details; use Tabs when people compare sections side by side.
- */
 export function Accordion({ children, style, ...props }: AccordionProps) {
   return (
     <AccordionContext.Provider value>

@@ -110,12 +110,6 @@ export type RadioGroupProps<Value extends string> = RadioGroupBaseProps<Value> &
 // Radio values are strings, so the none option takes the one id that no option may use.
 const noneId = "";
 
-/**
- * One choice from a short visible list. Arrow keys move between the options
- * and choose one; Tab leaves the group. Use `cards` when people compare the
- * options, `chips` for short labels in a row, and Select for more than about
- * seven options. A single choice that people may skip takes a `noneOption`.
- */
 export function RadioGroup<Value extends string>(props: RadioGroupProps<Value>) {
   const {
     label,

@@ -66,7 +66,6 @@ const spin = stylex.keyframes({
   to: { transform: "rotate(360deg)" },
 });
 
-/** Placeholder block for content that loads after the first paint. Not for SSR-loaded data. */
 export function Skeleton({
   style,
 }: {
@@ -106,7 +105,6 @@ export interface EmptyStateProps {
   readonly size?: "sm" | "md";
 }
 
-/** Render only after data resolved to empty. Filtered-to-zero states need a clear-filters action. */
 export function EmptyState({
   icon,
   title,
@@ -144,7 +142,6 @@ export interface ErrorStateProps {
   readonly action?: ReactNode;
 }
 
-/** Visible failure. Never replace an error with an empty state. */
 export function ErrorState({ title = "Something failed", message, action }: ErrorStateProps) {
   return (
     <div role="alert" {...stylex.props(styles.error)}>

@@ -86,12 +86,6 @@ export interface ResizablePanelsProps {
 const keyStep = 2;
 const largeKeyStep = 10;
 
-/**
- * Panels that people resize, such as a list beside its detail or a query
- * above its results. Drag a handle, or focus it and use the arrow keys
- * (Shift for bigger steps), Home, and End. Panels nest: a panel's content can
- * be another ResizablePanels with the other orientation.
- */
 export function ResizablePanels({
   orientation = "horizontal",
   panels,

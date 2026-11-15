@@ -297,11 +297,6 @@ export type FilterSearchFields<Fields extends ReadonlyArray<FilterField>> = {
   readonly [Param in ParamOf<Fields[number]>]: Schema.optionalKey<Schema.String>;
 };
 
-/**
- * Effect Schema fields for the filter params. Spread them into the route's
- * search schema, so an invalid filter param fails search validation and the
- * route shows its reset action.
- */
 export function filterSearchFields<const Fields extends ReadonlyArray<FilterField>>(
   fields: Fields,
 ): FilterSearchFields<Fields> {
@@ -323,11 +318,6 @@ export function filterSearchFields<const Fields extends ReadonlyArray<FilterFiel
   return Object.fromEntries(entries) as FilterSearchFields<Fields>;
 }
 
-/**
- * Reads the active filters from validated search params, in field order.
- * It throws on an invalid value: validate the params with
- * `filterSearchFields` first.
- */
 export function parseFilters(
   fields: ReadonlyArray<FilterField>,
   search: Readonly<Record<string, unknown>>,
@@ -346,11 +336,6 @@ export function parseFilters(
   return filters;
 }
 
-/**
- * Writes filters as search params. Every field param is present, and the
- * params of inactive fields are `undefined`, so spreading the result over the
- * previous search removes them.
- */
 export function serializeFilters<const Fields extends ReadonlyArray<FilterField>>(
   fields: Fields,
   filters: ReadonlyArray<ActiveFilter>,

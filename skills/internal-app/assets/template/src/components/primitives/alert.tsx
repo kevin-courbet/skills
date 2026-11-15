@@ -81,10 +81,6 @@ const icons: Record<AlertIntent, LucideIcon> = {
   danger: CircleAlert,
 };
 
-/**
- * Inline notice about the current page or object. The title states the fact;
- * the body says what to do. Use ErrorState for a failed load.
- */
 export function Alert({
   intent = "info",
   title,

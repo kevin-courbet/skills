@@ -93,21 +93,6 @@ interface WorkQueueValue {
 const WorkQueueContext = createContext<WorkQueueValue | null>(null);
 const QueueSectionContext = createContext<{ readonly emphasis: boolean } | null>(null);
 
-/**
- * The work of one person on a touch page, grouped by the next action, such as
- * "In progress", "Up next", and "Waiting". Put it in `Page density="touch"`
- * under a `PageHeader` that says whose work it is. See
- * `design read internal-app-touch-work-view`.
- *
- * A card that moves to another section in a `withViewTransition` update glides
- * to its new place. A card that leaves the queue fades out, and a card that
- * arrives without a move fades in.
- *
- * The keyboard stays in the queue. When a card with the focus leaves its
- * section, the focus goes to the next card of that section, or to the section
- * heading when the section is empty. When the section no longer shows, the
- * focus goes to the heading of the section that takes its place.
- */
 export function WorkQueue({
   children,
 }: {
@@ -147,7 +132,6 @@ export interface QueueSectionProps<Item> {
   readonly emphasis?: boolean;
 }
 
-/** One group of a `WorkQueue`, with its title, its count, and its cards. */
 export function QueueSection<Item>({
   title,
   icon: Icon,
@@ -285,7 +269,6 @@ export interface QueueCardProps {
   readonly tone?: "default" | "attention";
 }
 
-/** One item of a `QueueSection`. Nothing depends on hover, and every target reaches 44px on a touch page. */
 export function QueueCard({
   title,
   link,

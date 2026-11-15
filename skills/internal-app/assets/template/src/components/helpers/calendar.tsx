@@ -47,10 +47,6 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 
-/**
- * Shared parts of DatePicker and DateRangePicker: the segmented date input,
- * the calendar button, the month header, and the calendar cell styles.
- */
 export function DateSegments({
   slot,
 }: {
@@ -95,10 +91,6 @@ export function CalendarHeader() {
   );
 }
 
-/**
- * Month grid for a date range. Inside DateRangePicker it reads the picker
- * state; on its own it takes `value` and `onChange`, as in the Filters editor.
- */
 export function RangeCalendarView(
   props: Omit<RangeCalendarProps<CalendarDate>, "className" | "style" | "children">,
 ) {

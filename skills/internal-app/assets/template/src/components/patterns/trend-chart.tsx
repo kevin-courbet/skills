@@ -60,11 +60,6 @@ export interface TrendChartProps {
   readonly series: ReadonlyArray<{ readonly date: string; readonly value: number }>;
 }
 
-/**
- * One Aperture widget: title, toolbar, plot, and the exact-value table.
- * The host owns data access and aggregation. Aperture owns interaction and the
- * widget layout, which the bridge maps to app tokens.
- */
 export function TrendChart({ title, description, unit, source, series }: TrendChartProps) {
   const data: ReadonlyArray<TimeSeriesDatum> = series.map((point) => ({
     id: point.date,

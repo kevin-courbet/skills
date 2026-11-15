@@ -106,11 +106,6 @@ export interface CommandPaletteProps {
   readonly placeholder?: string;
 }
 
-/**
- * Searchable list of navigation targets and actions in a modal. Command-K or
- * Control-K toggles it while it is mounted, so mount one palette per app.
- * AppShell mounts it with the navigation items and its `commands` prop.
- */
 export function CommandPalette({
   groups,
   isOpen,

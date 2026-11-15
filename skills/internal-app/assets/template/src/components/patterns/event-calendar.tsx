@@ -250,13 +250,6 @@ const weekdayIds: ReadonlyArray<CalendarWeekday> = [
   "sat",
 ];
 
-/**
- * Month, week, day, and agenda views of events, such as on-call shifts,
- * maintenance windows, or bookings, with recurring events, resources, and
- * changes by drag or keyboard. Arrow keys move between days in the month
- * view; Page Up and Page Down change the month. Below the `md` breakpoint the
- * month view shows dots and lists the events of the focused day.
- */
 export function EventCalendar({
   label,
   events,

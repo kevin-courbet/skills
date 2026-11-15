@@ -48,11 +48,6 @@ export interface ProgressBarProps extends Omit<
   readonly style?: StyleXStyles;
 }
 
-/**
- * Progress of a task that finishes, such as an upload, an import, or a batch
- * job. Pass `isIndeterminate` while the total is unknown. Use Meter for a
- * level that stays, such as quota or disk use.
- */
 export function ProgressBar({
   label,
   hideLabel = false,

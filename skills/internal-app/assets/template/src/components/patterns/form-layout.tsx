@@ -100,12 +100,6 @@ export interface FormLayoutProps {
   readonly footer?: ReactNode;
 }
 
-/**
- * Page layout for a long form. The sections take the main column, the preview
- * stays in view beside them on wide screens and goes under them on narrow
- * ones, and the footer sticks to the bottom of the window. Put a short form
- * in a Dialog instead.
- */
 export function FormLayout({
   id,
   onSubmit,
@@ -135,11 +129,6 @@ export function FormLayout({
   );
 }
 
-/**
- * Fields that belong together on one line, such as a name and an email, or a
- * floor and a room. Each field keeps the width of its answer, and the row
- * wraps when it is narrow.
- */
 export function FieldRow({
   children,
 }: {
@@ -162,13 +151,6 @@ export interface FormPreviewProps {
   readonly children: ReactNode;
 }
 
-/**
- * The end result of the form, filled in while people type. Give it a thing
- * that people see or hold outside the form, such as a printed badge, a label,
- * an invoice, or an outgoing message, in the shape of that thing. The kit
- * gives no frame for the thing, because each kind of thing has its own shape.
- * It does not announce changes, because it changes on every key.
- */
 export function FormPreview({ label, description, children }: FormPreviewProps) {
   return (
     <aside aria-label={label} {...stylex.props(styles.preview)}>
@@ -187,7 +169,6 @@ export interface FormFooterProps {
   readonly children: ReactNode;
 }
 
-/** Bar at the bottom of the window that keeps the summary and the submit button in view. */
 export function FormFooter({ summary, children }: FormFooterProps) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -248,11 +229,6 @@ const focusableSelector = [
   '[tabindex="0"]',
 ].join(", ");
 
-/**
- * The list of problems after a failed submit, at the top of the form. Each
- * item links to its field. Show it only after a submit attempt; it renders
- * nothing when no errors remain.
- */
 export function ErrorSummary({ title, errors, submitCount }: ErrorSummaryProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();

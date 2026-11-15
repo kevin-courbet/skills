@@ -42,11 +42,6 @@ export interface IconTileProps {
   readonly shape?: "square" | "circle";
 }
 
-/**
- * An icon on a small square surface, such as the media of a list row, the
- * kind of an integration, or the icon of an empty state. It is decorative:
- * put the meaning in the text next to it.
- */
 export function IconTile({
   icon: Icon,
   tone = "neutral",

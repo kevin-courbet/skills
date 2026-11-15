@@ -19,7 +19,8 @@
  * - The chevron opens and closes a branch. A leaf shows a spacer, so the labels
  *   stay aligned.
  * - With `selection.mode="single"`, the selected row has a fill. With
- *   `"checkbox"`, each row shows a checkbox and the fill does not show.
+ *   `"checkbox"`, each row shows a checkbox and the fill does not show. A
+ *   branch checkbox selects or clears every leaf under it.
  * - With `onMove`, people drag rows before, after, or into another row. The
  *   tree cancels a drop into the dragged node or into a node under it.
  * - `moveTreeNodes` throws an error when a node moves into itself.
@@ -140,11 +141,6 @@ export interface TreeProps {
   readonly style?: StyleXStyles;
 }
 
-/**
- * Hierarchy of records, such as folders, an org chart, categories, or
- * permissions. Arrow keys move between rows, Right and Left open and close a
- * branch, and Space selects. Branch checkboxes cascade to their leaves.
- */
 export function Tree({
   label,
   nodes,

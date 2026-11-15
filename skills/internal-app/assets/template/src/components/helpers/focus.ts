@@ -78,20 +78,6 @@ export interface FocusAfterRemovalOptions {
   readonly emptyTarget: () => HTMLElement | null;
 }
 
-/**
- * Keeps the keyboard in a collection when the focused item leaves it. When a
- * change removes the item that has the focus, such as an action that moves a
- * card to another group, the focus goes to the next item in the same order.
- * After the last item it goes to the item before. With no item left, it goes
- * to `emptyTarget`. When the item stays but the browser dropped the focus,
- * such as after a move in the list, the focus goes back to the item.
- *
- * The hook acts only when the focus is lost. A change that the person did
- * not cause never takes the focus from a control somewhere else. It watches
- * the elements of the container, not the renders, because a react-aria
- * collection removes its items in a later render than the one that changes
- * `ids`.
- */
 export function useFocusAfterRemoval(options: FocusAfterRemovalOptions): void {
   const { container, ids, itemSelector } = options;
   const latest = useRef(options);

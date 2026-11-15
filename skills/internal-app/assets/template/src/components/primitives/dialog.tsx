@@ -88,10 +88,6 @@ export interface DialogProps extends Pick<
   readonly children: ReactNode | ((close: () => void) => ReactNode);
 }
 
-/**
- * Centered modal dialog. Use for tasks that must interrupt the page.
- * Use Sheet for secondary detail that benefits from page context.
- */
 export function Dialog({
   title,
   description,

@@ -107,7 +107,6 @@ export interface SelectProps<Value extends string> extends AriaSingleSelectProps
   readonly style?: StyleXStyles;
 }
 
-/** Single choice from a fixed list. Use ComboBox when users need to type to find. */
 export function Select<Value extends string>({
   label,
   hideLabel = false,

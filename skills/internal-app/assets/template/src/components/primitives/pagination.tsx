@@ -43,7 +43,6 @@ export interface PaginationProps {
   readonly format?: (value: number) => string;
 }
 
-/** Previous and next paging for server-paged lists. Renders nothing for one page. */
 export function Pagination({ page, pageCount, onPageChange, format = String }: PaginationProps) {
   if (pageCount <= 1) return null;
   return (

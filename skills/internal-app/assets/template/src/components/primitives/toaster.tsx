@@ -35,10 +35,6 @@ import { color, font, layer, radius, shadow, space } from "@/styles/tokens.style
 
 export { toast } from "sonner";
 
-/**
- * Mount once in the app shell. Use toast.error for failures that have no
- * inline place. Do not toast success when the UI already shows the result.
- */
 export function Toaster() {
   const base = stylex.props(styles.toast);
   const region = stylex.props(styles.region);

@@ -44,11 +44,6 @@ export interface BreadcrumbItem {
   readonly href: string;
 }
 
-/**
- * Location within a hierarchy. The last item is the current page. The current
- * page has priority: the items before it shrink first, and below the sm
- * breakpoint they do not show.
- */
 export function Breadcrumbs({
   items,
 }: {

@@ -49,12 +49,6 @@ export interface SparklineProps {
   readonly series: ReadonlyArray<{ readonly date: string; readonly value: number }>;
 }
 
-/**
- * Trend for the StatTile `chart` slot: a compact Aperture line chart without
- * axes, legend, or controls. The tooltip and the collapsed exact-value table
- * keep every value available. A line, unlike an area, need not start at zero,
- * so small changes in a large value stay visible.
- */
 export function Sparkline({ label, description, series }: SparklineProps) {
   const data: ReadonlyArray<TimeSeriesDatum> = series.map((point) => ({
     id: point.date,

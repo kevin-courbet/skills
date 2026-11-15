@@ -146,11 +146,6 @@ const families: ReadonlyArray<{
 
 const unknownType: FileType = { kind: "File", icon: File, tone: "neutral" };
 
-/**
- * The family of a file from its name, path, or URL, or from its MIME type.
- * Names without an extension, such as "Dockerfile" or ".env.local", resolve
- * by name. Unknown files are a neutral "File".
- */
 export function fileTypeOf(name: string, mimeType?: string): FileType {
   const base = name.split(/[\\/]/).pop()?.split(/[?#]/)[0]?.toLowerCase() ?? "";
   const bare = base.startsWith(".") ? (base.slice(1).split(".")[0] ?? "") : base;
@@ -176,10 +171,6 @@ export interface FileTypeIconProps {
   readonly size?: "sm" | "md" | "lg";
 }
 
-/**
- * The family icon of a file on an IconTile, such as in an upload list, a file
- * tree, or an attachment row. It is decorative: show the file name next to it.
- */
 export function FileTypeIcon({ name, mimeType, size = "md" }: FileTypeIconProps) {
   const type = fileTypeOf(name, mimeType);
   return <IconTile icon={type.icon} tone={type.tone} size={size} />;

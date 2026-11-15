@@ -63,10 +63,6 @@ export interface TagGroupProps<Value extends string> {
   readonly style?: StyleXStyles;
 }
 
-/**
- * A labeled set of short values, such as labels, recipients, or chosen
- * options. Arrow keys move between tags. For list filters, use Filters.
- */
 export function TagGroup<Value extends string>({
   label,
   hideLabel = false,

@@ -40,10 +40,6 @@ export interface CopyButtonProps {
 
 const confirmationMs = 1500;
 
-/**
- * Small icon button next to an identifier or URL. A check mark confirms the
- * copy in place, so no success toast is shown. A refused clipboard shows an error.
- */
 export function CopyButton({ value, label }: CopyButtonProps) {
   const [isCopied, setCopied] = useState(false);
   useEffect(() => {

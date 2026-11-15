@@ -141,11 +141,6 @@ export interface StatusStepperProps<Id extends string> {
 
 export type StepperProps<Id extends string> = WizardStepperProps<Id> | StatusStepperProps<Id>;
 
-/**
- * Steps in order. `wizard` mode shows the position in a multi-step task:
- * steps before `currentStep` are complete. `status` mode shows steps that run
- * on their own, each with its own status and duration, such as pipeline stages.
- */
 export function Stepper<Id extends string>(props: StepperProps<Id>) {
   return props.mode === "status" ? <StatusStepper {...props} /> : <WizardStepper {...props} />;
 }
@@ -360,12 +355,6 @@ export interface SegmentedProgressProps<Id extends string> {
   readonly showStepLabels?: boolean;
 }
 
-/**
- * Compact read-only progress: one colored segment per step and a caption for
- * the current step. The caption shows the step name, the status word, and the
- * duration as separate elements. Use it in cards and table rows; use Stepper
- * with `mode="status"` where people inspect each step.
- */
 export function SegmentedProgress<Id extends string>({
   label,
   steps,
