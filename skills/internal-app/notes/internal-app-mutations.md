@@ -2,7 +2,7 @@
 id: internal-app-mutations
 topic: internal-app
 summary: Write a mutation that invalidates by key prefix and shows its failure where people acted, an optimistic move that writes the cache inside the view transition, and a delete that runs from ConfirmDialog.
-keywords: [mutation, useMutation, invalidate queries, optimistic update, optimistic move, rollback, restore on failure, move on a board, delete, destructive action, mutateAsync, setQueryData, cancelQueries, success toast]
+keywords: [mutation, useMutation, invalidate queries, optimistic update, optimistic move, instant update, update before the server answers, rollback, restore on failure, move on a board, delete, destructive action, mutateAsync, setQueryData, cancelQueries, success toast]
 specializes: [loading-states]
 related: [internal-app-server-functions, internal-app-composition, internal-app-states, internal-app-motion]
 ---

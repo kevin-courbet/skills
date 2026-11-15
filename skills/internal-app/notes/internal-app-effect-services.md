@@ -2,7 +2,7 @@
 id: internal-app-effect-services
 topic: internal-app
 summary: The Effect 4 API names for server services, layers, the one ManagedRuntime, config, workflows, internal and wire errors, and Effect Schema.
-keywords: [effect, effect 4, Context.Service, service class, layer, ManagedRuntime, runtime, config, Config.Redacted, Effect.gen, Effect.fn, tagged error, Data.TaggedError, Schema.TaggedError, Effect Schema, schema api, decode]
+keywords: [effect, effect 4, Context.Service, service class, dependency injection, layer, ManagedRuntime, runtime, config, Config.Redacted, Effect.gen, Effect.fn, tagged error, Data.TaggedError, Schema.TaggedError, Effect Schema, schema api, decode]
 related: [internal-app-server-functions, internal-app-error-reporting]
 ---
 

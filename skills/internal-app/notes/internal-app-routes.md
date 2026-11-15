@@ -2,7 +2,7 @@
 id: internal-app-routes
 topic: internal-app
 summary: Write a list route with validated search params and a loader that prefetches the query of the page, and a detail route that maps a missing record to the not-found page and names its breadcrumb.
-keywords: [route, file route, createFileRoute, loader, ensureQueryData, useSuspenseQuery, search params, validateSearch, stripSearchParams, detail route, not found, breadcrumb, crumb, routeTree, navigate]
+keywords: [route, file route, createFileRoute, loader, load data before render, prefetch, ensureQueryData, useSuspenseQuery, search params, validateSearch, stripSearchParams, detail route, not found, breadcrumb, crumb, routeTree, navigate]
 related: [internal-app-server-functions, internal-app-url-filters, internal-app-states, internal-app-page-patterns]
 ---
 

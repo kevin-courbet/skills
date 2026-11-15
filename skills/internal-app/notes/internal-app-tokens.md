@@ -2,7 +2,7 @@
 id: internal-app-tokens
 topic: internal-app
 summary: The token files of the kit, which file the app owns, the semantic color roles, the depth of the frame, the panel, and the cards, the other token groups, and the category colors for projects, teams, or tags.
-keywords: [StyleX tokens, design tokens, token files, tokens.stylex.ts, palette.stylex.ts, brand.stylex.ts, semantic color roles, color roles, surface order, frame color, raised surface, inset, overlay, status colors, shadow tokens, font tokens, space tokens, radius tokens, media tokens, container queries, z-index layer, category colors, categoryColor, project color, tag color]
+keywords: [StyleX tokens, design tokens, token files, tokens.stylex.ts, palette.stylex.ts, brand.stylex.ts, semantic color roles, color roles, which token, background color, text color, surface depth, frame color, raised surface, inset, overlay, status colors, shadow tokens, font tokens, space tokens, radius tokens, media tokens, container queries, z-index layer, category colors, categoryColor, project color, tag color]
 specializes: [semantic-tokens, depth]
 related: [internal-app-brand-colors, internal-app-themes, internal-app-density, internal-app-stylex]
 ---

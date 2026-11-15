@@ -2,7 +2,7 @@
 id: internal-app-themes
 topic: internal-app
 summary: How the kit renders the light and dark themes on the server, reads the theme cookie, applies createTheme and data-theme on the html element, sets the locale of react-aria, and the lightness steps of the dark surfaces.
-keywords: [dark theme tokens, light theme, theme cookie, ThemeSwitch, defaultTheme, system theme, prefers-color-scheme, createTheme, data-theme, color-scheme, flash of the wrong theme, I18nProvider, lang attribute, dark surfaces, dark neutrals]
+keywords: [dark theme tokens, dark mode, night mode, light theme, theme cookie, ThemeSwitch, defaultTheme, system theme, prefers-color-scheme, createTheme, data-theme, color-scheme, flash of the wrong theme, I18nProvider, lang attribute, dark surfaces, dark neutrals]
 specializes: [dark-theme]
 related: [internal-app-tokens, internal-app-brand-colors, internal-app-stylex]
 ---

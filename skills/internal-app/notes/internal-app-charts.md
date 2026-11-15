@@ -2,7 +2,7 @@
 id: internal-app-charts
 topic: internal-app
 summary: Wire Aperture charts into an internal app, use TrendChart or Sparkline, put a chart in a Section and not in a Card, build a new chart widget with the chart host bridge, and verify the chart in both themes.
-keywords: [chart, charts, Aperture, chart widget, ChartWidget, ChartToolbar, LineChart, TrendChart, Sparkline, chart in a card, chart in a section, stat tile chart, chart host, chartHost bridge, ChartProvider, chart theme, SVG rendering, exact values, chartData, time series, verify a chart]
+keywords: [chart, charts, plot, graph, chart in a dashboard, Aperture, chart widget, ChartWidget, ChartToolbar, LineChart, TrendChart, Sparkline, chart in a card, chart in a section, stat tile chart, chart host, chartHost bridge, ChartProvider, chart theme, SVG rendering, exact values, chartData, time series, verify a chart]
 specializes: [charts]
 related: [internal-app-tokens, internal-app-themes, internal-app-build-wiring, internal-app-cards, dashboards]
 ---
