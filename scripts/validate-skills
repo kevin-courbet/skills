@@ -3,15 +3,6 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
-test -f "$repo_root/skills/frontend-design/SKILL.md"
-test -f "$repo_root/skills/frontend-design/reference/color-and-contrast.md"
-test -f "$repo_root/skills/frontend-design/reference/interaction-design.md"
-test -f "$repo_root/skills/frontend-design/reference/motion-design.md"
-test -f "$repo_root/skills/frontend-design/reference/responsive-design.md"
-test -f "$repo_root/skills/frontend-design/reference/spatial-design.md"
-test -f "$repo_root/skills/frontend-design/reference/typography.md"
-test -f "$repo_root/skills/frontend-design/reference/ux-writing.md"
-
 design="$repo_root/skills/design"
 design_cli="$design/scripts/design"
 test -f "$design/SKILL.md"
@@ -19,6 +10,7 @@ test -x "$design_cli"
 test -f "$design/assets/themes/graphite.css"
 test -f "$design/assets/palettes/swatches.json"
 test -f "$design/assets/palettes/NOTICE.md"
+test -f "$design/assets/templates/DESIGN.md"
 (cd "$repo_root" && bun test skills/design/tests)
 bun "$design_cli" graph --check
 
@@ -124,7 +116,6 @@ test -f "$repo_root/skills/create-data-visualizations/SKILL.md"
 test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
 test -f "$repo_root/sources/aperture.json"
 
-npx --yes skills@1.5.22 use "$repo_root" --skill frontend-design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill internal-app >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill create-data-visualizations >/dev/null
