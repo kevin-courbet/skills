@@ -32,7 +32,7 @@ These tables give the replacement for each legacy part of an app that moves onto
 | `Card` | `Card`, or no container when the spacing makes the group |
 | `Skeleton`, spinners | `Skeleton`, `Spinner`, and none for SSR data |
 | `Alert`, callouts | `Alert` |
-| Toast and Sonner wrappers | `toast` from `@/components/ui/toaster` |
+| Toast and Sonner wrappers | `toast` from `@/components/primitives/toaster` |
 | `Breadcrumb` components | `staticData.crumb` and the loader `{ crumb }` |
 | Sidebar components | The navigation groups of `AppShell` |
 

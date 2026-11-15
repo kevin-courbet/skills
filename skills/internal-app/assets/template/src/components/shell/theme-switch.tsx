@@ -23,11 +23,11 @@
  */
 import { useMutation } from "@tanstack/react-query";
 import { Monitor, Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { Button } from "@/components/primitives/button";
+import { Menu, MenuItem, MenuTrigger } from "@/components/primitives/menu";
 import { setThemeChoiceFn, ThemeChoice, useTheme } from "@/lib/theme";
 import { failureMessage } from "@/lib/server-result";
-import { toast } from "@/components/ui/toaster";
+import { toast } from "@/components/primitives/toaster";
 import { Schema } from "effect";
 
 const labels: Record<ThemeChoice, string> = { light: "Light", dark: "Dark", system: "System" };

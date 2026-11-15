@@ -46,8 +46,8 @@ import {
   useRouter,
   useMatch,
 } from "@tanstack/react-router";
-import { Button, LinkButton } from "@/components/ui/button";
-import { EmptyState, ErrorState } from "@/components/ui/feedback";
+import { Button, LinkButton } from "@/components/primitives/button";
+import { EmptyState, ErrorState } from "@/components/primitives/feedback";
 import { space } from "@/styles/tokens.stylex";
 import { failureMessage, isServerFnError } from "@/lib/server-result";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

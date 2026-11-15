@@ -10,7 +10,7 @@ related: [internal-app-form-preview, internal-app-page-patterns, internal-app-wr
 
 # Internal App Forms
 
-Run `design read forms` before you design or change a form. This note gives the kit component for each job. `FormShowcase` in `src/components/kit/showcase-form.tsx` uses all of them, and the `/design-kit/form` route renders it. Copy its structure for a new long form. [[internal-app-form-submit]] gives the form state and the server call.
+Run `design read forms` before you design or change a form. This note gives the kit component for each job. `FormShowcase` in `src/components/showcase/showcase-form.tsx` uses all of them, and the `/design-kit/form` route renders it. Copy its structure for a new long form. [[internal-app-form-submit]] gives the form state and the server call.
 
 ## Choose The Control
 

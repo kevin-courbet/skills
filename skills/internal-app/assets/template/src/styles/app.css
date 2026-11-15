@@ -60,10 +60,11 @@
 }
 
 /*
- * View transitions that `withViewTransition` in `src/lib/motion.ts`
- * starts. Only elements with a `view-transition-name` move or fade; the rest
- * of the page changes at once. The values repeat `motion.move` and
- * `motion.easeInOut` from `tokens.stylex.ts`.
+ * View transitions that `withViewTransition` in
+ * `src/components/helpers/motion.ts` starts. Only elements with a
+ * `view-transition-name` move or fade; the rest of the page changes at once.
+ * The values repeat `motion.move` and `motion.easeInOut` from
+ * `tokens.stylex.ts`.
  */
 ::view-transition-group(*) {
   animation-duration: 240ms;

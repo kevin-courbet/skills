@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { countWords, DOC_WORD_LIMIT } from "../scripts/lib/kit-docs.ts";
@@ -52,6 +52,25 @@ describe("the kit docs of a new app", () => {
     expect(kitDocs).toEqual([]);
   });
 
+  test("check fails when the @layer of a kit file does not agree with its folder", () => {
+    const file = join(app, "src/components/patterns/kanban.tsx");
+    const original = readFileSync(file, "utf8");
+    writeFileSync(file, original.replace(" * @layer pattern\n", " * @layer primitive\n"));
+    try {
+      const result = run(INTERNAL_APP, ["check", "--json"]);
+      expect(result.code).toBe(1);
+      const report = JSON.parse(result.stdout) as { findings: ReadonlyArray<{ rule: string; file: string; line: number; text: string }> };
+      expect(report.findings).toContainEqual({
+        rule: "kit-docs",
+        file: "src/components/patterns/kanban.tsx",
+        line: 1,
+        text: "@layer primitive does not agree with the folder of the file; put a primitive file in src/components/primitives/",
+      });
+    } finally {
+      writeFileSync(file, original);
+    }
+  });
+
   test("the catalog lists every component under its layer and reads the installed kit", () => {
     const result = run(INTERNAL_APP, ["components"]);
     expect(result.code).toBe(0);
@@ -93,7 +112,7 @@ describe("the kit docs of a new app", () => {
 
   test("docs Kanban prints the doc comment and the props", () => {
     const result = run(INTERNAL_APP, ["docs", "Kanban"]);
-    expect(result.stdout).toStartWith("Kanban  (pattern)  src/components/ui/kanban.tsx");
+    expect(result.stdout).toStartWith("Kanban  (pattern)  src/components/patterns/kanban.tsx");
     expect(result.stdout).toContain("## Behavior");
     expect(result.stdout).toContain("## Example");
     expect(result.stdout).toContain("### Kanban");

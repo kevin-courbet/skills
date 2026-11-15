@@ -25,11 +25,12 @@ src/
     _app/...                   App. Pages. Set staticData.crumb for breadcrumbs.
   styles/                      kit. palette.stylex.ts, tokens.stylex.ts, themes.ts, category.ts, app.css
   styles/brand.stylex.ts       App. Brand surfaces, text, borders, and accent for the two themes.
-  components/
-    ui/                        kit. Primitives on react-aria-components.
+  components/                  kit. Only kit files. The folder of each file is its @layer.
+    primitives/                kit. One control or one display element, such as Button, Select, and Sparkline.
+    patterns/                  kit. A complete interaction for one task, such as DataTable, Kanban, and TrendChart.
     shell/                     kit. AppDocument, AppShell, NavLink, RouteBreadcrumbs, RouteError, ThemeSwitch.
-    charts/                    kit. chartHost bridge, TrendChart, and Sparkline.
-    kit/showcase*.tsx          kit. The showcases of the design-kit routes.
+    helpers/                   kit. Parts, hooks, and functions for kit code: Field, Overlay, chartHost, form, motion.
+    showcase/                  kit. The showcases of the design-kit routes.
   features/<name>/             App.
     schemas.ts                 Effect Schema for entities, inputs, and search params. Client-safe.
     api.ts                     Server functions, query keys, queryOptions. The only data module routes import.
@@ -39,10 +40,6 @@ src/
     locale.ts                  App. appLocale, appTimeZone, and the formatters.
     brand.ts                   App. defaultTheme for people without a saved theme.
     error-presentation.ts      App. unexpectedFailureMessage.
-    filter-params.ts           kit. Filter field types and the URL codec for the Filters chip bar.
-    focus.ts                   kit. useFocusAfterRemoval.
-    form.ts                    kit. formBehavior, fieldError, and formErrors for TanStack Form.
-    motion.ts                  kit. The motion helpers.
     rac.ts                     kit. renderStyles adapter for react-aria render props.
     router-defaults.tsx        kit. createQueryClient, routerDefaults, react-aria router bridge.
     server-result.ts           kit. ServerResult, ServerFnError, unwrap, failureMessage.
@@ -57,7 +54,7 @@ src/
   vite-env.d.ts                kit.
 ```
 
-[[internal-app-page-patterns#design-kit-routes]] tells what each showcase shows.
+Put the components of the app in `src/features/<name>/ui/`, not in `src/components/`. `check` fails when the `@layer` of a kit file does not agree with its folder. `src/lib/` keeps the kit modules that have no doc comment and the app modules. [[internal-app-page-patterns#design-kit-routes]] tells what each showcase shows.
 
 ## App Modules That The Kit Imports
 

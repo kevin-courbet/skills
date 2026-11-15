@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
-import { FormShowcase } from "@/components/kit/showcase-form";
-import { LinkButton } from "@/components/ui/button";
-import { Page } from "@/components/ui/layout";
+import { FormShowcase } from "@/components/showcase/showcase-form";
+import { LinkButton } from "@/components/primitives/button";
+import { Page } from "@/components/primitives/layout";
 
 const FormShowcaseSearch = Schema.Struct({
   density: Schema.optionalKey(Schema.Literals(["touch"])),

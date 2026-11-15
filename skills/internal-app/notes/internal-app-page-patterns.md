@@ -19,8 +19,8 @@ The template has one working example of each page pattern. Copy the structure of
 | List | `_app/items/index.tsx` | `PageHeader` with one primary action. A page `Toolbar` with a `SearchField` and `Filters` above the `DataTable`. A row link to the detail route, the name column pinned, `StatusDot` for the status, a summary footer, and the `pagination` footer. The search, the filters, the sort, and the page live in the URL. `features/items/filters.ts` holds the filter fields and builds the server query from the search. |
 | Detail | `_app/items/$itemId.tsx` | `Page width="reading"`, a `PageHeader` with quiet actions, a `DescriptionList` in a `Section`, and a `ConfirmDialog` for delete. |
 | Create | `features/items/ui/create-item-dialog.tsx` | A `Dialog` with a TanStack Form. The submit button in the footer uses `form={formId}`. The status is a `RadioGroup appearance="chips"`. |
-| Long form | `_app/design-kit_.form.tsx` with `components/kit/showcase-form.tsx` | See [[internal-app-forms]]. |
-| Touch queue | `_app/design-kit_.queue.tsx` with `components/kit/showcase-queue.tsx` | See [[internal-app-touch-work-view]]. |
+| Long form | `_app/design-kit_.form.tsx` with `components/showcase/showcase-form.tsx` | See [[internal-app-forms]]. |
+| Touch queue | `_app/design-kit_.queue.tsx` with `components/showcase/showcase-queue.tsx` | See [[internal-app-touch-work-view]]. |
 | Settings | `_app/settings.tsx` | A page of reading width with `SettingsCard` and `SettingRow`. Identifiers use `Identifier`. |
 
 ## Choose The Container
@@ -38,9 +38,9 @@ The template renders every kit component for visual checks. Open these routes be
 | Route | Component | Shows |
 | --- | --- | --- |
 | `/design-kit` | `KitShowcase` | Every primitive in all its states. |
-| `/design-kit` | `OperationsShowcase` in `src/components/kit/showcase-operations.tsx` | Filters, status, pipelines, activity, and detail cards. |
-| `/design-kit` | `WorkspaceShowcase` in `src/components/kit/showcase-workspace.tsx` | Traces, boards, trees, sortable lists, code, calendars, schedules, and panels. |
-| `/design-kit` | `ControlsShowcase` in `src/components/kit/showcase-controls.tsx` | Items, field add-ons, toggles, sliders, hover cards, and context menus. |
-| `/design-kit` | `MotionShowcase` in `src/components/kit/showcase-motion.tsx` | Each motion helper on one list. |
-| `/design-kit/form` | `FormShowcase` in `src/components/kit/showcase-form.tsx` | A long form that uses every form component. |
-| `/design-kit/queue` | `QueueShowcase` in `src/components/kit/showcase-queue.tsx` | A touch work view on a shared tablet. |
+| `/design-kit` | `OperationsShowcase` in `src/components/showcase/showcase-operations.tsx` | Filters, status, pipelines, activity, and detail cards. |
+| `/design-kit` | `WorkspaceShowcase` in `src/components/showcase/showcase-workspace.tsx` | Traces, boards, trees, sortable lists, code, calendars, schedules, and panels. |
+| `/design-kit` | `ControlsShowcase` in `src/components/showcase/showcase-controls.tsx` | Items, field add-ons, toggles, sliders, hover cards, and context menus. |
+| `/design-kit` | `MotionShowcase` in `src/components/showcase/showcase-motion.tsx` | Each motion helper on one list. |
+| `/design-kit/form` | `FormShowcase` in `src/components/showcase/showcase-form.tsx` | A long form that uses every form component. |
+| `/design-kit/queue` | `QueueShowcase` in `src/components/showcase/showcase-queue.tsx` | A touch work view on a shared tablet. |

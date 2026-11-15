@@ -34,7 +34,7 @@
  * ```
  */
 import { useMatches } from "@tanstack/react-router";
-import { Breadcrumbs, type BreadcrumbItem } from "@/components/ui/breadcrumbs";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/primitives/breadcrumbs";
 
 declare module "@tanstack/react-router" {
   interface StaticDataRouteOption {

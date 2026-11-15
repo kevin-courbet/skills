@@ -4,13 +4,13 @@ import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
 import type { SortingState } from "@tanstack/react-table";
 import { Schema } from "effect";
 import { Package, SearchX } from "lucide-react";
-import { type BadgeIntent, StatusDot } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/feedback";
-import { Filters } from "@/components/ui/filters";
-import { Page, PageHeader, Toolbar } from "@/components/ui/layout";
-import { SearchField } from "@/components/ui/search-field";
+import { type BadgeIntent, StatusDot } from "@/components/primitives/badge";
+import { Button } from "@/components/primitives/button";
+import { DataTable, type DataTableColumn } from "@/components/patterns/data-table";
+import { EmptyState } from "@/components/primitives/feedback";
+import { Filters } from "@/components/patterns/filters";
+import { Page, PageHeader, Toolbar } from "@/components/primitives/layout";
+import { SearchField } from "@/components/primitives/search-field";
 import { itemsListQueryOptions } from "@/features/items/api";
 import { ItemsSearch, itemFilterFields, itemsQueryFromSearch } from "@/features/items/filters";
 import {
@@ -20,7 +20,7 @@ import {
   itemsQueryDefaults,
 } from "@/features/items/schemas";
 import { CreateItemDialog } from "@/features/items/ui/create-item-dialog";
-import { parseFilters, serializeFilters } from "@/lib/filter-params";
+import { parseFilters, serializeFilters } from "@/components/helpers/filter-params";
 import { formatCurrency, formatInteger, formatRelative } from "@/lib/locale";
 import { color, font, space } from "@/styles/tokens.stylex";
 

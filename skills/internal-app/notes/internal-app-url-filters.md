@@ -8,7 +8,7 @@ related: [internal-app-page-patterns, internal-app-composition, tables, navigati
 
 # Internal App Filters In The URL
 
-A reload and a shared link show the same list, so the state that chooses the rows lives in schema-validated search params. The codec of the filters is `src/lib/filter-params.ts`: read it with `internal-app docs FilterParams`. The chip bar is `internal-app docs Filters`.
+A reload and a shared link show the same list, so the state that chooses the rows lives in schema-validated search params. The codec of the filters is `src/components/helpers/filter-params.ts`: read it with `internal-app docs FilterParams`. The chip bar is `internal-app docs Filters`.
 
 ## Rules
 

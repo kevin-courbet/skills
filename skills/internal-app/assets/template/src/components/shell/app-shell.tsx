@@ -106,17 +106,17 @@ import {
 } from "lucide-react";
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
 import { Button as AriaButton, Disclosure, DisclosurePanel } from "react-aria-components";
-import { Button } from "@/components/ui/button";
-import { type Density, DensityProvider, ShellDensityProvider } from "@/components/ui/density";
+import { Button } from "@/components/primitives/button";
+import { type Density, DensityProvider, ShellDensityProvider } from "@/components/helpers/density";
 import {
   type CommandGroup,
   CommandPalette,
   CommandPaletteProvider,
   useCommandPaletteShortcut,
-} from "@/components/ui/command-palette";
-import { Kbd } from "@/components/ui/layout";
-import { Sheet } from "@/components/ui/sheet";
-import { Toaster } from "@/components/ui/toaster";
+} from "@/components/patterns/command-palette";
+import { Kbd } from "@/components/primitives/layout";
+import { Sheet } from "@/components/primitives/sheet";
+import { Toaster } from "@/components/primitives/toaster";
 import {
   color,
   font,

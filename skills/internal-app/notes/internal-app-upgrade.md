@@ -24,7 +24,7 @@ bun "$SKILL_DIR/scripts/internal-app" sync
 
 - `doctor` lists the missing dependencies with their `bun add` commands, the replaced libraries, the gaps in the wiring, and the number of convention findings for each rule.
 - `check --json` gives each finding with its file and its line. Use it to plan the order of the pages and to measure the progress. Do not commit the file.
-- `sync` lists the kit files to add and each `conflict`: an app file at a kit path, often `src/components/ui/button.tsx`.
+- `sync` lists the kit files to add and each `conflict`: an app file at a kit path, such as `src/components/shell/app-shell.tsx`.
 
 If the `framework` row fails, stop. Run `design read internal-app-framework-port` before you do anything else.
 
@@ -40,7 +40,7 @@ Run `bun install` and `bun run build`. The build must pass before the next step.
 
 ## Install The Kit Next To The Old UI
 
-1. Move each app file that conflicts out of the kit paths first, for example from `src/components/ui/` to `src/components/legacy/`. Update its imports. Do not use `--force` to replace an app file that pages still use.
+1. Move the old UI out of `src/components/` first, for example from `src/components/ui/` to `src/legacy/ui/`. `src/components/` holds only kit files. Update the imports. Do not use `--force` to replace an app file that pages still use.
 2. Run `sync --write`. It adds each kit file and writes `internal-app.kit.json`. Commit the two.
 3. Create each app contract file that is missing. Copy it from the template and adapt it. [[internal-app-project-layout#app-modules-that-the-kit-imports]] lists the files and their exports. For `src/styles/brand.stylex.ts`, run `design read internal-app-brand-colors`.
 4. If the app already has an Effect runtime, export `runtime` and `AppServices` from it. Do not create a second runtime.

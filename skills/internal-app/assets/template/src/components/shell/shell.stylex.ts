@@ -1,7 +1,7 @@
 /**
  * The StyleX marker on the root of `AppShell`.
  *
- * @layer helper
+ * @layer shell
  * @keywords shell marker, stylex marker, when ancestor, shell root, touch page in shell
  * @related AppShell, Density, Layout
  * @notes density, internal-app-adding-a-primitive

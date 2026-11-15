@@ -18,7 +18,7 @@ The template has this wiring:
 1. `src/styles/app.css` imports the stylesheet first: `@import "@kevin-courbet/aperture/styles.css";`. Aperture 0.8.0 and later puts each rule in the `aperture` cascade layer, also in the copy that its browser export loads. The import declares that layer before the reset and StyleX layers, so host overrides win. Do not put the import in a different `layer()`.
 2. `src/routes/_app.tsx` wraps the shell in `<ChartProvider locale={appLocale} timeZone={appTimeZone}>`, with the values from `src/lib/locale.ts`.
 3. The kit `AppDocument` sets `<html data-theme="light|dark">`. The dark series palette of Aperture uses `[data-theme='dark']`.
-4. `src/components/charts/chart-host.ts` maps each `--aperture-*` variable of surface, text, border, accent, radius, spacing, and font to the app tokens. Run `internal-app docs ChartHost`.
+4. `src/components/helpers/chart-host.ts` maps each `--aperture-*` variable of surface, text, border, accent, radius, spacing, and font to the app tokens. Run `internal-app docs ChartHost`.
 
 The Aperture stylesheet contains IBM Plex Sans as a data URI of about 230 KB. The app font replaces it through the bridge, but the bytes still ship.
 

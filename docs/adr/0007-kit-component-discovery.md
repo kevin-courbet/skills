@@ -27,7 +27,7 @@ comment. The doc id is the PascalCase name of the file, such as `Kanban` for
 
 The layers are `primitive`, `pattern`, `shell`, and `helper`. A helper is a
 kit file that a page does not render alone, such as `Field`, `Overlay`, or
-`lib/motion.ts`.
+`Motion`. ADR 0008 puts each kit file in the folder of its layer.
 
 The parser in `scripts/lib/kit-docs.ts` uses text parsing only. It has no
 TypeScript compiler, no dependencies, and no build step. `internal-app check`

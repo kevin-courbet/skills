@@ -2,11 +2,17 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Badge, type BadgeIntent } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Identifier } from "@/components/ui/identifier";
-import { DescriptionList, MetaLine, Page, PageHeader, Section } from "@/components/ui/layout";
+import { Badge, type BadgeIntent } from "@/components/primitives/badge";
+import { Button } from "@/components/primitives/button";
+import { ConfirmDialog } from "@/components/primitives/confirm-dialog";
+import { Identifier } from "@/components/primitives/identifier";
+import {
+  DescriptionList,
+  MetaLine,
+  Page,
+  PageHeader,
+  Section,
+} from "@/components/primitives/layout";
 import { deleteItemFn, itemKeys, itemQueryOptions } from "@/features/items/api";
 import type { ItemStatus } from "@/features/items/schemas";
 import { formatCurrency, formatDateTime } from "@/lib/locale";

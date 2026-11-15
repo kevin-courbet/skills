@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Badge } from "@/components/ui/badge";
-import { Identifier } from "@/components/ui/identifier";
-import { Page, PageHeader, SettingRow, SettingsCard } from "@/components/ui/layout";
+import { Badge } from "@/components/primitives/badge";
+import { Identifier } from "@/components/primitives/identifier";
+import { Page, PageHeader, SettingRow, SettingsCard } from "@/components/primitives/layout";
 import { appLocale, appTimeZone } from "@/lib/locale";
 
 export const Route = createFileRoute("/_app/settings")({

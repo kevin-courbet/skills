@@ -21,6 +21,15 @@ export const LAYER_MEANINGS: Record<Layer, string> = {
   helper: "Hooks, functions, providers, styles, and parts for kit code and for new collections.",
 };
 
+// The folder of a kit file is its layer, so that a builder sees the layer in
+// the path and in the import specifier, not only in the doc comment.
+export const LAYER_FOLDERS: Record<Layer, string> = {
+  primitive: "src/components/primitives/",
+  pattern: "src/components/patterns/",
+  shell: "src/components/shell/",
+  helper: "src/components/helpers/",
+};
+
 const KNOWN_TAGS = new Set(["layer", "keywords", "related", "notes"]);
 const REQUIRED_SECTIONS = ["Example"] as const;
 
@@ -591,6 +600,8 @@ export function readKitDoc(root: string, file: string): KitDoc {
   const layer = layerTag !== undefined && (LAYERS as ReadonlyArray<string>).includes(layerTag) ? (layerTag as Layer) : null;
   if (layerTag === undefined) problems.push(`the doc comment has no @layer; give one of ${LAYERS.join(", ")}`);
   else if (layer === null) problems.push(`@layer ${layerTag} is not a layer; give one of ${LAYERS.join(", ")}`);
+  else if (!file.startsWith(LAYER_FOLDERS[layer]) || file.slice(LAYER_FOLDERS[layer].length).includes("/"))
+    problems.push(`@layer ${layer} does not agree with the folder of the file; put a ${layer} file in ${LAYER_FOLDERS[layer]}`);
   if (parsed.summary === "") problems.push("the doc comment has no summary sentence");
   else if (!parsed.summary.endsWith(".")) problems.push("the summary must be one sentence that ends with a period");
   const keywords = list(parsed.tags.get("keywords") ?? "");

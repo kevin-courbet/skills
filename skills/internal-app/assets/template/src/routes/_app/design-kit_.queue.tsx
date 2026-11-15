@@ -4,8 +4,8 @@ import {
   QueueShowcase,
   technicianIds,
   workOrdersQueryOptions,
-} from "@/components/kit/showcase-queue";
-import { Page } from "@/components/ui/layout";
+} from "@/components/showcase/showcase-queue";
+import { Page } from "@/components/primitives/layout";
 
 const QueueShowcaseSearch = Schema.Struct({
   person: Schema.optionalKey(Schema.Literals(technicianIds)),

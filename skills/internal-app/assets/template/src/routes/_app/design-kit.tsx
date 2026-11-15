@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { KitShowcase } from "@/components/kit/showcase";
-import { Page } from "@/components/ui/layout";
+import { KitShowcase } from "@/components/showcase/showcase";
+import { Page } from "@/components/primitives/layout";
 
 export const Route = createFileRoute("/_app/design-kit")({
   staticData: { crumb: "Design kit" },

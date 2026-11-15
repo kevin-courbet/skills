@@ -5,7 +5,7 @@ import {
   type FilterField,
   filterSearchFields,
   parseFilters,
-} from "@/lib/filter-params";
+} from "@/components/helpers/filter-params";
 import { ItemSortField, ItemStatus, type ItemsQuery, SortDirection } from "./schemas";
 
 /** Filters of the items list. The ids are the URL params. */

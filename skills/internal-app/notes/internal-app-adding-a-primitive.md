@@ -12,7 +12,7 @@ Kit components live in this skill, not in an app. Do not build a one-off control
 
 ## Steps
 
-1. Scaffold a working copy with `new`. Build the component in `src/components/ui` on the matching react-aria-components component, with StyleX tokens and `renderStyles`.
+1. Scaffold a working copy with `new`. Build the component in the folder of its layer, such as `src/components/primitives/`, on the matching react-aria-components component, with StyleX tokens and `renderStyles`.
 2. Start the file with its doc comment. `internal-app docs Kanban` shows a complete example. The comment gives a summary sentence, `@layer`, `@keywords`, `@related`, and `@notes`, then the purpose and the alternative, `## Behavior`, `## Rules`, and `## Example`. Give each exported prop a comment. `check` fails without them.
 3. Add the component to `KitShowcase` in all its states.
 4. Run `bun run build`, `bun run tsc`, `bun run lint`, and `check`, and capture `/design-kit` in both themes.

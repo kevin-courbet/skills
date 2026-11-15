@@ -1,9 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { TrendChart } from "@/components/charts/trend-chart";
-import { LinkButton } from "@/components/ui/button";
-import { Page, PageHeader, Section, StatTile } from "@/components/ui/layout";
+import { TrendChart } from "@/components/patterns/trend-chart";
+import { LinkButton } from "@/components/primitives/button";
+import { Page, PageHeader, Section, StatTile } from "@/components/primitives/layout";
 import { itemsSummaryQueryOptions } from "@/features/items/api";
 import { formatCurrency, formatInteger } from "@/lib/locale";
 import { media, space } from "@/styles/tokens.stylex";
