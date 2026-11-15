@@ -12,52 +12,46 @@ test -f "$repo_root/skills/frontend-design/reference/spatial-design.md"
 test -f "$repo_root/skills/frontend-design/reference/typography.md"
 test -f "$repo_root/skills/frontend-design/reference/ux-writing.md"
 
-test -f "$repo_root/skills/ui-design/SKILL.md"
-test -f "$repo_root/skills/ui-design/references/method.md"
-test -f "$repo_root/skills/ui-design/references/component-patterns.md"
-test -f "$repo_root/skills/ui-design/references/font-selection.md"
-test -f "$repo_root/skills/ui-design/references/icon-usage.md"
-test -f "$repo_root/skills/ui-design/references/palette-usage.md"
-test -f "$repo_root/skills/ui-design/references/dark-theme.md"
-test -f "$repo_root/skills/ui-design/assets/themes/graphite.css"
-test -f "$repo_root/skills/ui-design/assets/palettes/swatches.json"
-test -f "$repo_root/skills/ui-design/assets/palettes/NOTICE.md"
+design="$repo_root/skills/design"
+design_cli="$design/scripts/design"
+test -f "$design/SKILL.md"
+test -x "$design_cli"
+test -f "$design/assets/themes/graphite.css"
+test -f "$design/assets/palettes/swatches.json"
+test -f "$design/assets/palettes/NOTICE.md"
+(cd "$repo_root" && bun test skills/design/tests)
+bun "$design_cli" graph --check
 
-test -f "$repo_root/skills/form-design/SKILL.md"
-test -f "$repo_root/skills/form-design/references/method.md"
-test -f "$repo_root/skills/form-design/references/component-patterns.md"
-test -f "$repo_root/skills/form-design/references/dark-theme.md"
-test -f "$repo_root/skills/form-design/assets/themes/graphite.css"
-test -x "$repo_root/scripts/sync-form-design"
-shopt -s nullglob
-form_reference_files=("$repo_root"/skills/form-design/references/*)
-test "${#form_reference_files[@]}" -eq 3
-form_theme_files=("$repo_root"/skills/form-design/assets/themes/*)
-test "${#form_theme_files[@]}" -eq 1
-cmp -s \
-  "$repo_root/skills/ui-design/references/dark-theme.md" \
-  "$repo_root/skills/form-design/references/dark-theme.md"
-cmp -s \
-  "$repo_root/skills/ui-design/assets/themes/graphite.css" \
-  "$repo_root/skills/form-design/assets/themes/graphite.css"
-cmp -s \
-  "$repo_root/skills/ui-design/references/method.md" \
-  "$repo_root/skills/form-design/references/method.md"
-cmp -s \
-  "$repo_root/skills/ui-design/references/component-patterns.md" \
-  "$repo_root/skills/form-design/references/component-patterns.md"
+# Other skills point to design notes by id. Each pointer must resolve, so a
+# renamed note or section fails here and not in an agent session.
+design_references=$(
+  grep -ohE 'design read [a-z0-9]+(-[a-z0-9]+)*(#[a-z0-9]+(-[a-z0-9]+)*)?' \
+    "$repo_root/skills/internal-app/SKILL.md" \
+    "$repo_root"/skills/internal-app/references/*.md \
+    "$repo_root/skills/internal-app/scripts/internal-app" |
+    sed 's/^design read //' | sort -u
+)
+test -n "$design_references"
+while IFS= read -r design_reference; do
+  if [[ "$design_reference" == *"#"* ]]; then
+    bun "$design_cli" read "$design_reference" >/dev/null
+  else
+    bun "$design_cli" read "$design_reference" --outline >/dev/null
+  fi
+done <<<"$design_references"
 
 palette_files=()
 for index in {01..24}; do
-  palette_file="$repo_root/skills/ui-design/assets/palettes/palette-$index.json"
+  palette_file="$design/assets/palettes/palette-$index.json"
   test -f "$palette_file"
   palette_files+=("$palette_file")
 done
 
-all_palette_files=("$repo_root"/skills/ui-design/assets/palettes/palette-*.json)
+shopt -s nullglob
+all_palette_files=("$design"/assets/palettes/palette-*.json)
 test "${#all_palette_files[@]}" -eq "${#palette_files[@]}"
 
-node - "${palette_files[@]}" "$repo_root/skills/ui-design/assets/palettes/swatches.json" <<'NODE'
+node - "${palette_files[@]}" "$design/assets/palettes/swatches.json" <<'NODE'
 const fs = require("node:fs")
 
 for (const file of process.argv.slice(2)) {
@@ -131,8 +125,7 @@ test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
 test -f "$repo_root/sources/aperture.json"
 
 npx --yes skills@1.5.22 use "$repo_root" --skill frontend-design >/dev/null
-npx --yes skills@1.5.22 use "$repo_root" --skill ui-design >/dev/null
-npx --yes skills@1.5.22 use "$repo_root" --skill form-design >/dev/null
+npx --yes skills@1.5.22 use "$repo_root" --skill design >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill internal-app >/dev/null
 npx --yes skills@1.5.22 use "$repo_root" --skill create-data-visualizations >/dev/null
 install_root=$(mktemp -d)
@@ -140,12 +133,16 @@ trap 'rm -rf "$install_root"' EXIT
 (
   cd "$install_root"
   npx --yes skills@1.5.22 add "$repo_root" \
-    --skill form-design \
+    --skill design \
     --agent opencode \
     --copy \
     --yes >/dev/null
 )
-test -f "$install_root/.agents/skills/form-design/SKILL.md"
+installed_design="$install_root/.agents/skills/design"
+test -f "$installed_design/SKILL.md"
+bun "$installed_design/scripts/design" graph --check >/dev/null
+bun "$installed_design/scripts/design" search "invoice preview" >/dev/null
+bun "$installed_design/scripts/design" read graphite --outline >/dev/null
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" capabilities --json >/dev/null
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema capabilities --json >/dev/null
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema chart-spec --json >/dev/null
