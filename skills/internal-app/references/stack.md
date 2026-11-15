@@ -91,7 +91,7 @@ src/
     kit/showcase-workspace.tsx kit. Traces, boards, trees, sortable lists, code, calendars, schedules, and panels for the showcase.
     kit/showcase-controls.tsx  kit. Items, field add-ons, toggles, sliders, hover cards, and context menus for the showcase.
     kit/showcase-motion.tsx    kit. Each motion helper on one list of access requests, for the showcase.
-    kit/showcase-form.tsx      kit. A long form that uses every form component, on /design-kit/form.
+    kit/showcase-form.tsx      kit. A visitor form that uses every form component and previews the printed badge, on /design-kit/form.
     kit/showcase-queue.tsx     kit. A touch work view of facilities work orders, on /design-kit/queue.
   features/<name>/             App.
     schemas.ts                 Effect Schema for entities, inputs, and search params. Client-safe.

@@ -12,7 +12,11 @@ export interface FormLayoutProps {
   readonly "aria-label"?: string;
   /** ErrorSummary, then one `Section layout="split"` for each part of the form. */
   readonly children: ReactNode;
-  /** A FormPreview of the record that the answers make. */
+  /**
+   * A FormPreview of the tangible thing that the form produces, such as a
+   * printed badge or an invoice. Leave it out when the form only changes a
+   * record in the app.
+   */
   readonly preview?: ReactNode;
   /** A FormFooter with the summary and the submit button. */
   readonly footer?: ReactNode;
@@ -63,18 +67,24 @@ export function FieldRow({ children }: { readonly children: ReactNode }) {
 }
 
 export interface FormPreviewProps {
-  /** Names the preview for assistive technology, such as "Work order preview". */
+  /** Names the preview for assistive technology, such as "Visitor badge preview". */
   readonly label: string;
-  /** One sentence under the preview, such as what people do with the record next. */
+  /** One sentence under the preview, such as where the thing goes next: "Prints at the reception desk." */
   readonly description?: string;
-  /** The record as the answers make it, with a dash for each empty answer. */
+  /**
+   * An app-owned component that looks like the real thing, built from kit
+   * tokens, with a quiet placeholder for each empty answer. Use a
+   * DescriptionList only when the thing that the form produces is a record.
+   */
   readonly children: ReactNode;
 }
 
 /**
- * The record that the form makes, filled in while people type. It shows how
- * the answers will look where people meet the record later, such as a card on
- * a board. It does not announce changes, because it changes on every key.
+ * The end result of the form, filled in while people type. Give it a thing
+ * that people see or hold outside the form, such as a printed badge, a label,
+ * an invoice, or an outgoing message, in the shape of that thing. The kit
+ * gives no frame for the thing, because each kind of thing has its own shape.
+ * It does not announce changes, because it changes on every key.
  */
 export function FormPreview({ label, description, children }: FormPreviewProps) {
   return (

@@ -2,18 +2,17 @@ import * as stylex from "@stylexjs/stylex";
 import { useForm, useStore } from "@tanstack/react-form";
 import { Schema } from "effect";
 import {
-  Armchair,
-  DoorClosed,
-  Droplets,
-  Lightbulb,
-  Siren,
-  SprayCan,
-  Thermometer,
-  Zap,
+  Briefcase,
+  Coffee,
+  FlaskConical,
+  HardHat,
+  Presentation,
+  Truck,
+  Wrench,
 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CheckboxGroup } from "@/components/ui/checkbox";
 import type { ChoiceOption } from "@/components/ui/choice";
@@ -25,187 +24,175 @@ import {
   FormLayout,
   FormPreview,
 } from "@/components/ui/form-layout";
-import { Card, Code, DescriptionList, PageHeader, Section } from "@/components/ui/layout";
+import { Code, PageHeader, Section } from "@/components/ui/layout";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { TextField } from "@/components/ui/text-field";
 import { fieldError, formErrors, formBehavior } from "@/lib/form";
 import { appLocale } from "@/lib/locale";
-import { color, font, space } from "@/styles/tokens.stylex";
+import { lightTheme } from "@/styles/themes";
+import { color, font, radius, shadow, space } from "@/styles/tokens.stylex";
 
-const Building = Schema.Literals(["north", "south", "lab", "depot"]);
+const Host = Schema.Literals(["amara", "jonas", "mei", "tomas"]);
+type Host = typeof Host.Type;
+const Building = Schema.Literals(["harbour", "canal", "hill"]);
 type Building = typeof Building.Type;
-const WorkKind = Schema.Literals([
-  "electrical",
-  "plumbing",
-  "heating",
-  "lighting",
-  "doors",
-  "furniture",
-  "cleaning",
-]);
-type WorkKind = typeof WorkKind.Type;
-const AccessNeed = Schema.Literals(["keycard", "ladder", "escort", "afterHours"]);
-type AccessNeed = typeof AccessNeed.Type;
-const Priority = Schema.Literals(["normal", "urgent"]);
-type Priority = typeof Priority.Type;
-const Technician = Schema.Literals(["amara", "jonas", "mei", "tomas"]);
-type Technician = typeof Technician.Type;
+const BadgeType = Schema.Literals(["visitor", "contractor"]);
+type BadgeType = typeof BadgeType.Type;
+const Area = Schema.Literals(["lobby", "offices", "meeting", "labs", "workshop", "dock"]);
+type Area = typeof Area.Type;
+const Extra = Schema.Literals(["parking", "wifi", "stepFree", "locker"]);
+type Extra = typeof Extra.Type;
 
 const notBlank = (message: string) => Schema.isPattern(/\S/, { message });
 
-/** The request schema. The due date check needs today, so the schema is built per page. */
-function requestSchema(today: string) {
+/** The visit schema. The visit day check needs today, so the schema is built per page. */
+function visitSchema(today: string) {
   return Schema.Struct({
-    name: Schema.String.pipe(Schema.check(notBlank("Enter your name."))),
+    name: Schema.String.pipe(
+      Schema.check(notBlank("Enter the full name of the visitor, as it goes on the badge.")),
+    ),
+    company: Schema.String,
     email: Schema.String.pipe(
       Schema.check(
-        notBlank("Enter your work email. Updates about the request go to it."),
+        notBlank("Enter the email of the visitor. The visit details go to it."),
         Schema.isPattern(/^\s*$|^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
           message: "Enter the email in the form name@example.com.",
         }),
       ),
     ),
-    phone: Schema.String.pipe(
+    host: Schema.NullOr(Host),
+    building: Schema.NullOr(Building).pipe(
       Schema.check(
-        Schema.isPattern(/^$|^\+?[\d\s-]{6,}$/, {
-          message: "Enter the phone number with digits and spaces only, like 020 7946 0321.",
-        }),
+        Schema.makeFilter(
+          (value: Building | null) => value !== null || "Pick the building of the visit.",
+        ),
       ),
     ),
-    building: Schema.NullOr(Building),
     floor: Schema.String.pipe(
       Schema.check(
-        notBlank("Enter the floor, like 3 or G for the ground floor."),
         Schema.isMaxLength(3, {
           message: "Enter the floor in 3 characters or fewer, like 12 or B2.",
         }),
       ),
     ),
     room: Schema.String,
-    work: Schema.Array(WorkKind).pipe(
-      Schema.check(
-        Schema.isMinLength(1, {
-          message: "Pick at least one kind of work. Use the note for anything else.",
-        }),
-      ),
-    ),
-    note: Schema.String.pipe(
-      Schema.check(Schema.isMaxLength(500, { message: "Shorten the note to 500 characters." })),
-    ),
-    access: Schema.Array(AccessNeed),
-    priority: Priority,
-    dueBy: Schema.NullOr(Schema.String).pipe(
+    visitDay: Schema.NullOr(Schema.String).pipe(
       Schema.check(
         Schema.makeFilter((value: string | null) => {
           if (value === null) return "Pick a day, or enter a date in the date field.";
-          if (value < today) return "Pick a due day of today or later.";
+          if (value < today) return "Pick a visit day of today or later.";
           return true;
         }),
       ),
     ),
-    assignee: Schema.NullOr(Technician),
+    badgeType: BadgeType,
+    areas: Schema.Array(Area).pipe(
+      Schema.check(
+        Schema.isMinLength(1, {
+          message: "Pick at least one area. The badge opens only the areas on it.",
+        }),
+      ),
+    ),
+    extras: Schema.Array(Extra),
+    note: Schema.String.pipe(
+      Schema.check(Schema.isMaxLength(500, { message: "Shorten the note to 500 characters." })),
+    ),
   });
 }
 
-type RequestValues = ReturnType<typeof requestSchema>["Type"];
+type VisitValues = ReturnType<typeof visitSchema>["Type"];
 
-const buildingOptions: ReadonlyArray<ChoiceOption<Building>> = [
-  { id: "north", label: "North tower" },
-  { id: "south", label: "South tower" },
-  { id: "lab", label: "Lab block" },
-  { id: "depot", label: "Depot" },
+const hosts: ReadonlyArray<{ id: Host; label: string; floor: string }> = [
+  { id: "amara", label: "Amara Okafor", floor: "4" },
+  { id: "jonas", label: "Jonas Berg", floor: "2" },
+  { id: "mei", label: "Mei Tanaka", floor: "6" },
+  { id: "tomas", label: "Tomas Silva", floor: "3" },
 ];
 
-const workMinutes: Record<WorkKind, number> = {
-  electrical: 60,
-  plumbing: 120,
-  heating: 120,
-  lighting: 30,
-  doors: 60,
-  furniture: 60,
-  cleaning: 30,
-};
-
-const workKinds: ReadonlyArray<ChoiceOption<WorkKind>> = [
-  { id: "electrical", label: "Electrical", icon: Zap },
-  { id: "plumbing", label: "Plumbing", icon: Droplets },
-  { id: "heating", label: "Heating and air", icon: Thermometer },
-  { id: "lighting", label: "Lighting", icon: Lightbulb },
-  { id: "doors", label: "Doors and locks", icon: DoorClosed },
-  { id: "furniture", label: "Furniture", icon: Armchair },
-  { id: "cleaning", label: "Cleaning", icon: SprayCan },
-];
-
-const workOptions: ReadonlyArray<ChoiceOption<WorkKind>> = workKinds.map((option) => ({
-  ...option,
-  meta: formatMinutes(workMinutes[option.id]),
+const hostOptions: ReadonlyArray<ChoiceOption<Host>> = hosts.map((host) => ({
+  id: host.id,
+  label: host.label,
+  avatar: {},
+  meta: `Floor ${host.floor}`,
 }));
 
-const accessOptions: ReadonlyArray<ChoiceOption<AccessNeed>> = [
-  { id: "keycard", label: "Keycard" },
-  { id: "ladder", label: "Ladder" },
-  { id: "escort", label: "Escort" },
-  { id: "afterHours", label: "After hours" },
+const buildingOptions: ReadonlyArray<ChoiceOption<Building>> = [
+  { id: "harbour", label: "Harbour House" },
+  { id: "canal", label: "Canal Works" },
+  { id: "hill", label: "Hill Lab" },
 ];
 
-const priorityOptions: ReadonlyArray<ChoiceOption<Priority>> = [
-  { id: "normal", label: "Normal", description: "Joins the queue in the order it arrives." },
+const badgeTypeOptions: ReadonlyArray<ChoiceOption<BadgeType>> = [
   {
-    id: "urgent",
-    label: "Urgent",
-    icon: Siren,
-    description: "Goes to the on-call technician now. Use it for a risk to people or property.",
+    id: "visitor",
+    label: "Visitor",
+    description: "Walks with the host in every area.",
+  },
+  {
+    id: "contractor",
+    label: "Contractor",
+    icon: HardHat,
+    description: "Works alone in the areas on the badge after a safety briefing.",
   },
 ];
 
-const technicians: ReadonlyArray<{ id: Technician; label: string; open: number }> = [
-  { id: "amara", label: "Amara", open: 0 },
-  { id: "jonas", label: "Jonas", open: 3 },
-  { id: "mei", label: "Mei", open: 2 },
-  { id: "tomas", label: "Tomas", open: 5 },
+/** The time each area closes, as 24-hour text. The badge is valid until the earliest one. */
+const areaCloses: Record<Area, string> = {
+  lobby: "20:00",
+  offices: "18:00",
+  meeting: "19:00",
+  labs: "17:00",
+  workshop: "16:00",
+  dock: "15:00",
+};
+
+const areaKinds: ReadonlyArray<ChoiceOption<Area>> = [
+  { id: "lobby", label: "Lobby and café", icon: Coffee },
+  { id: "offices", label: "Office floors", icon: Briefcase },
+  { id: "meeting", label: "Meeting rooms", icon: Presentation },
+  { id: "labs", label: "Labs", icon: FlaskConical },
+  { id: "workshop", label: "Workshop", icon: Wrench },
+  { id: "dock", label: "Loading dock", icon: Truck },
 ];
 
-const technicianOptions: ReadonlyArray<ChoiceOption<Technician>> = technicians.map(
-  (technician) => ({
-    id: technician.id,
-    label: technician.label,
-    avatar: {},
-    meta: `${technician.open} open`,
-  }),
-);
+const areaOptions: ReadonlyArray<ChoiceOption<Area>> = areaKinds.map((option) => ({
+  ...option,
+  meta: `until ${areaCloses[option.id]}`,
+}));
+
+const extraOptions: ReadonlyArray<ChoiceOption<Extra>> = [
+  { id: "parking", label: "Parking space" },
+  { id: "wifi", label: "Guest Wi-Fi" },
+  { id: "stepFree", label: "Step-free route" },
+  { id: "locker", label: "Locker" },
+];
 
 /** Page order of the fields, for the error summary. */
 const fieldOrder = [
-  { name: "name", id: "request-name" },
-  { name: "email", id: "request-email" },
-  { name: "phone", id: "request-phone" },
-  { name: "building", id: "request-building" },
-  { name: "floor", id: "request-floor" },
-  { name: "room", id: "request-room" },
-  { name: "work", id: "request-work" },
-  { name: "note", id: "request-note" },
-  { name: "access", id: "request-access" },
-  { name: "priority", id: "request-priority" },
-  { name: "dueBy", id: "request-due" },
-  { name: "assignee", id: "request-assignee" },
+  { name: "name", id: "visit-name" },
+  { name: "company", id: "visit-company" },
+  { name: "email", id: "visit-email" },
+  { name: "host", id: "visit-host" },
+  { name: "building", id: "visit-building" },
+  { name: "floor", id: "visit-floor" },
+  { name: "room", id: "visit-room" },
+  { name: "visitDay", id: "visit-day" },
+  { name: "badgeType", id: "visit-badge-type" },
+  { name: "areas", id: "visit-areas" },
+  { name: "extras", id: "visit-extras" },
+  { name: "note", id: "visit-note" },
 ] as const;
 
-const requestNumber = "WO-2318";
-const formId = "facilities-request";
-function formatDueDay(isoDate: string): string {
+const badgeNumber = "V-2318";
+const formId = "visitor-registration";
+
+function formatVisitDay(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString(appLocale, {
     weekday: "short",
     day: "numeric",
     month: "short",
     timeZone: "UTC",
   });
-}
-
-function formatMinutes(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours === 0) return `${rest} min`;
-  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
 
 function labelOf<Value extends string>(
@@ -217,27 +204,34 @@ function labelOf<Value extends string>(
   return option.label;
 }
 
-const emptyValues: RequestValues = {
+/** The earliest closing time of the areas, or null when no area is picked. */
+function validUntil(areas: ReadonlyArray<Area>): string | null {
+  const times = areas.map((area) => areaCloses[area]).toSorted();
+  return times[0] ?? null;
+}
+
+const emptyValues: VisitValues = {
   name: "",
+  company: "",
   email: "",
-  phone: "",
+  host: null,
   building: null,
   floor: "",
   room: "",
-  work: [],
+  visitDay: null,
+  badgeType: "visitor",
+  areas: [],
+  extras: [],
   note: "",
-  access: [],
-  priority: "normal",
-  dueBy: null,
-  assignee: null,
 };
 
 /**
  * A long form built from the kit form parts: split sections, sized fields,
- * choice cards and chips, date quick picks, a live preview, an error summary,
- * and a sticky footer. `today` is an ISO date from the route loader, so the
- * server and the browser render the same days. `cancel` is a quiet LinkButton
- * back to the page that opened the form, because the kit knows no app routes.
+ * choice cards and chips, date quick picks, a live preview of the printed
+ * badge, an error summary, and a sticky footer. `today` is an ISO date from
+ * the route loader, so the server and the browser render the same days.
+ * `cancel` is a quiet LinkButton back to the page that opened the form,
+ * because the kit knows no app routes.
  */
 export function FormShowcase({
   today,
@@ -246,8 +240,8 @@ export function FormShowcase({
   readonly today: string;
   readonly cancel: ReactNode;
 }) {
-  const [sent, setSent] = useState<RequestValues | null>(null);
-  const schema = useMemo(() => Schema.toStandardSchemaV1(requestSchema(today)), [today]);
+  const [sent, setSent] = useState<VisitValues | null>(null);
+  const schema = useMemo(() => Schema.toStandardSchemaV1(visitSchema(today)), [today]);
   const quickPicks = useMemo(
     () =>
       dayQuickPicks({
@@ -268,13 +262,13 @@ export function FormShowcase({
   if (sent !== null)
     return (
       <>
-        <PageHeader title="Report a building problem" />
+        <PageHeader title="Register a visitor" />
         <Alert
           intent="success"
           announce="status"
           title={
             <>
-              Request <Code>{requestNumber}</Code> is in the queue
+              Badge <Code>{badgeNumber}</Code> is printing at reception
             </>
           }
           actions={
@@ -284,13 +278,13 @@ export function FormShowcase({
                 setSent(null);
               }}
             >
-              Report another problem
+              Register another visitor
             </Button>
           }
         >
-          {sent.assignee === null
-            ? "The next free technician takes it. Updates go to "
-            : `${labelOf(technicianOptions, sent.assignee)} has it. Updates go to `}
+          {sent.host === null
+            ? "Reception meets the visitor at the desk. The visit details go to "
+            : `${labelOf(hostOptions, sent.host)} gets a message when the visitor arrives. The visit details go to `}
           {sent.email}.
         </Alert>
       </>
@@ -299,29 +293,31 @@ export function FormShowcase({
   return (
     <>
       <PageHeader
-        title="Report a building problem"
-        description="Facilities fixes most problems within two working days."
+        title="Register a visitor"
+        description="Reception prints the badge before the visitor arrives."
       />
       <FormLayout
         id={formId}
         onSubmit={() => void form.handleSubmit()}
-        aria-label="Report a building problem"
+        aria-label="Register a visitor"
         preview={
-          <form.Subscribe selector={(state) => state.values}>
-            {(values) => <RequestPreview values={values} />}
-          </form.Subscribe>
+          <FormPreview label="Visitor badge preview" description="Prints at the reception desk.">
+            <form.Subscribe selector={(state) => state.values}>
+              {(values) => <VisitorBadge values={values} />}
+            </form.Subscribe>
+          </FormPreview>
         }
         footer={
           <FormFooter
             summary={
-              <form.Subscribe selector={(state) => state.values.work}>
-                {(work) => <FooterSummary work={work} />}
+              <form.Subscribe selector={(state) => state.values.areas}>
+                {(areas) => <FooterSummary areas={areas} />}
               </form.Subscribe>
             }
           >
             {cancel}
             <Button intent="primary" type="submit">
-              Send request
+              Print badge
             </Button>
           </FormFooter>
         }
@@ -336,7 +332,7 @@ export function FormShowcase({
             const errors = submissionAttempts === 0 ? [] : formErrors(fieldMeta, fieldOrder);
             return (
               <ErrorSummary
-                title={`${errors.length} ${errors.length === 1 ? "thing" : "things"} to fix before you send the request`}
+                title={`${errors.length} ${errors.length === 1 ? "thing" : "things"} to fix before you print the badge`}
                 errors={errors}
                 submitCount={submissionAttempts}
               />
@@ -346,17 +342,17 @@ export function FormShowcase({
 
         <Section
           layout="split"
-          title="You"
-          description="Updates go to your email, and the technician calls only about urgent work."
+          title="Visitor"
+          description="The name and the company go on the badge. The visit details go to the email."
         >
           <FieldRow>
             <form.Field name="name">
               {(field) => (
                 <TextField
-                  id="request-name"
-                  label="Name"
+                  id="visit-name"
+                  label="Full name"
                   autoFocus
-                  autoComplete="name"
+                  autoComplete="off"
                   width="md"
                   value={field.state.value}
                   onChange={field.handleChange}
@@ -365,15 +361,14 @@ export function FormShowcase({
                 />
               )}
             </form.Field>
-            <form.Field name="email">
+            <form.Field name="company">
               {(field) => (
                 <TextField
-                  id="request-email"
-                  label="Work email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="e.g. sam.lee@example.com"
-                  width="lg"
+                  id="visit-company"
+                  label="Company"
+                  isOptional
+                  autoComplete="off"
+                  width="md"
                   value={field.state.value}
                   onChange={field.handleChange}
                   onBlur={field.handleBlur}
@@ -382,16 +377,15 @@ export function FormShowcase({
               )}
             </form.Field>
           </FieldRow>
-          <form.Field name="phone">
+          <form.Field name="email">
             {(field) => (
               <TextField
-                id="request-phone"
-                label="Phone"
-                isOptional
-                type="tel"
-                autoComplete="tel"
-                placeholder="e.g. 020 7946 0321"
-                width="sm"
+                id="visit-email"
+                label="Email"
+                type="email"
+                autoComplete="off"
+                placeholder="e.g. sam.lee@example.com"
+                width="lg"
                 value={field.state.value}
                 onChange={field.handleChange}
                 onBlur={field.handleBlur}
@@ -403,19 +397,42 @@ export function FormShowcase({
 
         <Section
           layout="split"
-          title="Where"
-          description="A room number saves the technician a search of the floor."
+          title="Host"
+          description="The host gets a message when the visitor arrives and walks them in."
+        >
+          <form.Field name="host">
+            {(field) => (
+              <RadioGroup
+                id="visit-host"
+                label="Host"
+                appearance="chips"
+                options={hostOptions}
+                noneOption={{ label: "Reception" }}
+                value={field.state.value}
+                onChange={field.handleChange}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
+              />
+            )}
+          </form.Field>
+        </Section>
+
+        <Section
+          layout="split"
+          title="Visit"
+          description="The badge works only in this building and on this day."
         >
           <form.Field name="building">
             {(field) => (
               <RadioGroup
-                id="request-building"
+                id="visit-building"
                 label="Building"
                 appearance="chips"
                 options={buildingOptions}
-                noneOption={{ label: "Not sure" }}
                 value={field.state.value}
-                onChange={field.handleChange}
+                onChange={(next) => {
+                  field.handleChange(next);
+                  field.handleBlur();
+                }}
                 errorMessage={fieldError(field, hasSubmitAttempt)}
               />
             )}
@@ -424,9 +441,10 @@ export function FormShowcase({
             <form.Field name="floor">
               {(field) => (
                 <TextField
-                  id="request-floor"
+                  id="visit-floor"
                   label="Floor"
-                  placeholder="e.g. 3"
+                  isOptional
+                  placeholder="e.g. 4"
                   width="xs"
                   value={field.state.value}
                   onChange={field.handleChange}
@@ -438,10 +456,10 @@ export function FormShowcase({
             <form.Field name="room">
               {(field) => (
                 <TextField
-                  id="request-room"
+                  id="visit-room"
                   label="Room"
                   isOptional
-                  placeholder="e.g. 3.14"
+                  placeholder="e.g. 4.12"
                   width="sm"
                   value={field.state.value}
                   onChange={field.handleChange}
@@ -451,85 +469,11 @@ export function FormShowcase({
               )}
             </form.Field>
           </FieldRow>
-        </Section>
-
-        <Section
-          layout="split"
-          title="What needs work"
-          description="The kinds of work set the time estimate and the tools that the technician brings."
-        >
-          <form.Field name="work">
-            {(field) => (
-              <CheckboxGroup
-                id="request-work"
-                label="Kind of work"
-                description="Pick at least one."
-                options={workOptions}
-                value={field.state.value}
-                onChange={(next) => {
-                  field.handleChange(next);
-                  field.handleBlur();
-                }}
-                errorMessage={fieldError(field, hasSubmitAttempt)}
-              />
-            )}
-          </form.Field>
-          <form.Field name="note">
-            {(field) => (
-              <TextField
-                id="request-note"
-                label="Note"
-                isOptional
-                multiline
-                description="Anything the kinds of work do not say, such as when the room is free."
-                placeholder="e.g. The radiator under the window leaks after 4 pm."
-                value={field.state.value}
-                onChange={field.handleChange}
-                onBlur={field.handleBlur}
-                errorMessage={fieldError(field, hasSubmitAttempt)}
-              />
-            )}
-          </form.Field>
-          <form.Field name="access">
-            {(field) => (
-              <CheckboxGroup
-                id="request-access"
-                label="Access needs"
-                isOptional
-                description="The technician brings or books these before the visit."
-                appearance="chips"
-                options={accessOptions}
-                value={field.state.value}
-                onChange={field.handleChange}
-                errorMessage={fieldError(field, hasSubmitAttempt)}
-              />
-            )}
-          </form.Field>
-        </Section>
-
-        <Section
-          layout="split"
-          title="When"
-          description="Past the due day, the request shows as late on the facilities board."
-        >
-          <form.Field name="priority">
-            {(field) => (
-              <RadioGroup
-                id="request-priority"
-                label="Priority"
-                appearance="cards"
-                options={priorityOptions}
-                value={field.state.value}
-                onChange={field.handleChange}
-                errorMessage={fieldError(field, hasSubmitAttempt)}
-              />
-            )}
-          </form.Field>
-          <form.Field name="dueBy">
+          <form.Field name="visitDay">
             {(field) => (
               <DatePicker
-                id="request-due"
-                label="Due by"
+                id="visit-day"
+                label="Visit day"
                 quickPicks={quickPicks}
                 minValue={today}
                 value={field.state.value}
@@ -545,19 +489,65 @@ export function FormShowcase({
 
         <Section
           layout="split"
-          title="Who"
-          description="Give it to a technician now, or leave it in the queue for whoever is free first."
+          title="Badge"
+          description="The badge opens only the areas on it, until the first of them closes."
         >
-          <form.Field name="assignee">
+          <form.Field name="badgeType">
             {(field) => (
               <RadioGroup
-                id="request-assignee"
-                label="Technician"
-                appearance="chips"
-                options={technicianOptions}
-                noneOption={{ label: "Leave in queue" }}
+                id="visit-badge-type"
+                label="Badge type"
+                appearance="cards"
+                options={badgeTypeOptions}
                 value={field.state.value}
                 onChange={field.handleChange}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
+              />
+            )}
+          </form.Field>
+          <form.Field name="areas">
+            {(field) => (
+              <CheckboxGroup
+                id="visit-areas"
+                label="Areas"
+                description="Pick at least one."
+                options={areaOptions}
+                value={field.state.value}
+                onChange={(next) => {
+                  field.handleChange(next);
+                  field.handleBlur();
+                }}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
+              />
+            )}
+          </form.Field>
+          <form.Field name="extras">
+            {(field) => (
+              <CheckboxGroup
+                id="visit-extras"
+                label="Extras"
+                isOptional
+                description="Reception prepares these before the visitor arrives."
+                appearance="chips"
+                options={extraOptions}
+                value={field.state.value}
+                onChange={field.handleChange}
+                errorMessage={fieldError(field, hasSubmitAttempt)}
+              />
+            )}
+          </form.Field>
+          <form.Field name="note">
+            {(field) => (
+              <TextField
+                id="visit-note"
+                label="Note for reception"
+                isOptional
+                multiline
+                description="Anything the other answers do not say, such as equipment the visitor brings."
+                placeholder="e.g. Brings two cases of test equipment."
+                value={field.state.value}
+                onChange={field.handleChange}
+                onBlur={field.handleBlur}
                 errorMessage={fieldError(field, hasSubmitAttempt)}
               />
             )}
@@ -568,83 +558,248 @@ export function FormShowcase({
   );
 }
 
-function estimateOf(work: ReadonlyArray<WorkKind>): number {
-  return work.reduce((total, kind) => total + workMinutes[kind], 0);
-}
-
-function FooterSummary({ work }: { readonly work: ReadonlyArray<WorkKind> }) {
+function FooterSummary({ areas }: { readonly areas: ReadonlyArray<Area> }) {
+  const until = validUntil(areas);
   return (
     <>
-      <Code>{requestNumber}</Code>
+      <Code>{badgeNumber}</Code>
       <span>
-        {work.length === 0
-          ? "No work picked yet"
-          : `${work.length} ${work.length === 1 ? "kind" : "kinds"} of work, about ${formatMinutes(estimateOf(work))}`}
+        {until === null
+          ? "No areas picked yet"
+          : `${areas.length} ${areas.length === 1 ? "area" : "areas"}, valid until ${until}`}
       </span>
     </>
   );
 }
 
-const empty = "—";
-
-function RequestPreview({ values }: { readonly values: RequestValues }) {
-  const location = [
+/**
+ * The printed visitor badge, the signature element of this form. It is
+ * app-owned and built from tokens, because no kit frame can have the shape of
+ * every printed thing.
+ */
+function VisitorBadge({ values }: { readonly values: VisitValues }) {
+  const name = values.name.trim();
+  const company = values.company.trim();
+  const floor = values.floor.trim();
+  const room = values.room.trim();
+  const host = values.host === null ? undefined : hosts.find((item) => item.id === values.host);
+  const until = validUntil(values.areas);
+  const place = [
     values.building === null ? undefined : labelOf(buildingOptions, values.building),
-    values.floor.trim() === "" ? undefined : `floor ${values.floor.trim()}`,
-    values.room.trim() === "" ? undefined : `room ${values.room.trim()}`,
+    floor === "" ? undefined : `Floor ${floor}`,
+    room === "" ? undefined : `Room ${room}`,
   ].filter((part) => part !== undefined);
   return (
-    <FormPreview
-      label="Work order preview"
-      description="The work order as the technician sees it on the facilities board."
-    >
-      <Card
-        title={
-          <span {...stylex.props(styles.previewTitle)}>
-            {requestNumber}
-            {values.priority === "urgent" ? (
-              <Badge intent="danger" icon={<Siren />}>
-                Urgent
-              </Badge>
-            ) : null}
-          </span>
-        }
-        description={
-          values.work.length === 0
-            ? "No work picked yet"
-            : values.work.map((kind) => labelOf(workOptions, kind)).join(", ")
-        }
-      >
-        <DescriptionList
-          items={[
-            { term: "From", detail: values.name.trim() || empty },
-            { term: "Where", detail: location.length === 0 ? empty : location.join(", ") },
-            {
-              term: "Due",
-              detail: values.dueBy === null ? empty : formatDueDay(values.dueBy),
-            },
-            {
-              term: "Technician",
-              detail:
-                values.assignee === null ? "Queue" : labelOf(technicianOptions, values.assignee),
-            },
-            {
-              term: "Estimate",
-              detail: values.work.length === 0 ? empty : formatMinutes(estimateOf(values.work)),
-            },
-          ]}
-        />
-        {values.access.length === 0 ? null : (
-          <p {...stylex.props(styles.previewNote)}>
-            Bring or book: {values.access.map((need) => labelOf(accessOptions, need)).join(", ")}.
+    <div {...stylex.props(styles.badge)}>
+      {/* The paper is printed on white card, so it keeps the light theme on a dark page. */}
+      <div {...stylex.props(lightTheme, styles.paper)}>
+        <span aria-hidden {...stylex.props(styles.hole)} />
+        <div {...stylex.props(styles.body)}>
+          <p {...stylex.props(styles.eyebrow)}>
+            {values.visitDay === null ? "Visit day" : formatVisitDay(values.visitDay)}
           </p>
-        )}
-      </Card>
-    </FormPreview>
+          <div>
+            <p {...stylex.props(styles.name, name === "" && styles.placeholder)}>
+              {name === "" ? "Visitor name" : name}
+            </p>
+            <p {...stylex.props(styles.company, company === "" && styles.placeholder)}>
+              {company === "" ? "Company" : company}
+            </p>
+          </div>
+          <dl {...stylex.props(styles.facts)}>
+            <div {...stylex.props(styles.fact)}>
+              <dt {...stylex.props(styles.term)}>Host</dt>
+              <dd {...stylex.props(styles.detail, styles.host)}>
+                {host === undefined ? (
+                  "Reception"
+                ) : (
+                  <>
+                    <Avatar name={host.label} size="xs" />
+                    {host.label}
+                  </>
+                )}
+              </dd>
+            </div>
+            <div {...stylex.props(styles.fact)}>
+              <dt {...stylex.props(styles.term)}>Where</dt>
+              <dd {...stylex.props(styles.detail, place.length === 0 && styles.placeholder)}>
+                {place.length === 0 ? "Building" : place.join(", ")}
+              </dd>
+            </div>
+            <div {...stylex.props(styles.fact)}>
+              <dt {...stylex.props(styles.term)}>Areas</dt>
+              <dd {...stylex.props(styles.detail)}>
+                {values.areas.length === 0 ? (
+                  <span {...stylex.props(styles.placeholder)}>No areas yet</span>
+                ) : (
+                  <ul {...stylex.props(styles.areas)}>
+                    {areaOptions
+                      .filter((option) => values.areas.includes(option.id))
+                      .map((option) => (
+                        <li key={option.id} {...stylex.props(styles.area)}>
+                          {option.label}
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </dd>
+            </div>
+            <div {...stylex.props(styles.fact)}>
+              <dt {...stylex.props(styles.term)}>Valid until</dt>
+              <dd
+                {...stylex.props(styles.detail, styles.time, until === null && styles.placeholder)}
+              >
+                {until ?? "--:--"}
+              </dd>
+            </div>
+          </dl>
+        </div>
+        <div
+          {...stylex.props(
+            styles.band,
+            values.badgeType === "contractor" ? styles.bandContractor : styles.bandVisitor,
+          )}
+        >
+          <span {...stylex.props(styles.bandType)}>
+            {labelOf(badgeTypeOptions, values.badgeType)}
+          </span>
+          <span {...stylex.props(styles.bandNumber)}>{badgeNumber}</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
+/** The punched hole for the lanyard clip: its radius and its gap to the top edge. */
+const holeRadius = "0.4375rem";
+const holeTop = "1rem";
+const ringGap = "0.1875rem";
+
 const styles = stylex.create({
-  previewTitle: { display: "inline-flex", alignItems: "center", gap: space.sm },
-  previewNote: { margin: 0, marginTop: space.md, fontSize: font.sm, color: color.textMuted },
+  // The shadow sits on an unmasked wrapper, because the mask that punches the
+  // hole in the paper would also cut away a shadow on the paper itself.
+  badge: {
+    alignSelf: "center",
+    width: "100%",
+    // The card is a fixed print size, so it grows with the text of a touch
+    // density as one piece instead of wrapping the larger name more often.
+    fontSize: font.md,
+    maxWidth: "18.5em",
+    borderRadius: radius.xl,
+    boxShadow: shadow.lg,
+    transform: "rotate(-1.5deg)",
+  },
+  paper: {
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    // The card grows past its print proportions for a long name, so it must not clip its content.
+    aspectRatio: "54 / 86",
+    borderRadius: radius.xl,
+    backgroundColor: color.raised,
+    color: color.text,
+    maskImage: `radial-gradient(circle at 50% calc(${holeTop} + ${holeRadius}), transparent ${holeRadius}, black calc(${holeRadius} + 0.5px))`,
+  },
+  hole: {
+    position: "absolute",
+    top: `calc(${holeTop} - ${ringGap})`,
+    insetInlineStart: `calc(50% - ${holeRadius} - ${ringGap})`,
+    width: `calc(2 * (${holeRadius} + ${ringGap}))`,
+    height: `calc(2 * (${holeRadius} + ${ringGap}))`,
+    borderRadius: radius.full,
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: color.border,
+  },
+  body: {
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    gap: space.lg,
+    paddingTop: `calc(${holeTop} + 2 * ${holeRadius} + ${space.md})`,
+    paddingInline: space.lg,
+    paddingBottom: space.lg,
+  },
+  eyebrow: {
+    margin: 0,
+    fontSize: font.xs,
+    fontWeight: font.semibold,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: color.textMuted,
+    textAlign: "center",
+  },
+  name: {
+    margin: 0,
+    fontSize: font.displayLg,
+    fontWeight: font.bold,
+    lineHeight: font.leadingTight,
+    letterSpacing: font.trackingTight,
+    overflowWrap: "break-word",
+    hyphens: "auto",
+  },
+  company: {
+    margin: 0,
+    marginTop: space.xs,
+    fontSize: font.lg,
+    color: color.textMuted,
+    overflowWrap: "anywhere",
+  },
+  placeholder: { color: color.textFaint },
+  facts: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space.sm,
+    margin: 0,
+    marginTop: "auto",
+  },
+  fact: { display: "flex", flexDirection: "column", gap: space.xs },
+  term: {
+    fontSize: font.xs,
+    fontWeight: font.semibold,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: color.textFaint,
+  },
+  detail: { margin: 0, fontSize: font.md, overflowWrap: "anywhere" },
+  host: { display: "flex", alignItems: "center", gap: space.sm },
+  time: { fontFamily: font.mono },
+  areas: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: space.xs,
+    margin: 0,
+    padding: 0,
+    listStyle: "none",
+  },
+  area: {
+    paddingBlock: "0.0625rem",
+    paddingInline: space.sm,
+    borderRadius: radius.sm,
+    backgroundColor: color.subtle,
+    fontSize: font.sm,
+  },
+  // The angled top edge reads as the color band of a printed card, across the
+  // full width, so it never becomes a strip along one edge of a box.
+  band: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: space.sm,
+    paddingTop: space.xxl,
+    paddingInline: space.lg,
+    paddingBottom: space.md,
+    borderEndStartRadius: radius.xl,
+    borderEndEndRadius: radius.xl,
+    clipPath: `polygon(0 ${space.md}, 100% 0, 100% 100%, 0 100%)`,
+  },
+  bandVisitor: { backgroundColor: color.accent, color: color.onAccent },
+  bandContractor: { backgroundColor: color.warningBorder, color: color.text },
+  bandType: {
+    fontSize: font.xl,
+    fontWeight: font.bold,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+  },
+  bandNumber: { flexShrink: 0, fontFamily: font.mono, fontSize: font.sm, whiteSpace: "nowrap" },
 });

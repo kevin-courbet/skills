@@ -13,7 +13,8 @@ toggles, sliders, hover cards, and context menus. `MotionShowcase`
 (`src/components/kit/showcase-motion.tsx`) shows each motion helper on one
 list. The `/design-kit/form` route
 renders `FormShowcase` (`src/components/kit/showcase-form.tsx`), a long form
-that uses every form component. Copy its structure for a new form; see Forms
+that uses every form component. It registers a visitor and shows a preview of
+the printed visitor badge. Copy its structure for a new form; see Forms
 below. The `/design-kit/queue` route renders `QueueShowcase`
 (`src/components/kit/showcase-queue.tsx`), a touch work view on a shared
 tablet. Copy its structure for a touch view; see Touch Work View below.
@@ -64,7 +65,7 @@ All primitives take typed props, render visible labels, and accept a
 | `radio-group.tsx` | `RadioGroup` | One visible choice from up to about seven options. `appearance` is `list` (default: small marks, for a dense panel or a dialog), `cards` (tiles with a `description`, for choices that people compare, such as a priority), or `chips` (pills in a wrapping row, for short labels, such as a building or a person). `orientation` applies to `list` only. `noneOption={{ label, description? }}` adds a last choice whose value is `null`, such as "Decide later"; then `value` and `onChange` take `null` too. Arrow keys move and choose; Tab leaves the group. |
 | `checkbox.tsx` | `Checkbox`, `CheckboxGroup` | `Checkbox` is one independent on/off choice and supports indeterminate. `CheckboxGroup` picks several values from a short fixed list, such as the kinds of work in a request. `appearance` is `cards` (default), `chips`, or `list`, as in `RadioGroup`. A selected chip shows a check. `isOptional` marks the label when people may choose nothing. The group also takes `description` and `errorMessage`. `value` and `onChange` use arrays; `onChange` returns the values in option order. Each option is a tab stop and Space toggles it. Use `MultiSelect` for a long or searchable list. |
 | `choice.tsx` | `ChoiceOption`, `ChoiceNoneOption`, `ChoiceAppearance` | The option type of `RadioGroup` and `CheckboxGroup`: `id`, `label`, and optional `description` (list and cards), `meta` (a quiet fact after the label, such as "3 open", "1 h", or a price), `icon` (a lucide icon) or `avatar` (`{ src? }`, initials when it is missing), and `isDisabled`. A field that the appearance cannot show throws an error, such as a `description` on a chip. Chips take the control size of their row. |
-| `form-layout.tsx` | `FormLayout`, `FieldRow`, `FormPreview`, `FormFooter`, `ErrorSummary`, `FormError` | The parts of a long form on its own route. `FormLayout` (`id`, `onSubmit`, `aria-label`, `preview`, `footer`) renders the `<form>` without browser validation. The sections take the main column, and `preview` stays beside them while the form is wider than the `lg` breakpoint and goes under them otherwise. `FieldRow` puts related fields on one line, such as a floor and a room; it wraps when it is narrow. `FormPreview` (`label`, `description`) shows the record that the answers make, such as a `DescriptionList`, with a dash for each empty answer. `FormFooter` (`summary`, children) sticks to the bottom of the window with live facts on the left, then a cancel action and the submit button; a focused field never goes under it. `ErrorSummary` (`title`, `errors`, `submitCount`) lists the problems with a link to each field, takes focus on each new submit attempt, and renders nothing without errors. Build `errors` with `formErrors` from `src/lib/form.ts`. |
+| `form-layout.tsx` | `FormLayout`, `FieldRow`, `FormPreview`, `FormFooter`, `ErrorSummary`, `FormError` | The parts of a long form on its own route. `FormLayout` (`id`, `onSubmit`, `aria-label`, `preview`, `footer`) renders the `<form>` without browser validation. The sections take the main column, and `preview` stays beside them while the form is wider than the `lg` breakpoint and goes under them otherwise. `FieldRow` puts related fields on one line, such as a floor and a room; it wraps when it is narrow. `FormPreview` (`label`, `description`) holds a live preview of the tangible thing that the form produces, such as a printed badge, a label, an invoice, or an outgoing message. The kit gives no frame for the thing, because each kind of thing has its own shape: the app builds it from tokens (see Preview Of The End Result below). `FormFooter` (`summary`, children) sticks to the bottom of the window with live facts on the left, then a cancel action and the submit button; a focused field never goes under it. `ErrorSummary` (`title`, `errors`, `submitCount`) lists the problems with a link to each field, takes focus on each new submit attempt, and renders nothing without errors. Build `errors` with `formErrors` from `src/lib/form.ts`. |
 | `switch.tsx` | `Switch` | Settings that apply immediately. |
 
 The text-like fields (`TextField`, `NumberField`, `Select`, `ComboBox`,
@@ -170,7 +171,7 @@ The template contains one working example of each:
 | List | `_app/items/index.tsx` | `PageHeader` with one primary action. A page `Toolbar` above the `DataTable` (`SearchField`, `Filters`), a row link to the detail route, the name column pinned, `StatusDot` status, a summary footer, and the `pagination` footer. Search, filters, sort, and page live in the URL; `features/items/filters.ts` holds the filter fields and builds the server query from the search. |
 | Detail | `_app/items/$itemId.tsx` | `Page width="reading"`, `PageHeader` with quiet actions, `DescriptionList` in a `Section`, `ConfirmDialog` for delete. |
 | Create | `features/items/ui/create-item-dialog.tsx` | `Dialog` with a TanStack Form; the footer submit button uses `form={formId}`. Status is a `RadioGroup appearance="chips"`. |
-| Long form | `_app/design-kit_.form.tsx` with `components/kit/showcase-form.tsx` | `FormLayout` with an `ErrorSummary`, one `Section layout="split"` for each part, a `FormPreview` beside the sections, and a `FormFooter` with the summary and the submit button. After submit, a success `Alert` names the new record and offers the next action. |
+| Long form | `_app/design-kit_.form.tsx` with `components/kit/showcase-form.tsx` | `FormLayout` with an `ErrorSummary`, one `Section layout="split"` for each part, a `FormPreview` of the printed badge beside the sections, and a `FormFooter` with the summary and the submit button. After submit, a success `Alert` names the new record and offers the next action. |
 | Touch queue | `_app/design-kit_.queue.tsx` with `components/kit/showcase-queue.tsx` | `Page density="touch"`. A person picker as `RadioGroup appearance="cards"`, then a `PageHeader` that names the person with the person chips in its actions. A `WorkQueue` with one `QueueSection` for each next action, `QueueCard` actions that move a card optimistically, an inline panel for a short question, and a `Sheet` for the full record. |
 | Settings | `_app/settings.tsx` | Reading-width page with `SettingsCard` and `SettingRow`. Identifiers use `Code` with a `CopyButton`. |
 
@@ -401,24 +402,40 @@ two clicks, so use one only when the list is long or the row has no space.
 
 - Use `FormLayout` on its own route for a form with more than about six fields or more than one part. Put a short form in a `Dialog`.
 - Make each part a `Section layout="split"`. The title names the part ("Where", "When"). The description is one sentence that says what the answers change: "The kinds of work set the time estimate and the tools that the technician brings."
-- Give `FormLayout` a `preview` when the answers make a record that people meet later, such as a card on a board. `FormPreview` shows the record with a dash for each empty answer.
-- Give `FormLayout` a `footer`: a `FormFooter` with live facts in `summary`, such as a count or an estimate, then the cancel action and one primary submit `Button type="submit"`. The button names the action: "Send request".
-- After a successful submit, replace the form with a success `Alert` with `announce="status"`. The title names the new record ("Request WO-2318 is in the queue"), the text says what happens next, and one action starts the next task, such as "Report another problem".
+- Give `FormLayout` a `preview` only when the form produces a tangible thing that people see or hold outside the form. See Preview Of The End Result below. When the form only changes a record in the app, such as the details of a contact, leave out the preview.
+- Give `FormLayout` a `footer`: a `FormFooter` with live facts in `summary`, such as a count or an estimate, then the cancel action and one primary submit `Button type="submit"`. The button names the action: "Print badge".
+- After a successful submit, replace the form with a success `Alert` with `announce="status"`. The title names the new record ("Badge V-2318 is printing at reception"), the text says what happens next, and one action starts the next task, such as "Register another visitor".
 
 ```tsx
-<FormLayout id={formId} onSubmit={() => void form.handleSubmit()} aria-label="Report a building problem"
-  preview={<form.Subscribe selector={(state) => state.values}>{(values) => <RequestPreview values={values} />}</form.Subscribe>}
-  footer={<FormFooter summary={<FooterSummary />}>{cancel}<Button intent="primary" type="submit">Send request</Button></FormFooter>}>
+<FormLayout id={formId} onSubmit={() => void form.handleSubmit()} aria-label="Register a visitor"
+  preview={<FormPreview label="Visitor badge preview" description="Prints at the reception desk.">
+    <form.Subscribe selector={(state) => state.values}>{(values) => <VisitorBadge values={values} />}</form.Subscribe>
+  </FormPreview>}
+  footer={<FormFooter summary={<FooterSummary />}>{cancel}<Button intent="primary" type="submit">Print badge</Button></FormFooter>}>
   <ErrorSummary title={title} errors={errors} submitCount={submissionAttempts} />
-  <Section layout="split" title="Where" description="A room number saves the technician a search of the floor.">
-    <form.Field name="building">{(field) => (
-      <RadioGroup id="request-building" label="Building" appearance="chips" options={buildingOptions}
-        noneOption={{ label: "Not sure" }} value={field.state.value} onChange={field.handleChange}
+  <Section layout="split" title="Host" description="The host gets a message when the visitor arrives and walks them in.">
+    <form.Field name="host">{(field) => (
+      <RadioGroup id="visit-host" label="Host" appearance="chips" options={hostOptions}
+        noneOption={{ label: "Reception" }} value={field.state.value} onChange={field.handleChange}
         errorMessage={fieldError(field, hasSubmitAttempt)} />
     )}</form.Field>
   </Section>
 </FormLayout>
 ```
+
+### Preview Of The End Result
+
+Read "Preview Of The End Result" and "Signature Elements" in
+`references/method.md` of the `form-design` skill before you build a preview.
+The kit rules:
+
+- Build the thing as an app-owned component, such as `VisitorBadge` in `showcase-form.tsx`, and put it in `FormPreview`. Make it look like the real thing: its proportions, its surface, its type hierarchy, and the position of each value.
+- Use kit tokens for every color, font size, space, radius, and shadow. `check` permits a shaped edge with `clipPath`, a small `transform: rotate(...)`, a punched hole with `maskImage`, and `black` or `transparent` in a gradient. It does not permit a color literal.
+- Show a quiet placeholder in `color.textFaint` for each empty answer, so that the layout of the thing stays visible.
+- When the real thing is printed on white paper, apply `lightTheme` from `src/styles/themes.ts` to its surface. It then stays white in the dark theme.
+- When the thing has a fixed print size, set its width in `em` of a font token. It then grows with the text of `Page density="touch"` and keeps its proportions.
+- Keep real text as text. Use a `<dl>` for labeled facts and a `<ul>` for a list.
+- Use a `DescriptionList` in the preview only when the thing that the form produces is a record, such as a report that people read in the app. Put computed facts, such as a count or a total, in the `FormFooter` summary.
 
 ## Cards
 
