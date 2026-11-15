@@ -8,7 +8,7 @@ import {
   PanelLeftOpen,
   Search,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
 import { Button as AriaButton, Disclosure, DisclosurePanel } from "react-aria-components";
 import { Button } from "@/components/ui/button";
 import { type Density, DensityProvider, ShellDensityProvider } from "@/components/ui/density";
@@ -160,8 +160,10 @@ function Brand({
  * tablet in portrait gives its full width to the page.
  *
  * A page with `density="touch"` is work at a bench or on a shared tablet,
- * where people stay on one page. The shell then keeps the sidebar in the sheet
- * at every width, and its top bar, sheet, and menus take the touch density.
+ * where people stay on one page. On a touch device (a coarse pointer, or a
+ * window below lg), the shell then keeps the sidebar in the sheet at every
+ * width, and its top bar, sheet, and menus take the touch density. On a desktop
+ * with a mouse, the frame does not change; only the page content is larger.
  */
 export function AppShell({
   appName,
@@ -177,8 +179,11 @@ export function AppShell({
   const [isSidebarHidden, setSidebarHidden] = useState(false);
   const [isPaletteOpen, setPaletteOpen] = useState(false);
   // The top bar follows the page through CSS, which also works in the server render.
-  // The sheet and the menus render in portals, which only this state reaches.
+  // The sheet and the menus render in portals, which only this state reaches. They
+  // open only after hydration, so the server value of the media query is never seen.
   const [pageDensity, setPageDensity] = useState<Density>("default");
+  const isTouchDevice = useSyncExternalStore(subscribeTouchDevice, isTouchDeviceNow, () => false);
+  const frameDensity: Density = pageDensity === "touch" && isTouchDevice ? "touch" : "default";
   const navigate = useNavigate();
   const shortcut = useCommandPaletteShortcut();
   const paletteControls = useMemo(() => ({ open: () => setPaletteOpen(true) }), []);
@@ -221,7 +226,7 @@ export function AppShell({
       </aside>
       <div {...stylex.props(styles.column, isSidebarHidden && styles.columnSidebarHidden)}>
         <div {...stylex.props(styles.panel)}>
-          <DensityProvider density={pageDensity}>
+          <DensityProvider density={frameDensity}>
             <header {...stylex.props(styles.topbar)}>
               <div {...stylex.props(styles.topbarStart)}>
                 <Button
@@ -280,7 +285,7 @@ export function AppShell({
           </main>
         </div>
       </div>
-      <DensityProvider density={pageDensity}>
+      <DensityProvider density={frameDensity}>
         <Sheet isOpen={isNavOpen} onOpenChange={setNavOpen} side="left" size="sm" title={appName}>
           <div {...stylex.props(styles.sheetNav)}>
             <Navigation nav={nav} onNavigate={() => setNavOpen(false)} />
@@ -294,36 +299,165 @@ export function AppShell({
   );
 }
 
+// The same condition as `media.belowLg` and `media.coarsePointer` in the styles below.
+const touchDeviceQuery = "(max-width: 1023.98px), (pointer: coarse)";
+
+function subscribeTouchDevice(onChange: () => void): () => void {
+  const query = window.matchMedia(touchDeviceQuery);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function isTouchDeviceNow(): boolean {
+  return window.matchMedia(touchDeviceQuery).matches;
+}
+
 // Page in layout.tsx sets this attribute on the page of the shell. StyleX compiles
 // `stylex.when.ancestor` only inside `stylex.create`, so each style calls it there.
 const touchPageInShell = ':has([data-page-density="touch"])';
 
 const styles = stylex.create({
   root: {
-    // The top bar takes the control sizes and the type scale of a touch page. The page
-    // sets the same values itself.
-    [size.controlSm]: { default: null, [touchPageInShell]: touchSize.controlSm },
-    [size.controlMd]: { default: null, [touchPageInShell]: touchSize.controlMd },
-    [size.controlLg]: { default: null, [touchPageInShell]: touchSize.controlLg },
-    [size.iconSm]: { default: null, [touchPageInShell]: touchSize.iconSm },
-    [size.icon]: { default: null, [touchPageInShell]: touchSize.icon },
-    [size.iconLg]: { default: null, [touchPageInShell]: touchSize.iconLg },
-    [size.topbar]: { default: null, [touchPageInShell]: touchSize.topbar },
-    [font.xs]: { default: null, [touchPageInShell]: touchFont.xs },
-    [font.sm]: { default: null, [touchPageInShell]: touchFont.sm },
-    [font.md]: { default: null, [touchPageInShell]: touchFont.md },
-    [font.lg]: { default: null, [touchPageInShell]: touchFont.lg },
-    [font.xl]: { default: null, [touchPageInShell]: touchFont.xl },
-    [font.xxl]: { default: null, [touchPageInShell]: touchFont.xxl },
-    [font.xxxl]: { default: null, [touchPageInShell]: touchFont.xxxl },
-    [font.display]: { default: null, [touchPageInShell]: touchFont.display },
-    [font.displayLg]: { default: null, [touchPageInShell]: touchFont.displayLg },
+    // On a touch device, the top bar takes the control sizes and the type scale of a
+    // touch page. The page sets the same values itself. On a desktop with a mouse,
+    // the frame stays the same on every page, and only the page content changes.
+    [size.controlSm]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchSize.controlSm,
+        [media.coarsePointer]: touchSize.controlSm,
+      },
+    },
+    [size.controlMd]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchSize.controlMd,
+        [media.coarsePointer]: touchSize.controlMd,
+      },
+    },
+    [size.controlLg]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchSize.controlLg,
+        [media.coarsePointer]: touchSize.controlLg,
+      },
+    },
+    [size.iconSm]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchSize.iconSm,
+        [media.coarsePointer]: touchSize.iconSm,
+      },
+    },
+    [size.icon]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchSize.icon,
+        [media.coarsePointer]: touchSize.icon,
+      },
+    },
+    [size.iconLg]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchSize.iconLg,
+        [media.coarsePointer]: touchSize.iconLg,
+      },
+    },
+    [size.topbar]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchSize.topbar,
+        [media.coarsePointer]: touchSize.topbar,
+      },
+    },
+    [font.xs]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.xs,
+        [media.coarsePointer]: touchFont.xs,
+      },
+    },
+    [font.sm]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.sm,
+        [media.coarsePointer]: touchFont.sm,
+      },
+    },
+    [font.md]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.md,
+        [media.coarsePointer]: touchFont.md,
+      },
+    },
+    [font.lg]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.lg,
+        [media.coarsePointer]: touchFont.lg,
+      },
+    },
+    [font.xl]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.xl,
+        [media.coarsePointer]: touchFont.xl,
+      },
+    },
+    [font.xxl]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.xxl,
+        [media.coarsePointer]: touchFont.xxl,
+      },
+    },
+    [font.xxxl]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.xxxl,
+        [media.coarsePointer]: touchFont.xxxl,
+      },
+    },
+    [font.display]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.display,
+        [media.coarsePointer]: touchFont.display,
+      },
+    },
+    [font.displayLg]: {
+      default: null,
+      [touchPageInShell]: {
+        default: null,
+        [media.belowLg]: touchFont.displayLg,
+        [media.coarsePointer]: touchFont.displayLg,
+      },
+    },
     display: "grid",
     gridTemplateColumns: {
       default: "minmax(0, 1fr)",
       [media.lg]: {
         default: `${size.sidebar} minmax(0, 1fr)`,
-        [touchPageInShell]: "minmax(0, 1fr)",
+        [touchPageInShell]: {
+          default: `${size.sidebar} minmax(0, 1fr)`,
+          [media.coarsePointer]: "minmax(0, 1fr)",
+        },
       },
     },
     // One full-height row; the panel scrolls inside it, never the document.
@@ -337,7 +471,10 @@ const styles = stylex.create({
       default: "none",
       [media.lg]: {
         default: "flex",
-        [stylex.when.ancestor(touchPageInShell, shellMarker)]: "none",
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: {
+          default: "flex",
+          [media.coarsePointer]: "none",
+        },
       },
     },
     flexDirection: "column",
@@ -453,7 +590,10 @@ const styles = stylex.create({
       [media.md]: size.frameGap,
       [media.lg]: {
         default: 0,
-        [stylex.when.ancestor(touchPageInShell, shellMarker)]: size.frameGap,
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: {
+          default: 0,
+          [media.coarsePointer]: size.frameGap,
+        },
       },
     },
   },
@@ -491,7 +631,10 @@ const styles = stylex.create({
       default: "inline-flex",
       [media.lg]: {
         default: "none",
-        [stylex.when.ancestor(touchPageInShell, shellMarker)]: "inline-flex",
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: {
+          default: "none",
+          [media.coarsePointer]: "inline-flex",
+        },
       },
     },
   },
@@ -500,7 +643,10 @@ const styles = stylex.create({
       default: "none",
       [media.lg]: {
         default: "inline-flex",
-        [stylex.when.ancestor(touchPageInShell, shellMarker)]: "none",
+        [stylex.when.ancestor(touchPageInShell, shellMarker)]: {
+          default: "inline-flex",
+          [media.coarsePointer]: "none",
+        },
       },
     },
   },

@@ -101,7 +101,7 @@ Other groups: `shadow` (`sm`, `md`, `lg`, `xl` for a floating surface such as a 
 `frame` for the content panel), `font` (families, sizes `xs` to `xxxl`, `display` and `displayLg` for large numerals
 and labels that people read from a distance, weights `regular` to `semibold`, `bold` for a wordmark only, line heights), `space` (`xs` 4px to `page` 48px), `radius`,
 `size` (control heights, icon sizes, sidebar, top bar, frame gap, content widths),
-`media` (breakpoints, `finePointer` for feedback that only a hover shows, reduced motion, forced colors), `container` (`belowSm`,
+`media` (breakpoints, `belowLg`, `finePointer` for feedback that only a hover shows, `coarsePointer` for a touch screen, reduced motion, forced colors), `container` (`belowSm`,
 `belowMd`, `belowLg` container queries that resolve against the nearest
 `containerType: "inline-size"` ancestor, such as the DataTable scroller), `layer` (z-index), and
 `motion` (durations and easing curves; see Motion).
@@ -165,7 +165,9 @@ page that opens it. A new overlay component must do the same: put
 command palette render in the app shell, outside every page, and keep the
 default density.
 
-`AppShell` follows a touch page:
+On a touch device, `AppShell` follows a touch page. A touch device has a
+coarse pointer (`media.coarsePointer`) or a window narrower than the `lg`
+breakpoint (`media.belowLg`). On such a device:
 
 - The sidebar stays in the navigation sheet at every width. The menu button in
   the top bar opens the sheet.
@@ -178,14 +180,20 @@ People stay on that page and seldom go to a different page. Thus the width is
 for the work, not for the navigation. Also, the sidebar items are 28px high,
 which is less than the 44px tap target.
 
+On a desktop with a mouse (a fine pointer and a window of `lg` or wider), the
+shell does not change. The sidebar, the top bar, the sheet, and the menus keep
+the default density. Only the page content is larger. A supervisor who opens
+the touch page at a desk keeps the same navigation as on all other pages.
+
 `Page` puts the attribute `data-page-density` on its root element. `AppShell`
 reads this attribute with the CSS `:has()` selector, so the server HTML already
 shows the correct shell and the layout does not move after hydration. Only the
 outermost `Page` in the shell sets the attribute. A touch specimen in a default
 page does not change the shell. The sheet and the menus render in portals, which
 the selector cannot reach. Thus `Page` also sends its density to `AppShell`
-through `ShellDensityProvider`. The sheet and the menus open only after
-hydration, so they always have this density.
+through `ShellDensityProvider`. `AppShell` gives them the touch density only
+when the window also matches the touch device query. The sheet and the menus
+open only after hydration, so the media query of the browser always decides.
 
 On a touch page, prefer visible choices to a list in a popover: show a short
 list in a `SegmentedControl` or a `RadioGroup`, not in a `Select`. A

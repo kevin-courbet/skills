@@ -50,10 +50,12 @@ export function Page({
   /**
    * "touch" makes controls and text larger for a shared tablet or kiosk. Use it
    * for a whole page, never for one control. Dialogs, sheets, popovers, menus,
-   * and tooltips that the page opens follow it. The app shell then moves its
-   * sidebar into the navigation sheet at every width, and its top bar, that
-   * sheet, and the top bar menus take the same density. Toasts and the
-   * command palette keep the default density.
+   * and tooltips that the page opens follow it. On a touch device (a coarse
+   * pointer, or a window below the lg breakpoint), the app shell then moves its
+   * sidebar into the navigation sheet, and its top bar, that sheet, and the top
+   * bar menus take the same density. On a desktop with a mouse, the shell keeps
+   * its sidebar and its top bar. Toasts and the command palette keep the
+   * default density.
    */
   readonly density?: Density;
 }) {
