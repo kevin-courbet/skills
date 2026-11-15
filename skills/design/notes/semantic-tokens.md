@@ -10,6 +10,8 @@ related: [color, palettes, dark-theme, graphite]
 
 Keep raw palette values separate from semantic tokens. A semantic token names a role, such as `surface`, `text-muted`, `action-primary`, or `status-danger`.
 
+Use two layers. A primitive token holds a raw value, such as `--blue-500`. A semantic token points to a primitive, such as `--color-primary: var(--blue-500)`. For a dark theme, change only the semantic layer. The primitives stay the same.
+
 ## Token Rules
 
 - Let components use semantic tokens only.

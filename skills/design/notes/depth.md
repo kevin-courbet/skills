@@ -2,7 +2,7 @@
 id: depth
 topic: layout
 summary: Surfaces, borders, and one small elevation scale separate regions without decoration.
-keywords: [depth, elevation, shadow, drop shadow, box shadow, surface, raised, inset, border, borders, radius, corner radius, layering, z-index]
+keywords: [depth, elevation, shadow, drop shadow, box shadow, surface, raised, inset, border, borders, radius, corner radius, layering, z-index, z-index scale, stacking order]
 requires: [spacing]
 related: [dark-theme, color, finishing-details]
 ---
@@ -24,6 +24,11 @@ Separate regions with space and surfaces first. Add depth only when it explains 
 - Use larger, softer shadows for higher elevation. Use smaller, tighter shadows near the surface.
 - Consider a two-part shadow: one broad soft shadow and one short sharp shadow.
 - Change elevation for interaction only when it explains press, lift, or drag behavior.
+- Keep shadows subtle. If you clearly see a shadow, it is probably too strong.
+
+## Stacking Order
+
+Define a semantic z-index scale, not arbitrary numbers. From low to high: dropdown, sticky, modal backdrop, modal, toast, and tooltip.
 
 On a dark theme, shadows are weak. [[dark-theme#surface-hierarchy]] gives the rules.
 

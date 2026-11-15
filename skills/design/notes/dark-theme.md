@@ -22,9 +22,19 @@ If the product has a dark theme, use it and apply this note to it. If the produc
 
 ## Surface Hierarchy
 
-- Use a near-black neutral for a typical web application base. A subtle cast is permitted. [[color#neutrals]] gives the limit.
+- Use a near-black neutral for a typical web application base, a dark gray at approximately 12 to 18% lightness in OKLCH. A subtle cast is permitted. [[color#neutrals]] gives the limit.
 - Use pure black only when the platform, the content, or the hardware gives a clear reason.
 - Make raised dark surfaces lighter than the page base. Shadows alone are weak on dark backgrounds.
+
+```css
+/* A higher surface is lighter. */
+:root[data-theme="dark"] {
+  --surface-1: oklch(15% 0.01 250);
+  --surface-2: oklch(20% 0.01 250);
+  --surface-3: oklch(25% 0.01 250);
+}
+```
+
 - Use a small number of deliberate surface levels. More levels make the page noisy and flatten their meaning.
 - Pair close surfaces with a border when users must see the boundary.
 - Use stronger boundaries for controls and selected states than for quiet content groups.
@@ -35,7 +45,7 @@ Material, Apple, Carbon, Fluent, Radix, and Primer all use lighter dark surfaces
 
 ## Dark Accent And Status Values
 
-- Make dark-theme values for accents and status colors. Light-theme values can glare or lose contrast.
+- Make dark-theme values for accents and status colors. Light-theme values can glare or lose contrast. Reduce their saturation slightly.
 - Keep neutral surfaces low in chroma. Keep the brand hue as a subtle cast, not a colored wash.
 
 Linear reduced blue in its neutral calculations to make its themes more neutral. Fluent also limits brand color, because broad use weakens hierarchy.
@@ -44,6 +54,7 @@ Linear reduced blue in its neutral calculations to make its themes more neutral.
 
 - Use a high-contrast off-white for primary text.
 - Increase the text contrast when thin strokes, small sizes, or anti-aliasing make text look faint.
+- Light text on a dark background looks lighter in weight. Add 0.05 to 0.1 to the normal line height.
 
 Linear made neutral text and icons lighter in dark mode. Apple uses primary through quaternary text roles to show hierarchy. The contrast limits are in [[contrast#text]].
 

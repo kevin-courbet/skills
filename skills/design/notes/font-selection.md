@@ -2,7 +2,7 @@
 id: font-selection
 topic: type
 summary: Select and pair typefaces for the reading task, the product tone, the languages, the performance budget, and the license.
-keywords: [font, fonts, typeface, how to pick a font, choose font, font pairing, web font, woff2, font license, font loading, fallback font, layout shift, display font, serif, sans serif]
+keywords: [font, fonts, typeface, how to pick a font, choose font, font pairing, distinctive font, inter alternative, overused fonts, system font stack, monospace, web font, woff2, font-display, font license, font loading, fallback font, layout shift, display font, serif, sans serif]
 requires: [typography]
 related: [sources]
 ---
@@ -34,6 +34,21 @@ Prefer a family with:
 
 Use a fixed `rem` scale for dense product UI, unless the existing design system uses another accessible method.
 
+The system font stack, `-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui`, looks native, loads at once, and reads well. Consider it for an app where performance is more important than personality.
+
+## Invisible Defaults
+
+Inter, Roboto, Open Sans, Lato, and Montserrat are everywhere. They are correct for documentation and tools where personality is not the goal, and for a product that already uses them. For a new [[visual-direction]] that must be distinctive, select another family:
+
+| Instead of | Try |
+| --- | --- |
+| Inter | Instrument Sans, Plus Jakarta Sans, Outfit |
+| Roboto | Onest, Figtree, Urbanist |
+| Open Sans | Source Sans 3, Nunito Sans, DM Sans |
+| An editorial or premium feel | Fraunces, Newsreader, Lora |
+
+Do not use a monospace font as a shortcut for a "technical" or "developer" look. Use monospace for code and for values that need fixed character widths.
+
 ## Long-Form Content
 
 Prioritize a comfortable texture, clear punctuation, suitable italics, and stable reading at the target line length. A serif or a sans serif can work. Test paragraphs, not isolated specimen words.
@@ -44,20 +59,46 @@ The source examples include Freight Text, Source Sans, Open Sans, Merriweather, 
 
 Display type can carry more personality than body text. The source examples include Proxima Nova, Freight Sans, Futura PT, Harmonia Sans, Graphik, Meta Serif, Roboto, Jubilat, Interstate, Neue Plak, and Adelle.
 
-- Do not use a display face for body text only because it works at a large size.
+- Never use a decorative or display face for body text.
 - Check line-height, letter spacing, and weight again after every font change.
 
 ## Pairing
 
 - Start with one strong family and multiple weights.
 - Add a second family only when it gives the content a distinct voice or a useful structural contrast.
-- Pair clearly different families, not two sans serifs that almost match.
+- Pair clearly different families, not two families that almost match, such as two geometric sans serifs. Make the contrast clear on one or more axes:
+  - Structure: a serif with a sans serif.
+  - Personality: a geometric family with a humanist family.
+  - Proportion: a condensed display family with a wide body family.
 - Keep the metrics compatible enough to prevent unstable line breaks and controls.
-- Limit a product to the smallest number of families that serves the content.
+- Limit a product to the smallest number of families that serves the content. Never use more than 2 or 3.
 
 ## Delivery
 
 - Prefer WOFF2 for web delivery.
 - Subset only after you know the required languages and symbols.
 - Use an explicit fallback stack.
-- Match the fallback metrics when layout shift matters.
+- Use `font-display: swap`, so that text is visible while the font loads.
+- Match the fallback metrics when layout shift matters. [Fontaine](https://github.com/unjs/fontaine) calculates the overrides:
+
+```css
+@font-face {
+  font-family: 'CustomFont';
+  src: url('font.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* A fallback with matched metrics reduces the layout shift when the font arrives. */
+@font-face {
+  font-family: 'CustomFont-Fallback';
+  src: local('Arial');
+  size-adjust: 105%;
+  ascent-override: 90%;
+  descent-override: 20%;
+  line-gap-override: 10%;
+}
+
+body {
+  font-family: 'CustomFont', 'CustomFont-Fallback', sans-serif;
+}
+```

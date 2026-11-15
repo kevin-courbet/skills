@@ -20,7 +20,24 @@ Density is the amount of content and control in one area. Set it for the task an
 
 - Make controls large enough to scan and operate.
 - A 48px control height is a useful starting point, not a fixed law. A product design system can set a lower height for dense desktop work. In that product, its value wins.
-- Keep touch targets large enough, also when the visible icon is small.
+- Keep touch targets at 44 by 44px or more, also when the visible icon is small. Extend the target with padding or a pseudo-element:
+
+```css
+.icon-button {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+/* The target grows to 44px without a change to the visible size. */
+.icon-button::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+```
+
+- Give a text link enough padding or line height for a 44px target.
 
 ## One Height In A Row
 

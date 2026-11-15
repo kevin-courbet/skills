@@ -33,7 +33,8 @@ The source gallery covers:
 
 - Start from the task and the information hierarchy, not from the visual treatment.
 - Prefer the simplest pattern that keeps all required actions and states.
-- Use progressive disclosure when advanced controls would overwhelm the common path.
+- Use progressive disclosure when advanced controls would overwhelm the common path. Show the basic options first, and put the advanced options in a section that people can expand.
+- A secondary action that appears on hover also needs a focus trigger and a touch path. [[responsive#keep-the-task]] gives the rule.
 - Keep familiar control behavior when the visual treatment changes. [[accessibility#native-behavior]] gives the rule.
 - Use a container only for a real group or an interaction boundary. [[spacing#containers-and-cards]] gives the rule.
 - Keep one dominant action for each decision point. [[hierarchy#actions]] gives the rule.

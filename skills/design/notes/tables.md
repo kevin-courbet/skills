@@ -49,5 +49,6 @@ In both examples, the header band is a little darker than the container. [[graph
 ## Narrow Screens
 
 - If the screen is for overview, remove low-priority columns. Do not force the full desktop table onto mobile.
+- Change rows to cards with `display: block` and a `data-label` on each cell only when people can still compare the values. When comparison is the task, keep the table.
 - When a table scrolls horizontally on a narrow screen, keep a visible cue that it scrolls.
 - Make the scroll container focusable with the keyboard, give it an accessible name, and show its focus clearly.

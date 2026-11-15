@@ -14,7 +14,16 @@ Give the highest visual weight to the information or the action that matters mos
 ## Build Hierarchy
 
 - De-emphasize supporting content before you make the primary content larger.
-- Combine two or three hierarchy tools: size, weight, contrast, position, and space. Size alone gives weak hierarchy.
+- Combine two or three hierarchy tools: size, weight, contrast, position, and space. Size alone gives weak hierarchy. A strong heading is larger, bolder, and has more space above it.
+
+| Tool | Strong hierarchy | Weak hierarchy |
+| --- | --- | --- |
+| Size | A ratio of 3:1 or more | A ratio under 2:1 |
+| Weight | Bold against regular | Medium against regular |
+| Contrast | High contrast | Similar tones |
+| Position | Top or left | Bottom or right |
+| Space | White space around it | Crowded |
+
 - Keep section headings quieter than the content when the content is the real focus.
 - Separate document semantics from visual importance. Use the correct HTML element, then style it for its role.
 - Balance visual weight as well as contrast. Large or solid icons often need a softer color than the text near them.
@@ -29,7 +38,7 @@ Give the highest visual weight to the information or the action that matters mos
 ## Actions
 
 - Usually give one primary action, a small number of secondary actions, and quiet tertiary actions.
-- Keep one dominant action for each decision point.
+- Keep one dominant action for each decision point. Do not make every button primary. Use ghost buttons, text links, and secondary styles for the other actions.
 - Treat the importance of an action separately from its meaning. A destructive action is not always the primary action.
 - Place workflow actions consistently across the product.
 - On mobile, stacked full-width actions can work. Keep the primary action first.

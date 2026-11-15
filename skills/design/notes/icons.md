@@ -61,6 +61,6 @@ When you copy SVG files from `lucide-static`, keep the complete license file tha
 
 ## Avoid
 
-- Do not add icons to every label or heading.
+- Do not add icons to every label or heading. A large icon with rounded corners above every heading adds no value and makes the page look like a template.
 - Do not use an unfamiliar icon without text where recognition matters.
 - Do not use different icons for the same action in one product.

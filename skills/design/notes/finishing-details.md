@@ -21,7 +21,7 @@ Finishing details come after the structure works. Each detail must support the t
 
 ## Empty States
 
-- Design an empty state as a first-use experience.
+- Design an empty state as a first-use experience that teaches the interface, not only a message that says "nothing here". [[ux-writing#empty-states]] gives the copy.
 - Remove filters, tabs, or actions that have no purpose before content exists.
 
 ## Decoration

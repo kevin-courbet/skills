@@ -13,13 +13,14 @@ Feedback tells people what went wrong, where, and how to fix it.
 
 ## Field Errors
 
-- Put an error next to the field when one field caused the error.
+- Put an error below the field when one field caused the error. Connect it to the field with `aria-describedby`.
 - The message names the field and says how to fix the problem: "Enter the floor in 3 characters or fewer, like 12 or B2."
 
 ## When To Show A Message
 
 - Show a message after the user changes a field and leaves it, or after a submit attempt.
-- Do not show it while the user types a first answer.
+- Do not show it while the user types a first answer. A password strength meter is the exception: it updates on each key.
+- Write the message with the rules in [[ux-writing#error-messages]].
 
 ## Error Summary
 
