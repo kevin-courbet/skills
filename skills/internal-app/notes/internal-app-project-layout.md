@@ -54,7 +54,7 @@ src/
   vite-env.d.ts                kit.
 ```
 
-Put the components of the app in `src/features/<name>/ui/`, not in `src/components/`. `check` fails when the `@layer` of a kit file does not agree with its folder. `src/lib/` keeps the kit modules that have no doc comment and the app modules. [[internal-app-page-patterns#design-kit-routes]] tells what each showcase shows.
+Put the components of the app in `src/features/<name>/ui/`, not in `src/components/`. `check` fails when the `@layer` of a kit file does not agree with its folder. `src/lib/` keeps the kit modules that have no doc comment and the app modules. [[internal-app-page-patterns#recipes]] gives a complete page for each common page type.
 
 ## App Modules That The Kit Imports
 

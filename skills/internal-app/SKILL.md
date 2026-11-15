@@ -27,14 +27,14 @@ internal-app sync [dir] [--write] [--force] # install or update kit files
 internal-app check [dir]                    # conventions
 internal-app components [dir]               # kit catalog by layer
 internal-app docs <Id>[#part] [dir]         # docs of one kit component
+internal-app recipe [<Id>[#files]]          # page recipes
 ```
 
-`--json` gives output for a machine. Exit status 1 is a failure, not a
+`--json` prints JSON. Exit status 1 is a failure, not a
 warning.
 
-`components` and `docs` read the installed kit of the app in the working
-folder, because an app can have an older kit than this skill. Outside an app,
-they read the template.
+`components` and `docs` read the kit of the app in the working folder. That
+kit can be older than this skill. Outside an app, they read the template.
 
 ## Hard Rules
 
@@ -62,7 +62,7 @@ they read the template.
 
 ### Add Or Change A Page
 
-1. Pattern and container: `design read internal-app-page-patterns`. Primary action, row heights, moves, focus: `design read internal-app-composition`.
+1. Pattern, container, and recipe: `design read internal-app-page-patterns`, then `recipe <Id>`. Primary action, row heights, moves, focus: `design read internal-app-composition`.
 2. Components: `design search "<the need>"`, then `docs <Id>`. None fits: `design read internal-app-adding-a-primitive`.
 3. Route: `design read internal-app-routes`. List filters: `design read internal-app-url-filters`.
 4. Data: `design read internal-app-server-functions`. Writes, optimistic moves, deletes: `design read internal-app-mutations`. Effect services and config: `design read internal-app-effect-services`. A separate backend: `design read internal-app-rpc`. An error tracker: `design read internal-app-error-reporting`.

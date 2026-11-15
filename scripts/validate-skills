@@ -24,7 +24,8 @@ design_references=$(
       "$repo_root"/skills/internal-app/notes/*.md \
       "$repo_root/skills/internal-app/scripts/internal-app"
     grep -rohE "$design_pointer" --include='*.ts' --include='*.tsx' \
-      "$repo_root/skills/internal-app/assets/template/src"
+      "$repo_root/skills/internal-app/assets/template/src" \
+      "$repo_root/skills/internal-app/assets/lab/src"
   } | sed 's/^design read //' | sort -u
 )
 test -n "$design_references"
@@ -121,6 +122,21 @@ bun "$internal_app_cli" doctor "$scaffold_root/app" >/dev/null
   bun "$design_cli" search "drag cards between columns" | grep -q "internal-app.* docs Kanban"
   bun "$design_cli" graph --check >/dev/null
 )
+# The recipes build only in a scaffold with the lab, so the lab app passes the
+# same gates as the plain app, and check holds each recipe to its contract.
+bun "$internal_app_cli" new "$scaffold_root/lab" --name "Lab app" --lab >/dev/null
+(
+  cd "$scaffold_root/lab"
+  bun install --frozen-lockfile >/dev/null
+  NODE_ENV=production bun run build >/dev/null
+  bun run tsc >/dev/null
+  bun run lint >/dev/null
+  bun --bun oxfmt --check >/dev/null
+)
+bun "$internal_app_cli" check "$scaffold_root/lab" >/dev/null
+bun "$internal_app_cli" recipe | grep -q "^  ListPage "
+bun "$internal_app_cli" recipe ListPage | grep -q "^ListPage  (recipe)"
+bun "$design_cli" search "list page with filters" | grep -q "internal-app.* recipe ListPage"
 rm -rf "$scaffold_root"
 
 test -f "$repo_root/skills/create-data-visualizations/SKILL.md"

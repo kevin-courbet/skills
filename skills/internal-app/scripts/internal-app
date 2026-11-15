@@ -20,9 +20,11 @@ import {
   type KitDoc,
   type KitSource,
 } from "./lib/kit-docs.ts";
+import { findRecipe, LAB_INDEX, labIndexProblems, missingComponents, readRecipes, recipeProblems, renderRecipe, renderRecipeList, type Recipe } from "./lib/recipes.ts";
 
 const skillDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const templateDir = join(skillDir, "assets", "template");
+const labDir = join(skillDir, "assets", "lab");
 const manifestPath = join(skillDir, "assets", "kit.json");
 const lockName = "internal-app.kit.json";
 const dotfiles = ["gitignore", "oxlintrc.json", "oxfmtrc.json"] as const;
@@ -49,7 +51,10 @@ class CliError extends Error {}
 const usage = `internal-app <command> [options]
 
 Commands:
-  new <dir> [--name "App name"]       Scaffold a new app from the template.
+  new <dir> [--name "App name"] [--lab]
+                                      Scaffold a new app from the template.
+                                      --lab adds the recipe pages under /lab, to
+                                      build, check, and screenshot them.
   sync [dir] [--write] [--force]      Compare the app's kit files with the skill.
                                       --write installs and updates them.
                                       --force also replaces locally edited or conflicting files.
@@ -60,8 +65,12 @@ Commands:
                                       comment and its props. <id> is a component id
                                       from "components", or any name that a kit file
                                       exports. #part prints one section, or #props.
-  design-entries [dir]                Print the kit components as search entries for
-                                      "design search". The design skill runs it.
+  recipe [<id>[#files]] [dir]          List the recipes, or print one recipe: a complete,
+                                      small page that composes the kit for one page
+                                      type. Copy it into the app and adapt it. #files
+                                      prints its example data and app parts.
+  design-entries [dir]                Print the kit components and the recipes as search
+                                      entries for "design search". The design skill runs it.
 
 The commands that read docs find the app from [dir], or from the current folder:
 the nearest folder upward with ${lockName}. Outside an app, they read the newest
@@ -752,6 +761,19 @@ function runCheck(appDir: string): Array<Finding> {
     }
   }
   findings.push(...kitDocFindings(appDir, manifest));
+  if (existsSync(join(appDir, LAB_INDEX))) findings.push(...recipeFindings(appDir, manifest));
+  return findings;
+}
+
+// A scaffold with the lab is where the recipes build and type-check, so check
+// also holds each recipe to the recipe contract there.
+function recipeFindings(appDir: string, manifest: Manifest): Array<Finding> {
+  const recipes = readRecipes(appDir);
+  const findings: Array<Finding> = [];
+  for (const [file, problems] of recipeProblems(recipes, readKit(appDocSource(appDir, manifest)))) {
+    for (const problem of problems) findings.push({ rule: "recipes", file, line: 1, text: problem });
+  }
+  for (const problem of labIndexProblems(appDir, recipes)) findings.push({ rule: "recipes", file: LAB_INDEX, line: 1, text: problem });
   return findings;
 }
 
@@ -778,6 +800,7 @@ function ruleMessages(): Record<string, string> {
     "forbidden-dependency": "Dependency the stack replaces. Migrate its usages, then bun remove it.",
     "kit-docs":
       "A kit component file has no valid doc comment. In an app, run sync --write to install the documented kit. In the skill, fix the comment in assets/template.",
+    recipes: "A lab page breaks the recipe contract. Fix the recipe in assets/lab of the skill: design read internal-app-page-patterns.",
     "kit-layout": "The kit files of the app are at old paths. Run sync --write to move them: design read internal-app-kit-update.",
   };
   for (const rule of lineRules(readManifest())) messages[rule.id] = rule.message;
@@ -1021,10 +1044,19 @@ function runDoctor(appDir: string): Array<DoctorCheck> {
 
 // ---------------------------------------------------------------- new
 
-function runNew(target: string, name: string) {
+function runNew(target: string, name: string, lab: boolean) {
   if (existsSync(target) && readdirSync(target).length > 0) throw new CliError(`${target} exists and is not empty.`);
   mkdirSync(target, { recursive: true });
   cpSync(templateDir, target, { recursive: true });
+  if (lab) {
+    // The lab only adds pages. A lab file that replaced a template file would
+    // make the lab scaffold verify another app than the one that ships.
+    for (const absolute of walk(labDir)) {
+      const file = toPosix(relative(labDir, absolute));
+      if (existsSync(join(templateDir, file))) throw new CliError(`The lab file ${file} is also a template file. Lab files only add pages.`);
+    }
+    cpSync(labDir, target, { recursive: true });
+  }
   for (const dotfile of dotfiles) {
     const stored = join(target, `_${dotfile}`);
     if (existsSync(stored)) renameSync(stored, join(target, `.${dotfile}`));
@@ -1057,6 +1089,15 @@ function componentsCommand(): string {
 
 function noteCommand(): string {
   return "design read {id}";
+}
+
+function recipeCommand(): string {
+  return `bun "${scriptPath}" recipe {id}`;
+}
+
+// The recipes come from the skill and follow the newest kit, also in an app.
+function recipeSourcePhrase(): string {
+  return `the recipes of the skill at ${labDir}. They follow the newest kit; an app with an older kit can miss a component.`;
 }
 
 function loadDocs(dir: string | undefined): { source: KitSource; docs: Array<KitDoc> } {
@@ -1096,8 +1137,9 @@ function nameWords(name: string): string {
   return name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
 }
 
-function designEntries(source: KitSource, docs: ReadonlyArray<KitDoc>) {
+function designEntries(source: KitSource, docs: ReadonlyArray<KitDoc>, recipes: ReadonlyArray<Recipe>) {
   const problems = [...kitProblems(docs).entries()].filter(([, items]) => items.length > 0);
+  const recipeIssues = recipes.flatMap((recipe) => recipe.problems.map((problem) => `${recipe.file}: ${problem}`));
   const moved = movedKitMessage(source);
   const components = docs
     .filter((doc) => doc.hasComment)
@@ -1125,8 +1167,29 @@ function designEntries(source: KitSource, docs: ReadonlyArray<KitDoc>) {
       ...(problems.length === 0
         ? []
         : [`${problems.length} kit files have doc comment problems, for example ${problems[0]![0]}: ${problems[0]![1][0]}. Run internal-app check.`]),
+      ...recipeIssues,
     ],
-    groups: [{ name: "components", read: docsCommand(), source: sourcePhrase(source), entries: components }],
+    groups: [
+      { name: "components", read: docsCommand(), source: sourcePhrase(source), entries: components },
+      { name: "recipes", read: recipeCommand(), source: recipeSourcePhrase(), entries: recipes.map(recipeEntry) },
+    ],
+  };
+}
+
+function recipeEntry(recipe: Recipe) {
+  return {
+    id: recipe.id,
+    kind: "recipe",
+    label: "page",
+    title: recipe.id,
+    summary: recipe.summary,
+    keywords: [...recipe.keywords, nameWords(recipe.id)],
+    intro: recipe.intro,
+    sections: [
+      ...recipe.sections.map((section) => ({ title: section.title, text: section.text })),
+      { title: "Components", text: recipe.components.join(", ") },
+    ],
+    links: recipe.notes,
   };
 }
 
@@ -1145,9 +1208,10 @@ function main(argv: ReadonlyArray<string>): number {
   switch (command) {
     case "new": {
       const target = positional[0];
-      if (target === undefined) throw new CliError("Usage: internal-app new <dir> [--name \"App name\"]");
+      if (target === undefined) throw new CliError("Usage: internal-app new <dir> [--name \"App name\"] [--lab]");
       const name = values.name ?? "Internal app";
-      runNew(resolve(target), name);
+      const lab = flags.has("lab");
+      runNew(resolve(target), name, lab);
       print(json, { ok: true, dir: resolve(target), name }, () =>
         [
           `Created ${resolve(target)} from the internal-app template.`,
@@ -1156,6 +1220,7 @@ function main(argv: ReadonlyArray<string>): number {
           "  bun install",
           "  bun run build && bun run tsc && bun run lint",
           "  bun run dev",
+          ...(lab ? ["Then open /lab for the recipe pages."] : []),
         ].join("\n"),
       );
       return 0;
@@ -1241,9 +1306,26 @@ function main(argv: ReadonlyArray<string>): number {
       print(json, { source: sourceInfo(source), doc: found.doc, part: found.part, section: found.section, text: rendered.text }, () => rendered.text);
       return 0;
     }
+    case "recipe": {
+      const target = positional[0];
+      const recipes = readRecipes(labDir);
+      const context = { recipeCommand: recipeCommand(), docsCommand: docsCommand(), noteCommand: noteCommand(), sourceLine: `Source: ${recipeSourcePhrase()}` };
+      if (target === undefined) {
+        print(json, { recipes: recipes.map(({ id, summary, file, route, lines }) => ({ id, summary, file, route, lines })) }, () => renderRecipeList(recipes, context));
+        return 0;
+      }
+      const [name = "", part = null] = target.split("#", 2) as [string, string?];
+      const found = findRecipe(recipes, name);
+      if ("error" in found) throw new CliError(`${found.error}\nList the recipes with: ${recipeCommand().replace(" {id}", "")}`);
+      const { docs } = loadDocs(positional[1]);
+      const rendered = renderRecipe(found, part, labDir, context, missingComponents(found, docs));
+      if ("error" in rendered) throw new CliError(rendered.error);
+      print(json, { recipe: found, part, text: rendered.text }, () => rendered.text);
+      return 0;
+    }
     case "design-entries": {
       const { source, docs } = loadDocs(positional[0]);
-      console.log(JSON.stringify(designEntries(source, docs)));
+      console.log(JSON.stringify(designEntries(source, docs, readRecipes(labDir))));
       return 0;
     }
     case undefined:

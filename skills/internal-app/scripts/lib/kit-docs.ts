@@ -30,7 +30,7 @@ export const LAYER_FOLDERS: Record<Layer, string> = {
   helper: "src/components/helpers/",
 };
 
-const KNOWN_TAGS = new Set(["layer", "keywords", "related", "notes"]);
+const KIT_TAGS: ReadonlySet<string> = new Set(["layer", "keywords", "related", "notes"]);
 const REQUIRED_SECTIONS = ["Example"] as const;
 
 export interface DocSection {
@@ -103,7 +103,7 @@ export function countWords(text: string): number {
   return text.split(/\s+/).filter((word) => /[A-Za-z0-9]/.test(word)).length;
 }
 
-function list(value: string): string[] {
+export function list(value: string): string[] {
   return value
     .split(",")
     .map((item) => item.trim())
@@ -112,14 +112,14 @@ function list(value: string): string[] {
 
 // ------------------------------------------------------------ doc comment
 
-interface RawComment {
+export interface RawComment {
   readonly lines: ReadonlyArray<string>;
 }
 
 // The doc comment is the first block comment that opens with "/**". Line
 // comments before it are permitted, so that a license notice stays the first
 // line of the file.
-function leadingComment(source: string): RawComment | null {
+export function leadingComment(source: string): RawComment | null {
   const lines = source.split("\n");
   let index = 0;
   while (index < lines.length && (lines[index]!.trim() === "" || lines[index]!.trim().startsWith("//"))) index += 1;
@@ -138,7 +138,7 @@ function leadingComment(source: string): RawComment | null {
   return null;
 }
 
-function parseComment(comment: RawComment, problems: string[]) {
+export function parseComment(comment: RawComment, knownTags: ReadonlySet<string>, problems: string[]) {
   const tags = new Map<string, string>();
   const text: string[] = [];
   let fence = false;
@@ -146,7 +146,7 @@ function parseComment(comment: RawComment, problems: string[]) {
     if (/^\s*```/.test(line)) fence = !fence;
     const tag = fence ? null : /^@([a-z]+)\s*(.*)$/.exec(line);
     if (tag) {
-      if (!KNOWN_TAGS.has(tag[1]!)) problems.push(`unknown tag @${tag[1]}; the tags are ${[...KNOWN_TAGS].map((name) => `@${name}`).join(", ")}`);
+      if (!knownTags.has(tag[1]!)) problems.push(`unknown tag @${tag[1]}; the tags are ${[...knownTags].map((name) => `@${name}`).join(", ")}`);
       if (tags.has(tag[1]!)) problems.push(`the tag @${tag[1]} appears twice`);
       tags.set(tag[1]!, tag[2]!.trim());
       continue;
@@ -595,7 +595,7 @@ export function readKitDoc(root: string, file: string): KitDoc {
       source: root,
     };
   }
-  const parsed = parseComment(raw, problems);
+  const parsed = parseComment(raw, KIT_TAGS, problems);
   const layerTag = parsed.tags.get("layer");
   const layer = layerTag !== undefined && (LAYERS as ReadonlyArray<string>).includes(layerTag) ? (layerTag as Layer) : null;
   if (layerTag === undefined) problems.push(`the doc comment has no @layer; give one of ${LAYERS.join(", ")}`);
@@ -764,7 +764,7 @@ export function lookup(docs: ReadonlyArray<KitDoc>, target: string): Lookup | { 
   return { error: `no kit doc or export is named "${name}". Nearest: ${near.join(", ")}.` };
 }
 
-function exportNames(exports: Exports): string[] {
+export function exportNames(exports: Exports): string[] {
   return [
     ...exports.components.map((item) => item.name),
     ...exports.hooks.map((item) => item.name),
@@ -774,7 +774,7 @@ function exportNames(exports: Exports): string[] {
   ];
 }
 
-function distance(left: string, right: string): number {
+export function distance(left: string, right: string): number {
   const row = Array.from({ length: right.length + 1 }, (_, index) => index);
   for (let i = 1; i <= left.length; i += 1) {
     let previous = row[0]!;

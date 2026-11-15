@@ -127,8 +127,8 @@ describe("the kit docs of a new app", () => {
   });
 });
 
-// Each query in the words of the docs and the notes, and the id that must rank
-// in the top 3 of `design search` inside the app.
+// Each query in the words of the docs, the notes, and the recipes, and the id
+// that must rank in the top 3 of `design search` inside the app.
 const GOLDEN: ReadonlyArray<readonly [string, string]> = [
   ["kanban", "Kanban"],
   ["drag cards between columns", "Kanban"],
@@ -181,6 +181,14 @@ const GOLDEN: ReadonlyArray<readonly [string, string]> = [
   ["stack packages", "internal-app-stack"],
   ["color picker", "internal-app-adding-a-primitive"],
   ["project layout", "internal-app-project-layout"],
+  ["list page with filters", "ListPage"],
+  ["detail page of one record", "DetailPage"],
+  ["settings page", "SettingsPage"],
+  ["long form with a live preview", "PreviewForm"],
+  ["work board", "WorkBoard"],
+  ["touch queue on a shared tablet", "TouchQueue"],
+  ["overview page with kpi tiles", "OverviewPage"],
+  ["approval list", "ApprovalList"],
 ];
 
 // The same needs in other words, written after the docs, so that the docs do
@@ -231,6 +239,14 @@ const PARAPHRASES: ReadonlyArray<readonly [string, string]> = [
   ["which libraries are allowed", "internal-app-stack"],
   ["control that the kit does not have", "internal-app-adding-a-primitive"],
   ["where do files go in the app", "internal-app-project-layout"],
+  ["table of tickets with search and paging", "ListPage"],
+  ["one ticket with its facts and actions", "DetailPage"],
+  ["preferences that save on their own", "SettingsPage"],
+  ["big form with a preview panel", "PreviewForm"],
+  ["move tickets between stages", "WorkBoard"],
+  ["my jobs on a kiosk tablet", "TouchQueue"],
+  ["home page with key numbers and a trend", "OverviewPage"],
+  ["inbox of requests to approve", "ApprovalList"],
 ];
 
 function expectTop3(queries: ReadonlyArray<readonly [string, string]>) {
