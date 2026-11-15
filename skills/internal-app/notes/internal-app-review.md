@@ -39,7 +39,7 @@ Start the built server with `bun run start`. Examine it in a real browser with t
 3. Each dialog, sheet, menu, and popover that the page opens, and one invalid form field.
 4. Each form before and after a submit with errors. Make sure that the `ErrorSummary` takes the focus and counts the problems, that each link moves the focus to its field, and that Tab gets to each control in the order of the page. Examine a long form at the `touch` density when it runs on a tablet.
 5. The page at 400px, 768px, and 1440px wide. At 400px and 768px, the menu button in the top bar opens the navigation. At 400px, the top bar shows the full page title. Examine a touch page at 1440px with a mouse, and at 1180px and 768px with touch emulation. With a mouse, the sidebar shows. With touch emulation, the sidebar is hidden at each width.
-6. `/design-kit` and `/design-kit/form` after a kit install or update, in the two themes.
+6. After a kit change in this skill, the `/lab` recipes that use the changed components, in the two themes. Scaffold them with `internal-app new <dir> --lab`.
 7. The system theme during hydration and after a change of the native color scheme. The document theme must follow the native preference without hydration errors.
 
 Compare the pages with the tokens. Surfaces, text, borders, and spacing must come from tokens. The dark theme must keep the hierarchy without inversion.

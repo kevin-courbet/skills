@@ -10,11 +10,11 @@ related: [internal-app-forms]
 
 # Internal App Form Preview
 
-Run `design read form-preview` and `design read signature-elements` before you build a preview. `FormShowcase` on the `/design-kit/form` route shows a preview of a printed visitor badge. Read the frame with `internal-app docs FormPreview`.
+Run `design read form-preview` and `design read signature-elements` before you build a preview. The PreviewForm recipe shows a preview of a printed visitor badge: run `internal-app recipe PreviewForm`, and `internal-app recipe PreviewForm#files` for the badge. Read the frame with `internal-app docs FormPreview`.
 
 ## Rules
 
-- Build the thing as an app component, such as `VisitorBadge` in `showcase-form.tsx`, and put it in `FormPreview`. Make it look like the real thing: its proportions, its surface, its type hierarchy, and the position of each value.
+- Build the thing as an app component, such as `VisitorBadge` in the PreviewForm recipe, and put it in `FormPreview`. Make it look like the real thing: its proportions, its surface, its type hierarchy, and the position of each value.
 - Use kit tokens for every color, font size, space, radius, and shadow. `check` permits a shaped edge with `clipPath`, a small `transform: rotate(...)`, a punched hole with `maskImage`, and `black` or `transparent` in a gradient. It does not permit a color literal.
 - Show a quiet placeholder in `color.textFaint` for each empty answer, so that the layout of the thing stays visible.
 - When the real thing is printed on white paper, apply `lightTheme` from `src/styles/themes.ts` to its surface. It then stays white in the dark theme.

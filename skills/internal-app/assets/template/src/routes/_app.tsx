@@ -1,13 +1,6 @@
 import { ChartProvider } from "@kevin-courbet/aperture";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import {
-  ClipboardList,
-  LayoutDashboard,
-  ListChecks,
-  Package,
-  Palette,
-  Settings,
-} from "lucide-react";
+import { LayoutDashboard, Package, Settings } from "lucide-react";
 import { AppShell, type NavGroup } from "@/components/shell/app-shell";
 import { appLocale, appTimeZone } from "@/lib/locale";
 
@@ -21,12 +14,7 @@ const nav: ReadonlyArray<NavGroup> = [
   },
   {
     label: "System",
-    items: [
-      { to: "/settings", label: "Settings", icon: Settings },
-      { to: "/design-kit", label: "Design kit", icon: Palette, exact: true },
-      { to: "/design-kit/form", label: "Form showcase", icon: ClipboardList },
-      { to: "/design-kit/queue", label: "Touch queue", icon: ListChecks },
-    ],
+    items: [{ to: "/settings", label: "Settings", icon: Settings }],
   },
 ];
 

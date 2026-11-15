@@ -33,8 +33,6 @@ file does not agree with its folder. There are no exceptions.
 - The charts have no folder. `Sparkline` is a primitive, `TrendChart` is a
   pattern, and `chartHost` is a helper. An agent finds a topic with
   `design search`, not with a folder.
-- The showcases of the design-kit routes are in `src/components/showcase/`.
-  They are kit files without a doc comment.
 - `src/components/` holds only kit files. The components of an app are in
   `src/features/<name>/ui/`. Thus `src/components/` is the catalog of the
   design system, and `WorkQueue` is a kit pattern, not app code.

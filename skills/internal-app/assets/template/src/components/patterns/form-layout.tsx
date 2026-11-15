@@ -9,7 +9,8 @@
  * Use `FormLayout` for a form with more than about six fields or more than
  * one part. Do not use it for a short form: put that in a `Dialog`. Do not
  * use it for settings that apply at once: use a `SettingsCard`. The
- * `/design-kit/form` route shows a complete form with every part.
+ * PreviewForm recipe is a complete form with a preview: print it with
+ * `internal-app recipe PreviewForm`.
  *
  * ## Behavior
  * The parts do these things. Do not build them again:

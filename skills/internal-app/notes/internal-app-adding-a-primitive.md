@@ -1,8 +1,8 @@
 ---
 id: internal-app-adding-a-primitive
 topic: internal-app
-summary: Add a missing control to the kit in this skill, with its doc comment, its showcase, the template checks, kit.json, and a sync into each app, and the controls that the kit leaves out on purpose.
-keywords: [add a primitive, new component, missing control, extend the kit, kit component, one-off control, port reui, doc comment, kit.json, showcase, color picker, phone input, rating, emoji picker, signature pad, otp input, carousel, chat, scroll area, menubar, navigation menu]
+summary: Add a missing control to the kit in this skill, with its doc comment, a visual check in the lab, the template checks, kit.json, and a sync into each app, and the controls that the kit leaves out on purpose.
+keywords: [add a primitive, new component, missing control, extend the kit, kit component, one-off control, port reui, doc comment, kit.json, lab, recipe, color picker, phone input, rating, emoji picker, signature pad, otp input, carousel, chat, scroll area, menubar, navigation menu]
 related: [internal-app-page-patterns, internal-app-composition, method]
 ---
 
@@ -12,11 +12,11 @@ Kit components live in this skill, not in an app. Do not build a one-off control
 
 ## Steps
 
-1. Scaffold a working copy with `new`. Build the component in the folder of its layer, such as `src/components/primitives/`, on the matching react-aria-components component, with StyleX tokens and `renderStyles`.
+1. Scaffold a working copy with `new --lab`. Build the component in the folder of its layer, such as `src/components/primitives/`, on the matching react-aria-components component, with StyleX tokens and `renderStyles`.
 2. Start the file with its doc comment. `internal-app docs Kanban` shows a complete example. The comment gives a summary sentence, `@layer`, `@keywords`, `@related`, and `@notes`, then the purpose and the alternative, `## Behavior`, `## Rules`, and `## Example`. Give each exported prop a comment. `check` fails without them.
-3. Add the component to `KitShowcase` in all its states.
-4. Run `bun run build`, `bun run tsc`, `bun run lint`, and `check`, and capture `/design-kit` in both themes.
-5. Copy the file into `assets/template/src`, add its path to the `files` of `assets/kit.json`, and run `bash scripts/validate-skills` in the skills repository.
+3. Show the component in each of its states. Use it in the recipe of the page type that needs it, or on a route of the working copy that you do not copy back.
+4. Run `bun run build`, `bun run tsc`, `bun run lint`, and `check`, and capture the page of step 3 in both themes.
+5. Copy the file into `assets/template/src`, add its path to the `files` of `assets/kit.json`, and run `bash scripts/validate-skills` in the skills repository. Copy a changed recipe into `assets/lab`.
 6. In each app, run `sync --write`.
 
 ## Ports Of ReUI

@@ -11,11 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as AppDesignKitRouteImport } from './routes/_app/design-kit'
 import { Route as AppItemsRouteRouteImport } from './routes/_app/items/route'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
-import { Route as AppDesignKitFormRouteImport } from './routes/_app/design-kit_.form'
-import { Route as AppDesignKitQueueRouteImport } from './routes/_app/design-kit_.queue'
 import { Route as AppItemsIndexRouteImport } from './routes/_app/items/index'
 import { Route as AppItemsItemIdRouteImport } from './routes/_app/items/$itemId'
 
@@ -28,11 +25,6 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppDesignKitRoute = AppDesignKitRouteImport.update({
-  id: '/design-kit',
-  path: '/design-kit',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppItemsRouteRoute = AppItemsRouteRouteImport.update({
   id: '/items',
   path: '/items',
@@ -41,16 +33,6 @@ const AppItemsRouteRoute = AppItemsRouteRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDesignKitFormRoute = AppDesignKitFormRouteImport.update({
-  id: '/design-kit_/form',
-  path: '/design-kit/form',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDesignKitQueueRoute = AppDesignKitQueueRouteImport.update({
-  id: '/design-kit_/queue',
-  path: '/design-kit/queue',
   getParentRoute: () => AppRoute,
 } as any)
 const AppItemsIndexRoute = AppItemsIndexRouteImport.update({
@@ -67,19 +49,13 @@ const AppItemsItemIdRoute = AppItemsItemIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/items': typeof AppItemsRouteRouteWithChildren
-  '/design-kit': typeof AppDesignKitRoute
   '/settings': typeof AppSettingsRoute
-  '/design-kit/form': typeof AppDesignKitFormRoute
-  '/design-kit/queue': typeof AppDesignKitQueueRoute
   '/items/$itemId': typeof AppItemsItemIdRoute
   '/items/': typeof AppItemsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/design-kit': typeof AppDesignKitRoute
   '/settings': typeof AppSettingsRoute
   '/': typeof AppIndexRoute
-  '/design-kit/form': typeof AppDesignKitFormRoute
-  '/design-kit/queue': typeof AppDesignKitQueueRoute
   '/items/$itemId': typeof AppItemsItemIdRoute
   '/items': typeof AppItemsIndexRoute
 }
@@ -87,43 +63,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/_app/items': typeof AppItemsRouteRouteWithChildren
-  '/_app/design-kit': typeof AppDesignKitRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/design-kit_/form': typeof AppDesignKitFormRoute
-  '/_app/design-kit_/queue': typeof AppDesignKitQueueRoute
   '/_app/items/$itemId': typeof AppItemsItemIdRoute
   '/_app/items/': typeof AppItemsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/items'
-    | '/design-kit'
-    | '/settings'
-    | '/design-kit/form'
-    | '/design-kit/queue'
-    | '/items/$itemId'
-    | '/items/'
+  fullPaths: '/' | '/items' | '/settings' | '/items/$itemId' | '/items/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/design-kit'
-    | '/settings'
-    | '/'
-    | '/design-kit/form'
-    | '/design-kit/queue'
-    | '/items/$itemId'
-    | '/items'
+  to: '/settings' | '/' | '/items/$itemId' | '/items'
   id:
     | '__root__'
     | '/_app'
     | '/_app/items'
-    | '/_app/design-kit'
     | '/_app/settings'
     | '/_app/'
-    | '/_app/design-kit_/form'
-    | '/_app/design-kit_/queue'
     | '/_app/items/$itemId'
     | '/_app/items/'
   fileRoutesById: FileRoutesById
@@ -148,13 +103,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/design-kit': {
-      id: '/_app/design-kit'
-      path: '/design-kit'
-      fullPath: '/design-kit'
-      preLoaderRoute: typeof AppDesignKitRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/items': {
       id: '/_app/items'
       path: '/items'
@@ -167,20 +115,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/design-kit_/form': {
-      id: '/_app/design-kit_/form'
-      path: '/design-kit/form'
-      fullPath: '/design-kit/form'
-      preLoaderRoute: typeof AppDesignKitFormRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/design-kit_/queue': {
-      id: '/_app/design-kit_/queue'
-      path: '/design-kit/queue'
-      fullPath: '/design-kit/queue'
-      preLoaderRoute: typeof AppDesignKitQueueRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/items/': {
@@ -216,20 +150,14 @@ const AppItemsRouteRouteWithChildren = AppItemsRouteRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppItemsRouteRoute: typeof AppItemsRouteRouteWithChildren
-  AppDesignKitRoute: typeof AppDesignKitRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppDesignKitFormRoute: typeof AppDesignKitFormRoute
-  AppDesignKitQueueRoute: typeof AppDesignKitQueueRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppItemsRouteRoute: AppItemsRouteRouteWithChildren,
-  AppDesignKitRoute: AppDesignKitRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
-  AppDesignKitFormRoute: AppDesignKitFormRoute,
-  AppDesignKitQueueRoute: AppDesignKitQueueRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

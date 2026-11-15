@@ -11,7 +11,7 @@ related: [internal-app-mutations, internal-app-stylex, internal-app-tokens]
 
 Motion helps people follow an object when the state changes. It is not decoration. Animate a change only when people can lose an object without the animation: a card that goes to a different lane, a row that leaves a list, or a status that changes while people look at a different part of the screen. [[motion]] gives the general method.
 
-`src/components/helpers/motion.ts` has the helpers. Run `internal-app docs Motion`. The overlay, button, `Kanban`, `SortableList`, and `WorkQueue` components already use them. `MotionShowcase` (`src/components/showcase/showcase-motion.tsx`) on the `/design-kit` route shows each helper on one list.
+`src/components/helpers/motion.ts` has the helpers. Run `internal-app docs Motion`. The overlay, button, `Kanban`, `SortableList`, and `WorkQueue` components already use them. The ApprovalList recipe uses each helper on one page: run `internal-app recipe ApprovalList`.
 
 ## What To Animate
 

@@ -30,7 +30,6 @@ src/
     patterns/                  kit. A complete interaction for one task, such as DataTable, Kanban, and TrendChart.
     shell/                     kit. AppDocument, AppShell, NavLink, RouteBreadcrumbs, RouteError, ThemeSwitch.
     helpers/                   kit. Parts, hooks, and functions for kit code: Field, Overlay, chartHost, form, motion.
-    showcase/                  kit. The showcases of the design-kit routes.
   features/<name>/             App.
     schemas.ts                 Effect Schema for entities, inputs, and search params. Client-safe.
     api.ts                     Server functions, query keys, queryOptions. The only data module routes import.

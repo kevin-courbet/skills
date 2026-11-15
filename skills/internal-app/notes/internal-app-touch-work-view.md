@@ -9,7 +9,7 @@ related: [internal-app-page-patterns, internal-app-composition, loading-states]
 
 # Internal App Touch Work View
 
-Some people work away from a desk. A technician, a stock picker, or a nurse holds a tablet or a phone, finishes one item, and then starts the next. A desktop list page in touch density does not help these people. `QueueShowcase` on the `/design-kit/queue` route is the reference. Copy its structure. Read the component with `internal-app docs WorkQueue`.
+Some people work away from a desk. A technician, a stock picker, or a nurse holds a tablet or a phone, finishes one item, and then starts the next. A desktop list page in touch density does not help these people. The TouchQueue recipe is the reference: run `internal-app recipe TouchQueue`. Copy its structure. Read the component with `internal-app docs WorkQueue`.
 
 ## When To Make A Touch View
 

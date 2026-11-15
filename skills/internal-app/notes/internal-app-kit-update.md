@@ -51,4 +51,4 @@ Until the move is done, `check` reports a `kit-layout` finding, and `components`
 4. If `sync` moved files, run `bun run format`, because a rewritten import line can be longer than the line width.
 5. Commit the kit files, the rewritten app files, and `internal-app.kit.json` together.
 6. Run `doctor`. A `contract` row fails when a new kit file imports an export that an app module does not have. [[internal-app-project-layout#app-modules-that-the-kit-imports]] lists the exports.
-7. Run `bun run build`, `bun run tsc`, `bun run lint`, and `check`. Capture `/design-kit` and the pages that use the changed components in the two themes. Then do the gates of [[internal-app-review]].
+7. Run `bun run build`, `bun run tsc`, `bun run lint`, and `check`. A build error that names a missing kit file means that an app file imports a file that the kit removed. Remove that import, or delete the app file when it only showed the removed file, such as an old `/design-kit` route and its navigation item. Capture the pages that use the changed components in the two themes. Then do the gates of [[internal-app-review]].
