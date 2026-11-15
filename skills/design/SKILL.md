@@ -52,7 +52,7 @@ These rules apply to every interface. A note gives the details of each rule.
 
 ## Process
 
-1. **Context, users, and priorities.** Before you choose a layout, run `design read project-context` and read `DESIGN.md` when it exists. Then run `design read method#establish-users-and-priorities`. Identify the users, the task, and what they must notice first.
+1. **Context, users, and priorities.** Before you choose a layout, read `DESIGN.md` at the project root when it exists. Otherwise, run `design read project-context#when-to-collect-the-context`. Then run `design read method#establish-users-and-priorities`. Identify the users, the task, and what they must notice first.
 2. **Direction.** For a new product, or for a marketing or content page, run `design read visual-direction` and choose a direction inside the house rules. For a functional app, keep the product system and use [[signature-elements]].
 3. **Structure.** Before you choose components, run `design read hierarchy` and `design read patterns --outline`. For a form, run `design read forms` first. For data, run `design read dashboards` or `design read tables`.
 4. **Build.** Before each part, read its note. Examples: `design read color` before you set colors, `design read dark-theme` before a dark theme, `design read font-selection` before you pick a font, `design read icons` before you add icons, `design read motion` before you animate, and `design read ux-writing` before you write labels, errors, or empty states. When the part has no obvious note, run `design search`.
