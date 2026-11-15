@@ -115,7 +115,7 @@ describe("read", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toStartWith("form-errors (topic forms,");
     expect(result.stdout).toContain("## Error Summary");
-    expect(result.stdout).toMatch(/Read first:\n {2}requires {4}forms {2}The entry note for forms/);
+    expect(result.stdout).toMatch(/Read first:\n {2}forms {2}The entry note for forms[^\n]*\nSee also: /);
     expect(result.stdout).toMatch(/\nSee also: form-fields, form-layout, accessibility, overlays, ux-writing\n$/);
     expect(result.stdout).not.toContain("Links:");
   });
@@ -280,11 +280,12 @@ describe("graph membership", () => {
     expect(check.code).toBe(0);
 
     const forms = cli(hub, "read", "forms");
-    expect(forms.stdout).toContain("Specialized by:\n  demo-skill-forms [demo-skill]");
+    expect(forms.stdout).toMatch(/\nSpecialized by: demo-skill-forms\n$/);
+    expect(cli(hub, "read", "forms", "--outline").stdout).toContain("Specialized by:\n  demo-skill-forms [demo-skill]  ");
 
     const member = cli(hub, "read", "demo-skill-forms");
     expect(member.stdout).toStartWith("demo-skill-forms [demo-skill]");
-    expect(member.stdout).toContain("specializes forms");
+    expect(member.stdout).toContain("\nSpecializes: forms\n");
 
     expect(cli(hub, "list").stdout).toContain("demo-skill-forms [demo-skill]");
     expect(cli(hub, "search", "demo forms").stdout).toStartWith("demo-skill-forms [demo-skill]");
@@ -407,8 +408,11 @@ describe("member entries", () => {
     expect(read.stderr).toContain('"Board" is not a note. It is a component of the demo-skill skill. Read it with:\n  demo-cli docs Board');
 
     const forms = run(["read", "forms"], { skillDir: hub, cwd: project });
-    expect(forms.stdout).toContain("Implemented by:");
-    expect(forms.stdout).toContain("Board [demo-skill component, pattern]");
+    expect(forms.stdout).toMatch(/\nImplemented by \(demo-skill\): Board\n {2}Read one with: demo-cli docs <id>\n$/);
+    expect(forms.stdout).not.toContain("Board [demo-skill component, pattern]");
+    const outline = run(["read", "forms", "--outline"], { skillDir: hub, cwd: project });
+    expect(outline.stdout).toContain("Implemented by:\n  Board [demo-skill component, pattern]  ");
+    expect(outline.stdout).toContain("  Read one demo-skill entry with: demo-cli docs <id>");
 
     const check = run(["graph", "--check"], { skillDir: hub, cwd: project });
     expect(check.code).toBe(0);

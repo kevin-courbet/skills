@@ -38,7 +38,7 @@ A member can add documents that are not notes to `design search`, such as the co
    ```
 
 - An entry id is PascalCase, such as `PriceTag`. A note id is lowercase, so the two never collide.
-- `links` names the notes that the entry applies. The check verifies each id. `design read <note>` lists the entries that link to it under "Implemented by".
+- `links` names the notes that the entry applies. The check verifies each id. `design read <note>` lists the ids of the entries that link to it under "Implemented by", with the `read` command once. `design read <note> --outline` adds the summary of each entry.
 - Search ranks entries and notes together. Each entry hit prints its `read` command. `design read <entry id>` prints that command too.
 - The CLI prints the `problems` and a failed run as warnings in search. `design graph --check` fails on them.
 

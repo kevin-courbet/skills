@@ -76,8 +76,12 @@ build step, or network access. Agents run it as
   titles, and body, and corrects small typing errors.
 - `read <id>`, `read <id>#<section>`, and `read <id> --outline` print a note,
   one section, or the section list with word counts. A full read gives
-  summaries only for the `requires` and `specializes` links, and puts the
-  other linked ids on one line. The outline gives the full link list.
+  summaries only for the `requires` links. It puts the other links on one
+  line of ids for each kind: `Specializes`, `See also`, `Specialized by`, and
+  `Implemented by` for each member skill, with the read command of its
+  entries once. The body already says why it links to a note, so the
+  summaries of the other links only add words to each read. The outline gives
+  the full link list with the summaries.
 - `search` prints the query words that no note contains. When the best note
   contains less than half of the query words, it prints a "No strong match"
   line before the results.

@@ -1,6 +1,6 @@
 import { relative } from "node:path";
 import { checkGraph } from "./check.ts";
-import { entriesFor, findEntry, isEntry, loadEntries, type Entry, type EntrySet } from "./entries.ts";
+import { entriesFor, findEntry, isEntry, loadEntries, type Entry, type EntrySet, type EntrySource } from "./entries.ts";
 import { backlinks, findSection, loadGraph, NOTE_WORD_LIMIT, type Graph, type Link, type LoadOptions, type Note } from "./graph.ts";
 import { search } from "./search.ts";
 import { nearest, unique } from "./text.ts";
@@ -125,24 +125,42 @@ function summaryLines(graph: Graph, links: ReadonlyArray<Link>, s: Style): strin
 
 // The full read prints summaries only for the notes that the reader must read
 // first. The body already names the sections of the other links, so their ids
-// fit on one line.
+// fit on one line. The outline keeps the summaries of every link.
 function readLinkLines(context: Context, note: Note, s: Style): string[] {
   const graph = context.graph;
   const outgoing = outgoingLinks(note);
-  const first = outgoing.filter((link) => link.type === "requires" || link.type === "specializes");
   const targetId = (link: Link) => (link.kind === "skill" ? `skill:${link.id}` : link.id);
-  const firstIds = new Set(first.map(targetId));
-  const others = [...new Set(outgoing.map(targetId))].filter((id) => !firstIds.has(id));
+  const required = outgoing.filter((link) => link.type === "requires");
+  const specialized = outgoing.filter((link) => link.type === "specializes");
+  const named = new Set([...required, ...specialized].map(targetId));
+  const others = [...new Set(outgoing.map(targetId))].filter((id) => !named.has(id));
+  const idLine = (label: string, ids: ReadonlyArray<string>) => `${label}: ${ids.map((id) => s.id(id)).join(", ")}`;
   const lines: string[] = [];
-  if (first.length > 0) lines.push("Read first:", ...summaryLines(graph, first, s));
-  if (others.length > 0) lines.push(`See also: ${others.map((id) => s.id(id)).join(", ")}`);
-  return [...lines, ...specializationLines(graph, note, s), ...implementationLines(context, note, s)];
+  if (required.length > 0) {
+    const width = Math.max(...required.map((link) => targetId(link).length));
+    lines.push("Read first:", ...required.map((link) => `  ${s.id(targetId(link).padEnd(width))}  ${linkTargetSummary(graph, link)}`));
+  }
+  if (specialized.length > 0) lines.push(idLine("Specializes", specialized.map(targetId)));
+  if (others.length > 0) lines.push(idLine("See also", others));
+  const specializations = specializationsOf(graph, note);
+  if (specializations.length > 0) lines.push(idLine("Specialized by", specializations.map((from) => from.id)));
+  const entries = entriesFor(context.entries(), note.id);
+  for (const source of context.entries().sources) {
+    const ids = entries.filter((entry) => entry.skill === source.skill).map((entry) => entry.id);
+    if (ids.length === 0) continue;
+    lines.push(idLine(`Implemented by (${source.skill.name})`, ids), `  Read one with: ${readCommand(source)}`);
+  }
+  return lines;
 }
 
 function linkLines(context: Context, note: Note, s: Style): string[] {
   const outgoing = outgoingLinks(note);
   const lines = outgoing.length > 0 ? ["Links:", ...summaryLines(context.graph, outgoing, s)] : [];
   return [...lines, ...specializationLines(context.graph, note, s), ...implementationLines(context, note, s)];
+}
+
+function readCommand(source: EntrySource): string {
+  return source.read.replaceAll("{id}", "<id>");
 }
 
 // The member entries that apply the note, such as the kit components that
@@ -157,21 +175,21 @@ function implementationLines(context: Context, note: Note, s: Style): string[] {
     lines.push(`  ${s.id(entry.id)}${entryOwner(entry)}${" ".repeat(width - name.length)}  ${entry.summary}`);
   }
   for (const source of context.entries().sources.filter((candidate) => entries.some((entry) => entry.skill === candidate.skill))) {
-    lines.push(`  Read one ${source.skill.name} entry with: ${source.read.replaceAll("{id}", "<id>")}`);
+    lines.push(`  Read one ${source.skill.name} entry with: ${readCommand(source)}`);
   }
   return lines;
 }
 
+function specializationsOf(graph: Graph, note: Note): Note[] {
+  return backlinks(graph, note.id)
+    .filter((entry) => entry.link.type === "specializes")
+    .map((entry) => entry.from);
+}
+
 function specializationLines(graph: Graph, note: Note, s: Style): string[] {
-  const lines: string[] = [];
-  const specializations = backlinks(graph, note.id).filter((entry) => entry.link.type === "specializes");
-  if (specializations.length > 0) {
-    lines.push("Specialized by:");
-    for (const entry of specializations) {
-      lines.push(`  ${s.id(entry.from.id)}${owner(entry.from)}  ${entry.from.summary}`);
-    }
-  }
-  return lines;
+  const specializations = specializationsOf(graph, note);
+  if (specializations.length === 0) return [];
+  return ["Specialized by:", ...specializations.map((from) => `  ${s.id(from.id)}${owner(from)}  ${from.summary}`)];
 }
 
 function header(note: Note, s: Style): string[] {
