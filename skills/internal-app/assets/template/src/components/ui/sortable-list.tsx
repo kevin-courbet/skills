@@ -2,7 +2,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { GripVertical } from "lucide-react";
-import { type ReactNode, useId } from "react";
+import { type ReactNode, useId, useRef } from "react";
 import {
   Button,
   DropIndicator,
@@ -11,6 +11,7 @@ import {
   type Key,
   useDragAndDrop,
 } from "react-aria-components";
+import { useFocusAfterRemoval } from "@/lib/focus";
 import { motionStyles, useDropTransition, viewTransitionName } from "@/lib/motion";
 import { renderStyles } from "@/lib/rac";
 import { color, font, media, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
@@ -57,6 +58,10 @@ export interface SortableListProps<Item> {
  * dashboard widgets. Drag a row by the pointer, or focus its grip, press
  * Enter, move with the arrow keys, and press Enter to drop. Escape cancels.
  * The other rows glide to make room; see `useDropTransition`.
+ *
+ * A moved row keeps the focus. When a row with the focus leaves the list, such
+ * as after its remove button, the focus goes to the next row, or to the list
+ * when it is empty.
  */
 export function SortableList<Item extends object>({
   label,
@@ -76,6 +81,13 @@ export function SortableList<Item extends object>({
   const isGrid = layout === "grid";
   const motionScope = useId();
   const dropTransition = useDropTransition();
+  const listRef = useRef<HTMLDivElement>(null);
+  useFocusAfterRemoval({
+    container: listRef,
+    ids: items.map(getItemId),
+    itemSelector: '[role="row"][data-key]',
+    emptyTarget: () => listRef.current,
+  });
   const { dragAndDropHooks } = useDragAndDrop<Item>({
     getItems: (keys) =>
       [...keys].map((key) => {
@@ -113,6 +125,7 @@ export function SortableList<Item extends object>({
 
   return (
     <GridList
+      ref={listRef}
       aria-label={label}
       items={items}
       layout={isGrid ? "grid" : "stack"}
@@ -133,9 +146,10 @@ export function SortableList<Item extends object>({
             }
       }
       renderEmptyState={() => emptyState}
-      {...renderStyles<{ isEmpty: boolean }>(() => [
+      {...renderStyles<{ isEmpty: boolean; isFocusVisible: boolean }>((state) => [
         isGrid ? styles.grid : styles.list,
         !isGrid && framed && styles.framed,
+        state.isFocusVisible && styles.listFocused,
         style,
       ])}
     >
@@ -182,6 +196,8 @@ const tileGap = "0.375rem";
 
 const styles = stylex.create({
   list: { display: "flex", flexDirection: "column", minWidth: 0, outlineStyle: "none" },
+  // The list itself takes the focus only when it is empty, such as after its last row is removed.
+  listFocused: { outlineStyle: "solid", outlineWidth: "2px", outlineColor: color.focus },
   framed: {
     backgroundColor: color.raised,
     borderWidth: "1px",

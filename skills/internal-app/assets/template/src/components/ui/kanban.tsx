@@ -31,6 +31,7 @@ import {
 } from "@/lib/motion";
 import { renderStyles } from "@/lib/rac";
 import { color, font, media, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
+import { useFocusAfterRemoval } from "@/lib/focus";
 import { field } from "./field";
 
 export interface KanbanColumn {
@@ -103,6 +104,10 @@ interface ColumnDrag {
  * place, and the other cards and columns make room. A card that people drop
  * with the pointer is already at its new place, so it lands there at once.
  * Cards that arrive from the server fade in. See `withViewTransition`.
+ *
+ * A moved card keeps the focus in its new column. When a card with the focus
+ * leaves the board, such as after another person closes it, the focus goes to
+ * the next card of its column, or to the column when it is empty.
  */
 export function Kanban<Item extends object>({
   label,
@@ -363,6 +368,13 @@ function KanbanLane<Item extends object>({
   emptyLabel,
 }: KanbanLaneProps<Item>) {
   const headingId = useId();
+  const listRef = useRef<HTMLDivElement>(null);
+  useFocusAfterRemoval({
+    container: listRef,
+    ids: items.map(getItemId),
+    itemSelector: '[role="row"][data-key]',
+    emptyTarget: () => listRef.current,
+  });
   const readIds = (dropped: ReadonlyArray<DropItem>) =>
     Promise.all(
       dropped
@@ -444,6 +456,7 @@ function KanbanLane<Item extends object>({
         {actions === undefined ? null : <div {...stylex.props(styles.laneActions)}>{actions}</div>}
       </header>
       <GridList
+        ref={listRef}
         aria-label={column.title}
         items={items}
         dependencies={[renderItem, getItemLabel, onItemAction, droppedByPointer, arrivals]}
@@ -457,10 +470,13 @@ function KanbanLane<Item extends object>({
               }
         }
         renderEmptyState={() => <p {...stylex.props(styles.empty)}>{emptyLabel}</p>}
-        {...renderStyles<{ isDropTarget: boolean; isEmpty: boolean }>((state) => [
-          styles.list,
-          state.isDropTarget && styles.listDropTarget,
-        ])}
+        {...renderStyles<{ isDropTarget: boolean; isEmpty: boolean; isFocusVisible: boolean }>(
+          (state) => [
+            styles.list,
+            state.isDropTarget && styles.listDropTarget,
+            state.isFocusVisible && styles.listFocused,
+          ],
+        )}
       >
         {(item) => (
           <GridListItem
@@ -571,6 +587,8 @@ const styles = stylex.create({
     transitionProperty: "background-color, box-shadow",
     transitionDuration: motion.fast,
   },
+  // The column list takes the focus only when it is empty, such as after its last card left.
+  listFocused: { outlineStyle: "solid", outlineWidth: "2px", outlineColor: color.focus },
   listDropTarget: {
     backgroundColor: color.accentMuted,
     boxShadow: `inset 0 0 0 1px ${color.accentBorder}`,

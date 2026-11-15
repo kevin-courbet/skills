@@ -74,6 +74,7 @@ States and data:
 Accessibility and input:
 
 - Every control is reachable by keyboard with a visible focus ring.
+- After an action moves or removes the focused item, or closes a panel, the focus is not on the page body. It is on the next item of the group, on the group heading, or on the control that opened the panel. Check `document.activeElement` after each such action.
 - Icon-only buttons have `aria-label`. Decorative icons have `aria-hidden`.
 - Status and selection do not depend on color alone.
 - Text contrast is at least 4.5:1 in both themes. Controls and focus rings reach 3:1.

@@ -91,6 +91,7 @@
     "src/components/kit/showcase-queue.tsx",
     "src/components/kit/showcase-motion.tsx",
     "src/lib/filter-params.ts",
+    "src/lib/focus.ts",
     "src/lib/form.ts",
     "src/lib/motion.ts",
     "src/lib/rac.ts",

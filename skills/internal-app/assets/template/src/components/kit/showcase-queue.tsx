@@ -575,7 +575,6 @@ function PartForm({
           if (value.trim() !== "") setError(undefined);
         }}
         errorMessage={error}
-        autoFocus
       />
       <div {...stylex.props(styles.partActions)}>
         <Button type="submit" intent="primary" size="lg">

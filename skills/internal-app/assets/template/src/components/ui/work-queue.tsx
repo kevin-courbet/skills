@@ -1,13 +1,27 @@
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
-import { createContext, type ReactNode, useContext, useId } from "react";
+import {
+  createContext,
+  type ReactNode,
+  type RefObject,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useRef,
+} from "react";
+import { isFocusLost, useFocusAfterRemoval } from "@/lib/focus";
 import { motionStyles, useArrivals, useHasChanged, viewTransitionName } from "@/lib/motion";
 import { color, font, media, radius, shadow, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import type { StatStripLink } from "./layout";
 
-const WorkQueueContext = createContext<string | null>(null);
+interface WorkQueueValue {
+  readonly scope: string;
+  readonly root: RefObject<HTMLDivElement | null>;
+}
+
+const WorkQueueContext = createContext<WorkQueueValue | null>(null);
 const QueueSectionContext = createContext<{ readonly emphasis: boolean } | null>(null);
 
 /**
@@ -19,12 +33,21 @@ const QueueSectionContext = createContext<{ readonly emphasis: boolean } | null>
  * A card that moves to another section in a `withViewTransition` update glides
  * to its new place. A card that leaves the queue fades out, and a card that
  * arrives without a move fades in.
+ *
+ * The keyboard stays in the queue. When a card with the focus leaves its
+ * section, the focus goes to the next card of that section, or to the section
+ * heading when the section is empty. When the section no longer shows, the
+ * focus goes to the heading of the section that takes its place.
  */
 export function WorkQueue({ children }: { readonly children: ReactNode }) {
   const scope = useId();
+  const root = useRef<HTMLDivElement>(null);
   return (
-    <WorkQueueContext.Provider value={scope}>
-      <div {...stylex.props(styles.queue)}>{children}</div>
+    <WorkQueueContext.Provider value={{ scope, root }}>
+      {/* The queue takes the focus only when no section is left to take it. */}
+      <div ref={root} tabIndex={-1} {...stylex.props(styles.queue, styles.focusTarget)}>
+        {children}
+      </div>
     </WorkQueueContext.Provider>
   );
 }
@@ -59,16 +82,52 @@ export function QueueSection<Item>({
   emptyMessage,
   emphasis = false,
 }: QueueSectionProps<Item>) {
-  const scope = useContext(WorkQueueContext);
-  if (scope === null) throw new Error("QueueSection must render inside a WorkQueue.");
+  const queue = useContext(WorkQueueContext);
+  if (queue === null) throw new Error("QueueSection must render inside a WorkQueue.");
+  const { scope, root } = queue;
   const titleId = useId();
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // The place of the section among the sections of the queue, at the last render that showed it.
+  const place = useRef(-1);
   const ids = items.map(getItemId);
   const arrivals = useArrivals(ids);
   const countHasChanged = useHasChanged(items.length);
+  useFocusAfterRemoval({
+    container: root,
+    ids,
+    itemSelector: "li[data-key]",
+    focusTarget: (item) => {
+      const card = item.querySelector<HTMLElement>(":scope > article");
+      if (card === null)
+        throw new Error(`QueueSection "${title}": renderItem must draw a QueueCard.`);
+      return card;
+    },
+    emptyTarget: () => {
+      if (headingRef.current !== null) return headingRef.current;
+      const queueElement = root.current;
+      if (queueElement === null) return null;
+      const headings = Array.from(
+        queueElement.querySelectorAll<HTMLElement>(":scope > section > h2"),
+      );
+      return headings[place.current] ?? headings.at(-1) ?? queueElement;
+    },
+  });
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    const queueElement = root.current;
+    if (section === null || queueElement === null) return;
+    place.current = Array.from(queueElement.querySelectorAll(":scope > section")).indexOf(section);
+  });
   if (items.length === 0 && emptyMessage === undefined) return null;
   return (
-    <section aria-labelledby={titleId} {...stylex.props(styles.section)}>
-      <h2 id={titleId} {...stylex.props(styles.sectionTitle)}>
+    <section ref={sectionRef} aria-labelledby={titleId} {...stylex.props(styles.section)}>
+      <h2
+        ref={headingRef}
+        id={titleId}
+        tabIndex={-1}
+        {...stylex.props(styles.sectionTitle, styles.focusTarget)}
+      >
         {Icon === undefined ? null : <Icon aria-hidden {...stylex.props(styles.sectionIcon)} />}
         {title}
         <span
@@ -88,6 +147,7 @@ export function QueueSection<Item>({
               return (
                 <li
                   key={id}
+                  data-key={id}
                   {...stylex.props(
                     styles.cardSlot,
                     motionStyles.named(viewTransitionName(scope, "item", id)),
@@ -132,7 +192,11 @@ export interface QueueCardProps {
   readonly meta?: ReactNode;
   /** The next steps as large buttons that share the width of the card. */
   readonly actions?: ReadonlyArray<QueueCardAction>;
-  /** Content that replaces the actions, such as a short form that asks why work stops. */
+  /**
+   * Content that replaces the actions, such as a short form that asks why work
+   * stops. When the panel opens, its first control takes the focus. When it
+   * closes and the card stays, the action that opened it takes the focus again.
+   */
   readonly panel?: ReactNode;
   /**
    * `attention` marks an item that needs help, such as one that waits too
@@ -163,16 +227,41 @@ export function QueueCard({
   if (actions.filter((action) => action.intent === "primary").length > 1)
     throw new Error(`QueueCard "${title}": one primary action at most.`);
   const titleId = useId();
+  const cardRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const openedBy = useRef<string | null>(null);
+  const hadPanel = useRef(panel !== undefined);
+  // The panel and the actions replace each other, so the focused control leaves the page
+  // when one of them opens. The focus goes to the content that took its place.
+  useLayoutEffect(() => {
+    const hasPanel = panel !== undefined;
+    if (hasPanel === hadPanel.current) return;
+    hadPanel.current = hasPanel;
+    if (!isFocusLost()) return;
+    if (hasPanel) {
+      (firstControl(panelRef.current) ?? cardRef.current)?.focus();
+      return;
+    }
+    const opener = Array.from(
+      actionsRef.current?.querySelectorAll<HTMLElement>("[data-queue-action]") ?? [],
+    ).find((button) => button.dataset.queueAction === openedBy.current);
+    openedBy.current = null;
+    (opener ?? cardRef.current)?.focus();
+  });
   const lastSpace = title.lastIndexOf(" ");
   const titleStart = title.slice(0, lastSpace + 1);
   const titleEnd = title.slice(lastSpace + 1);
   return (
     <article
+      ref={cardRef}
       aria-labelledby={titleId}
+      tabIndex={-1}
       {...stylex.props(
         styles.card,
         section.emphasis && styles.cardEmphasis,
         tone === "attention" && styles.cardAttention,
+        styles.focusTarget,
       )}
     >
       <header {...stylex.props(styles.header)}>
@@ -194,33 +283,57 @@ export function QueueCard({
       </header>
       {children === undefined ? null : <div {...stylex.props(styles.body)}>{children}</div>}
       {meta === undefined ? null : <div {...stylex.props(styles.meta)}>{meta}</div>}
-      {panel ??
-        (actions.length === 0 ? null : (
-          <div {...stylex.props(styles.actions)}>
-            {actions.map(({ label, icon: Icon, intent = "secondary", onPress, isDisabled }) => (
-              <Button
-                key={label}
-                intent={intent}
-                size="lg"
-                onPress={onPress}
-                isDisabled={isDisabled}
-              >
-                {Icon === undefined ? null : (
-                  <Icon aria-hidden {...stylex.props(styles.actionIcon)} />
-                )}
-                {label}
-              </Button>
-            ))}
-          </div>
-        ))}
+      {panel === undefined ? null : (
+        <div ref={panelRef} {...stylex.props(styles.panel)}>
+          {panel}
+        </div>
+      )}
+      {panel !== undefined || actions.length === 0 ? null : (
+        <div ref={actionsRef} {...stylex.props(styles.actions)}>
+          {actions.map(({ label, icon: Icon, intent = "secondary", onPress, isDisabled }) => (
+            <Button
+              key={label}
+              data-queue-action={label}
+              intent={intent}
+              size="lg"
+              onPress={() => {
+                openedBy.current = label;
+                onPress();
+              }}
+              isDisabled={isDisabled}
+            >
+              {Icon === undefined ? null : (
+                <Icon aria-hidden {...stylex.props(styles.actionIcon)} />
+              )}
+              {label}
+            </Button>
+          ))}
+        </div>
+      )}
     </article>
   );
+}
+
+const controlSelector =
+  'input:not([type="hidden"]), select, textarea, button, a[href], [tabindex]:not([tabindex="-1"])';
+
+function firstControl(container: HTMLElement | null): HTMLElement | null {
+  const controls = container?.querySelectorAll<HTMLElement>(controlSelector) ?? [];
+  return Array.from(controls).find((control) => !control.matches(":disabled")) ?? null;
 }
 
 const titleLinkPadding = `max(0px, calc((${size.controlSm} - 1lh) / 2))`;
 
 const styles = stylex.create({
   queue: { display: "flex", flexDirection: "column", gap: space.section },
+  // The queue, a section heading, and a card take the focus from the script, not from Tab.
+  // The ring shows only after keyboard use.
+  focusTarget: {
+    outlineStyle: { default: "none", ":focus-visible": "solid" },
+    outlineWidth: "2px",
+    outlineColor: color.focus,
+    outlineOffset: "2px",
+  },
   section: { display: "flex", flexDirection: "column", gap: space.lg },
   sectionTitle: {
     display: "flex",
@@ -357,6 +470,7 @@ const styles = stylex.create({
     fontSize: font.md,
     color: color.textMuted,
   },
+  panel: { display: "contents" },
   // Each button takes an equal share of the row. A button label does not wrap, so the
   // buttons stack before a share gets too narrow for a label such as "Waiting for a part".
   actions: {
