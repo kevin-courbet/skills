@@ -12,9 +12,14 @@
  * record, use `HoverCard`.
  *
  * ## Behavior
- * - `TooltipTrigger` opens the tooltip after a delay on hover, and on keyboard
- *   focus. Escape closes it.
- * - The tooltip takes the density of the page and fades in.
+ * - `TooltipTrigger` opens the tooltip on keyboard focus, and on hover after
+ *   600 ms, so that a pointer that passes over the control does not open it.
+ *   Escape closes it.
+ * - While one tooltip is open, and for 500 ms after it closes, the next
+ *   tooltip opens at once and without motion. Thus people can read a row of
+ *   icon buttons quickly.
+ * - The first tooltip grows and fades in from its trigger. Under reduced
+ *   motion, it only fades. It takes the density of the page.
  *
  * ## Rules
  * - Wrap a focusable trigger, such as a kit `Button`, and the `Tooltip` in
@@ -30,11 +35,13 @@
  * ```
  */
 import * as stylex from "@stylexjs/stylex";
-import type { ReactNode } from "react";
+import { type ReactNode, useContext, useEffect, useState } from "react";
 import {
   Tooltip as AriaTooltip,
+  TooltipTrigger as AriaTooltipTrigger,
   type TooltipProps as AriaTooltipProps,
-  TooltipTrigger,
+  type TooltipTriggerComponentProps,
+  TooltipTriggerStateContext,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, layer, radius, shadow, space } from "@/styles/tokens.stylex";
@@ -48,6 +55,7 @@ export interface TooltipProps extends Omit<AriaTooltipProps, "className" | "styl
 
 export function Tooltip({ children, offset = 6, ...props }: TooltipProps) {
   const overlayDensity = useOverlayDensity();
+  const isInstant = useOpensWarm(useContext(TooltipTriggerStateContext)?.isOpen ?? false);
   return (
     <AriaTooltip
       {...props}
@@ -55,8 +63,10 @@ export function Tooltip({ children, offset = 6, ...props }: TooltipProps) {
       {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
         ...overlayDensity,
         styles.tooltip,
+        overlay.transition,
         state.isEntering && overlay.entering,
         state.isExiting && overlay.exiting,
+        isInstant && overlay.instant,
       ])}
     >
       {children}
@@ -64,7 +74,41 @@ export function Tooltip({ children, offset = 6, ...props }: TooltipProps) {
   );
 }
 
-export { TooltipTrigger };
+/** The react-aria default of 1500 ms makes people wait for a hint that they asked for. */
+export function TooltipTrigger({ delay = 600, ...props }: TooltipTriggerComponentProps) {
+  return <AriaTooltipTrigger delay={delay} {...props} />;
+}
+
+// react-aria opens the next tooltip without a delay while a tooltip is open
+// and for 500 ms after the last one closes. These counters follow the same
+// rule, so that such a tooltip also opens without motion.
+const warmPeriod = 500;
+let openTooltips = 0;
+let isCooling = false;
+let cooldown: ReturnType<typeof setTimeout> | undefined;
+
+function useOpensWarm(isOpen: boolean): boolean {
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  const [isWarm, setIsWarm] = useState(false);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    if (isOpen) setIsWarm(openTooltips > 0 || isCooling);
+  }
+  useEffect(() => {
+    if (!isOpen) return;
+    openTooltips += 1;
+    return () => {
+      openTooltips -= 1;
+      if (openTooltips > 0) return;
+      clearTimeout(cooldown);
+      isCooling = true;
+      cooldown = setTimeout(() => {
+        isCooling = false;
+      }, warmPeriod);
+    };
+  }, [isOpen]);
+  return isWarm;
+}
 
 const styles = stylex.create({
   tooltip: {
