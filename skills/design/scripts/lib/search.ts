@@ -117,6 +117,8 @@ function indexGraph(graph: Graph): ReadonlyArray<NoteIndex> {
 export interface SearchHit {
   readonly note: Note;
   readonly score: number;
+  // The number of query words that the note contains.
+  readonly matched: number;
   readonly sections: ReadonlyArray<Section>;
 }
 
@@ -124,6 +126,14 @@ export interface SearchResult {
   readonly hits: ReadonlyArray<SearchHit>;
   readonly corrections: ReadonlyArray<{ from: string; to: string }>;
   readonly terms: ReadonlyArray<string>;
+  // Query words that no note contains, also after typo correction.
+  readonly unmatched: ReadonlyArray<string>;
+  // The number of distinct query words, with the unmatched words.
+  readonly words: number;
+  // False when the best hit contains less than half of the query words. Such a
+  // hit is often about a near topic, such as tables for a kanban board, and the
+  // reader must not take it for the answer.
+  readonly strong: boolean;
 }
 
 // Replaces a query word that no note contains with the closest word of the
@@ -150,6 +160,7 @@ function correct(typed: string, vocabulary: ReadonlySet<string>): string | null 
 }
 
 const RELATIVE_FLOOR = 0.2;
+const STRONG_COVERAGE = 0.5;
 
 export function search(graph: Graph, query: string, limit: number): SearchResult {
   const index = indexGraph(graph);
@@ -157,6 +168,7 @@ export function search(graph: Graph, query: string, limit: number): SearchResult
   const typedVocabulary = new Set(index.flatMap((entry) => [...entry.typed]));
   const corrections: Array<{ from: string; to: string }> = [];
   const queryTerms: string[] = [];
+  const unmatched: string[] = [];
   for (const typed of new Set(words(query))) {
     const term = stem(typed);
     if (vocabulary.has(term)) {
@@ -168,9 +180,12 @@ export function search(graph: Graph, query: string, limit: number): SearchResult
       corrections.push({ from: typed, to: replacement });
       const replacementTerm = stem(replacement);
       if (!queryTerms.includes(replacementTerm)) queryTerms.push(replacementTerm);
+    } else {
+      unmatched.push(typed);
     }
   }
-  if (queryTerms.length === 0) return { hits: [], corrections, terms: queryTerms };
+  const queryWords = queryTerms.length + unmatched.length;
+  if (queryTerms.length === 0) return { hits: [], corrections, terms: queryTerms, unmatched, words: queryWords, strong: false };
 
   const total = index.length;
   const idf = new Map<string, number>();
@@ -215,11 +230,13 @@ export function search(graph: Graph, query: string, limit: number): SearchResult
       .sort((left, right) => right.sectionScore - left.sectionScore)
       .slice(0, 3)
       .map((candidate) => candidate.section);
-    hits.push({ note: entry.note, score, sections });
+    hits.push({ note: entry.note, score, matched, sections });
   }
   hits.sort((left, right) => right.score - left.score || left.note.id.localeCompare(right.note.id));
   // A hit far below the best hit matched only a common word. It costs the
   // reader a line and rarely holds the answer.
   const floor = (hits[0]?.score ?? 0) * RELATIVE_FLOOR;
-  return { hits: hits.filter((hit) => hit.score >= floor).slice(0, limit), corrections, terms: queryTerms };
+  const kept = hits.filter((hit) => hit.score >= floor).slice(0, limit);
+  const strong = kept.length > 0 && kept[0]!.matched >= STRONG_COVERAGE * queryWords;
+  return { hits: kept, corrections, terms: queryTerms, unmatched, words: queryWords, strong };
 }
