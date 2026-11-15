@@ -760,6 +760,7 @@ function runCheck(appDir: string): Array<Finding> {
       }
     }
   }
+  findings.push(...kitFolderFindings(appDir, manifest));
   findings.push(...kitDocFindings(appDir, manifest));
   if (existsSync(join(appDir, LAB_INDEX))) findings.push(...recipeFindings(appDir, manifest));
   return findings;
@@ -775,6 +776,18 @@ function recipeFindings(appDir: string, manifest: Manifest): Array<Finding> {
   }
   for (const problem of labIndexProblems(appDir, recipes)) findings.push({ rule: "recipes", file: LAB_INDEX, line: 1, text: problem });
   return findings;
+}
+
+// src/components/ is the catalog of the kit, so an app file there reads as a
+// kit component to the next agent. The lock names the kit files of an app.
+// Without a lock, the kit files are the files that kit.json lists.
+function kitFolderFindings(appDir: string, manifest: Manifest): Array<Finding> {
+  const lock = readLock(appDir);
+  const kitFiles = new Set(lock === undefined ? manifest.files : Object.keys(lock.files));
+  return walk(join(appDir, "src/components"))
+    .map((absolute) => toPosix(relative(appDir, absolute)))
+    .filter((file) => !kitFiles.has(file))
+    .map((file) => ({ rule: "kit-folder", file, line: 1, text: "not a kit file; move it to src/features/<name>/ui/" }));
 }
 
 // The kit files of an app that need a doc comment. With a lock, they are the
@@ -801,6 +814,8 @@ function ruleMessages(): Record<string, string> {
     "kit-docs":
       "A kit component file has no valid doc comment. In an app, run sync --write to install the documented kit. In the skill, fix the comment in assets/template.",
     recipes: "A lab page breaks the recipe contract. Fix the recipe in assets/lab of the skill: design read internal-app-page-patterns.",
+    "kit-folder":
+      "src/components/ holds only kit files. Move each app file to src/features/<name>/ui/ of the feature that uses it, and update its imports: design read internal-app-project-layout.",
     "kit-layout": "The kit files of the app are at old paths. Run sync --write to move them: design read internal-app-kit-update.",
   };
   for (const rule of lineRules(readManifest())) messages[rule.id] = rule.message;

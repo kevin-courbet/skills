@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { countWords, DOC_WORD_LIMIT } from "../scripts/lib/kit-docs.ts";
@@ -68,6 +68,27 @@ describe("the kit docs of a new app", () => {
       });
     } finally {
       writeFileSync(file, original);
+    }
+  });
+
+  test("check fails on a file in src/components/ that is not a kit file", () => {
+    const file = join(app, "src/components/patterns/visit-summary.tsx");
+    writeFileSync(file, "export function VisitSummary() {\n  return null;\n}\n");
+    try {
+      const result = run(INTERNAL_APP, ["check", "--json"]);
+      expect(result.code).toBe(1);
+      const report = JSON.parse(result.stdout) as { findings: ReadonlyArray<{ rule: string; file: string; line: number; text: string }> };
+      expect(report.findings.filter((item) => item.rule === "kit-folder")).toEqual([
+        {
+          rule: "kit-folder",
+          file: "src/components/patterns/visit-summary.tsx",
+          line: 1,
+          text: "not a kit file; move it to src/features/<name>/ui/",
+        },
+      ]);
+      expect(run(INTERNAL_APP, ["check"]).stdout).toContain("Move each app file to src/features/<name>/ui/");
+    } finally {
+      rmSync(file);
     }
   });
 
