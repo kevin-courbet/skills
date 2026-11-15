@@ -51,9 +51,35 @@ file does not agree with its folder. There are no exceptions.
   in `assets/kit.json` lists. A file has one owner, so these files are not
   split into a kit part and an app part.
 
+### `sync` moves the kit files of an app
+
+`moves` in `assets/kit.json` maps each old path of a kit file to its new
+path. `internal-app sync` reads it:
+
+- A move applies only when the lock of the app records the old path. An app
+  file at an old path that the lock does not record is app code, and it stays.
+- The status is `move`, or `move-modified` when the app edited the old file
+  or has a different file at the new path. `move-modified` needs `--force`.
+- `sync` rewrites each quoted import specifier in the app code that resolves
+  to a moved module. It reads the `paths` of `tsconfig.json` for the aliases,
+  and it keeps the form of each specifier. It prints each rewrite with the
+  file and the line.
+- After the rewrites, `sync` searches the app code for old kit paths that
+  remain outside comments, such as a template literal or an
+  `import.meta.glob` pattern. Each one is an `unsafe` line.
+- A move is all or nothing. When there is an `unsafe` line, or a status that
+  needs `--force` and the command does not have it, `sync --write` writes no
+  file. An app is thus never half moved.
+- Until the move is done, `check` reports a `kit-layout` finding,
+  `components` and `docs` fail, and `design-entries` reports a problem.
+
+`sync` does not format the rewritten files. The app runs `bun run format`
+after the move. The entries of `moves` stay, because an app can be several
+kit versions behind.
+
 ## Consequences
 
 - The import specifier of a kit file shows its layer, for example
   `@/components/patterns/kanban`.
 - No old path, re-export file, or alias remains. An app with the old layout
-  must move its kit files when it updates the kit.
+  moves its kit files with `sync --write` when it updates the kit.

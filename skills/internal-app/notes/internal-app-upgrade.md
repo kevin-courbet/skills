@@ -25,6 +25,7 @@ bun "$SKILL_DIR/scripts/internal-app" sync
 - `doctor` lists the missing dependencies with their `bun add` commands, the replaced libraries, the gaps in the wiring, and the number of convention findings for each rule.
 - `check --json` gives each finding with its file and its line. Use it to plan the order of the pages and to measure the progress. Do not commit the file.
 - `sync` lists the kit files to add and each `conflict`: an app file at a kit path, such as `src/components/shell/app-shell.tsx`.
+- If the app has an `internal-app.kit.json` from an older kit, `sync` can also list `move` rows. Then the app already uses the kit: do [[internal-app-kit-update#moved-kit-files]] instead of this upgrade.
 
 If the `framework` row fails, stop. Run `design read internal-app-framework-port` before you do anything else.
 

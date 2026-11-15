@@ -2,8 +2,8 @@
 // internal-app CLI: scaffold, install or update the design kit, audit an app,
 // and check conventions. Run with: bun "$SKILL_DIR/scripts/internal-app" <command>
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, posix, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   appKitSource,
@@ -12,6 +12,7 @@ import {
   kitProblems,
   kitSource,
   lookup as lookupDoc,
+  movedKitMessage,
   readKit,
   renderCatalog,
   renderDoc,
@@ -30,6 +31,9 @@ interface Manifest {
   readonly files: ReadonlyArray<string>;
   // Path prefixes of the kit files that must start with a doc comment.
   readonly docs: ReadonlyArray<string>;
+  // The old path and the new path of each kit file that the kit moved. An app
+  // can be several kit versions behind, so the entries stay.
+  readonly moves: Readonly<Record<string, string>>;
   readonly forbiddenDependencies: ReadonlyArray<string>;
   readonly forbiddenDependencyPrefixes: ReadonlyArray<string>;
   readonly appContract: Readonly<Record<string, ReadonlyArray<string>>>;
@@ -71,7 +75,14 @@ Exit status is 0 when the result is clean and 1 when action is needed.`;
 // ---------------------------------------------------------------- helpers
 
 function readManifest(): Manifest {
-  return JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest;
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest;
+  const files = new Set(manifest.files);
+  for (const [from, to] of Object.entries(manifest.moves)) {
+    if (files.has(from) || !files.has(to)) {
+      throw new CliError(`${manifestPath}: the move from ${from} to ${to} must start at a path that is not a kit file and end at a kit file.`);
+    }
+  }
+  return manifest;
 }
 
 function sha256(path: string): string {
@@ -82,12 +93,27 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+// Removes the comments and the trailing commas of a JSONC text. It skips the
+// strings, because a tsconfig path such as "@/*" or "src/**/*" holds the
+// characters of a comment.
 function readJsonc(path: string): unknown {
-  const source = readFileSync(path, "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/(^|[^:"'])\/\/.*$/gm, "$1")
-    .replace(/,(\s*[}\]])/g, "$1");
-  return JSON.parse(source);
+  const source = readFileSync(path, "utf8");
+  let out = "";
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index]!;
+    if (char === '"') {
+      const start = index;
+      for (index++; index < source.length && source[index] !== '"'; index++) if (source[index] === "\\") index++;
+      out += source.slice(start, index + 1);
+    } else if (char === "/" && source[index + 1] === "/") {
+      while (index + 1 < source.length && source[index + 1] !== "\n") index++;
+    } else if (char === "/" && source[index + 1] === "*") {
+      const end = source.indexOf("*/", index + 2);
+      if (end === -1) throw new CliError(`${path} has a comment that does not end.`);
+      index = end + 1;
+    } else out += char;
+  }
+  return JSON.parse(out.replace(/,(\s*[}\]])/g, "$1"));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -156,10 +182,21 @@ function parseArgs(argv: ReadonlyArray<string>) {
 
 // ---------------------------------------------------------------- sync
 
-type SyncStatus = "current" | "add" | "update" | "modified" | "conflict" | "remove" | "removed-modified";
+type SyncStatus =
+  | "current"
+  | "add"
+  | "update"
+  | "modified"
+  | "conflict"
+  | "remove"
+  | "removed-modified"
+  | "move"
+  | "move-modified";
 
 interface SyncEntry {
   readonly path: string;
+  // The old path of a kit file that the kit moved to `path`.
+  readonly from?: string;
   readonly status: SyncStatus;
   readonly detail: string;
 }
@@ -172,16 +209,33 @@ const syncDetails: Record<SyncStatus, string> = {
   conflict: "Differs from the skill and has no record of a previous sync. Review it, then replace it with --force.",
   remove: "No longer part of the kit and unchanged in the app.",
   "removed-modified": "No longer part of the kit but edited in the app. Review it, then delete it with --force.",
+  move: "The kit moved this file. sync deletes the old file, writes the new one, and rewrites the imports of the app.",
+  "move-modified":
+    "The kit moved this file, but the app edited the old file or has another file at the new path. Review it, then move it with --force.",
 };
 
-function planSync(appDir: string): { entries: Array<SyncEntry>; lock: Lock | undefined } {
+const forcedStatuses: ReadonlySet<SyncStatus> = new Set(["modified", "conflict", "removed-modified", "move-modified"]);
+
+function planSync(appDir: string): { entries: Array<SyncEntry>; lock: Lock | undefined; moves: Map<string, string> } {
   const manifest = readManifest();
   const lock = readLock(appDir);
+  // Only a file that the lock records is a kit file. An app file at an old kit
+  // path, such as the button of another UI library, does not move.
+  const moves = new Map(Object.entries(manifest.moves).filter(([from]) => lock?.files[from] !== undefined));
+  const movedFrom = new Map([...moves].map(([from, to]) => [to, from]));
   const entries: Array<SyncEntry> = [];
   for (const path of manifest.files) {
     const kitHash = sha256(join(templateDir, path));
     const target = join(appDir, path);
     const appHash = existsSync(target) ? sha256(target) : undefined;
+    const from = movedFrom.get(path);
+    if (from !== undefined) {
+      const old = join(appDir, from);
+      const oldEdited = existsSync(old) && sha256(old) !== lock?.files[from];
+      const status: SyncStatus = oldEdited || (appHash !== undefined && appHash !== kitHash) ? "move-modified" : "move";
+      entries.push({ path, from, status, detail: syncDetails[status] });
+      continue;
+    }
     const lockHash = lock?.files[path];
     let status: SyncStatus;
     if (appHash === undefined) status = "add";
@@ -193,28 +247,200 @@ function planSync(appDir: string): { entries: Array<SyncEntry>; lock: Lock | und
     entries.push({ path, status, detail: syncDetails[status] });
   }
   for (const [path, lockHash] of Object.entries(lock?.files ?? {})) {
-    if (manifest.files.includes(path)) continue;
+    if (manifest.files.includes(path) || moves.has(path)) continue;
     const target = join(appDir, path);
     if (!existsSync(target)) continue;
     const status: SyncStatus = sha256(target) === lockHash ? "remove" : "removed-modified";
     entries.push({ path, status, detail: syncDetails[status] });
   }
-  return { entries, lock };
+  return { entries, lock, moves };
+}
+
+interface ImportRewrite {
+  readonly file: string;
+  readonly line: number;
+  readonly from: string;
+  readonly to: string;
+}
+
+interface UnsafeImport {
+  readonly file: string;
+  readonly line: number;
+  readonly text: string;
+}
+
+// A tsconfig path alias with one trailing "*", such as "@/*" for "./src/*".
+interface PathAlias {
+  readonly prefix: string;
+  readonly target: string;
+}
+
+const codeFilePattern = /\.[cm]?[jt]sx?$/;
+const quotedLiteral = /(["'`])([^"'`\s]+)\1/g;
+// Build output and caches hold copies of the old paths. They are not app code.
+const skippedFolders = new Set(["node_modules", ".git", ".output", ".nitro", ".tanstack", ".vinxi", "dist"]);
+
+function stripCodeExtension(path: string): { module: string; extension: string } {
+  const match = codeFilePattern.exec(path);
+  return match === null ? { module: path, extension: "" } : { module: path.slice(0, match.index), extension: match[0] };
+}
+
+function pathAliases(appDir: string): Array<PathAlias> {
+  const path = join(appDir, "tsconfig.json");
+  if (!existsSync(path)) return [];
+  const config = readJsonc(path);
+  const options = isRecord(config) ? config.compilerOptions : undefined;
+  const paths = isRecord(options) ? options.paths : undefined;
+  if (!isRecord(paths)) return [];
+  const aliases: Array<PathAlias> = [];
+  for (const [key, targets] of Object.entries(paths)) {
+    const target = Array.isArray(targets) ? targets[0] : undefined;
+    if (!key.endsWith("*") || typeof target !== "string" || !target.endsWith("*")) continue;
+    const folder = posix.normalize(target.slice(0, -1) || ".").replace(/\/$/, "");
+    aliases.push({ prefix: key.slice(0, -1), target: folder === "." ? "" : folder });
+  }
+  return aliases.sort((left, right) => right.prefix.length - left.prefix.length);
+}
+
+// The app path that a specifier names, relative to the app root, or null when
+// the specifier is a package or has no known form.
+function resolveSpecifier(file: string, specifier: string, aliases: ReadonlyArray<PathAlias>): { path: string; alias: PathAlias | null } | null {
+  if (specifier.startsWith("./") || specifier.startsWith("../")) {
+    return { path: posix.normalize(posix.join(posix.dirname(file), specifier)), alias: null };
+  }
+  const alias = aliases.find((item) => specifier.startsWith(item.prefix));
+  if (alias === undefined) return null;
+  return { path: posix.normalize(posix.join(alias.target, specifier.slice(alias.prefix.length))), alias };
+}
+
+// The specifier for the new path, in the form of the old one: an alias stays an
+// alias, and a relative specifier stays relative.
+function formatSpecifier(file: string, path: string, alias: PathAlias | null): string {
+  if (alias !== null && (alias.target === "" || path.startsWith(`${alias.target}/`))) {
+    return `${alias.prefix}${alias.target === "" ? path : path.slice(alias.target.length + 1)}`;
+  }
+  const relativePath = posix.relative(posix.dirname(file), path);
+  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
+}
+
+function appCodeFiles(appDir: string, kitPaths: ReadonlySet<string>): Array<string> {
+  const out: Array<string> = [];
+  const visit = (dir: string) => {
+    for (const entry of readdirSync(dir)) {
+      if (skippedFolders.has(entry)) continue;
+      const path = join(dir, entry);
+      if (statSync(path).isDirectory()) visit(path);
+      else {
+        const file = toPosix(relative(appDir, path));
+        if (codeFilePattern.test(file) && !kitPaths.has(file)) out.push(file);
+      }
+    }
+  };
+  visit(appDir);
+  return out.sort();
+}
+
+// A pattern that finds an old kit path in any form, such as
+// "@/components/ui/button", "../components/ui/", or "lib/motion". A folder that
+// no kit file uses now matches as a whole, so that a template literal or a glob
+// that names the folder is found too.
+function oldPathPattern(moves: ReadonlyMap<string, string>, kitFiles: ReadonlyArray<string>): RegExp {
+  const liveFolders = new Set(kitFiles.map((file) => posix.dirname(file)));
+  const texts = new Set<string>();
+  for (const from of moves.keys()) {
+    const folder = posix.dirname(from);
+    const text = liveFolders.has(folder) ? stripCodeExtension(from).module : folder;
+    texts.add(text.replace(/^src\//, ""));
+  }
+  const alternatives = [...texts].sort((left, right) => right.length - left.length).map(escapeRegExp);
+  return new RegExp(`(?<![\\w-])(?:${alternatives.join("|")})(?![\\w-])`);
+}
+
+function isCommentLine(line: string): boolean {
+  return /^\s*(?:\/\/|\/\*|\*)/.test(line);
+}
+
+// Rewrites each import specifier of the app that names a moved kit file. A
+// line that still names an old kit path after the rewrite is unsafe: sync
+// cannot know what it does, so a person must change it.
+function planRewrites(appDir: string, moves: ReadonlyMap<string, string>, kitFiles: ReadonlyArray<string>, lock: Lock | undefined) {
+  const rewrites: Array<ImportRewrite> = [];
+  const unsafe: Array<UnsafeImport> = [];
+  const texts = new Map<string, string>();
+  if (moves.size === 0) return { rewrites, unsafe, texts };
+  const aliases = pathAliases(appDir);
+  const modules = new Map([...moves].map(([from, to]) => [stripCodeExtension(from).module, stripCodeExtension(to).module]));
+  const kitPaths = new Set([...kitFiles, ...Object.keys(lock?.files ?? {})]);
+  const kitFileSet = new Set(kitFiles);
+  const exists = (path: string) => kitFileSet.has(path) || (!moves.has(path) && existsSync(join(appDir, path)));
+  const resolvesToFile = (path: string) =>
+    exists(path) || ["ts", "tsx", "js", "jsx", "mts", "cts", "mjs", "cjs", "index.ts", "index.tsx", "index.js"].some((suffix) => exists(suffix.startsWith("index") ? `${path}/${suffix}` : `${path}.${suffix}`));
+  const oldPath = oldPathPattern(moves, kitFiles);
+  for (const file of appCodeFiles(appDir, kitPaths)) {
+    const lines = readFileSync(join(appDir, file), "utf8").split("\n");
+    let changed = false;
+    lines.forEach((line, index) => {
+      const next = line.replace(quotedLiteral, (whole, quote: string, specifier: string) => {
+        const resolved = resolveSpecifier(file, specifier, aliases);
+        if (resolved === null) return whole;
+        const { module, extension } = stripCodeExtension(resolved.path);
+        const target = modules.get(module);
+        if (target === undefined) return whole;
+        const replacement = formatSpecifier(file, `${target}${extension}`, resolved.alias);
+        rewrites.push({ file, line: index + 1, from: specifier, to: replacement });
+        return `${quote}${replacement}${quote}`;
+      });
+      if (next !== line) {
+        lines[index] = next;
+        changed = true;
+      }
+      if (isCommentLine(next)) return;
+      const rest = next
+        .replace(quotedLiteral, (whole, _quote: string, specifier: string) => {
+          const resolved = resolveSpecifier(file, specifier, aliases);
+          return resolved !== null && resolvesToFile(resolved.path) ? '""' : whole;
+        })
+        .replace(/(?:^|\s)\/\/.*$/, "");
+      if (oldPath.test(rest)) unsafe.push({ file, line: index + 1, text: line.trim() });
+    });
+    if (changed) texts.set(file, lines.join("\n"));
+  }
+  return { rewrites, unsafe, texts };
+}
+
+function removeEmptyFolders(appDir: string, paths: Iterable<string>) {
+  for (const path of paths) {
+    let dir = posix.dirname(path);
+    while (dir !== "." && dir !== "src") {
+      const absolute = join(appDir, dir);
+      if (!existsSync(absolute) || readdirSync(absolute).length > 0) break;
+      rmdirSync(absolute);
+      dir = posix.dirname(dir);
+    }
+  }
 }
 
 function runSync(appDir: string, write: boolean, force: boolean) {
   if (!existsSync(join(appDir, "package.json"))) throw new CliError(`${appDir} has no package.json.`);
-  const { entries, lock } = planSync(appDir);
+  const manifest = readManifest();
+  const { entries, lock, moves } = planSync(appDir);
+  const { rewrites, unsafe, texts } = planRewrites(appDir, moves, manifest.files, lock);
+  const changes = entries.filter((entry) => entry.status !== "current");
+  // A move rewrites the imports of the app, so it is all or nothing: a part of
+  // the moves leaves imports that point to files that do not exist.
+  if (moves.size > 0 && (!write || unsafe.length > 0 || (!force && changes.some((entry) => forcedStatuses.has(entry.status))))) {
+    return { entries, applied: [], pending: changes, rewrites, unsafe, written: false };
+  }
   const nextLock: Record<string, string> = { ...lock?.files };
   const applied: Array<SyncEntry> = [];
   const pending: Array<SyncEntry> = [];
+  const removed: Array<string> = [];
   for (const entry of entries) {
     if (entry.status === "current") {
       nextLock[entry.path] = sha256(join(appDir, entry.path));
       continue;
     }
-    const needsForce = entry.status === "modified" || entry.status === "conflict" || entry.status === "removed-modified";
-    if (!write || (needsForce && !force)) {
+    if (!write || (forcedStatuses.has(entry.status) && !force)) {
       pending.push(entry);
       continue;
     }
@@ -222,15 +448,25 @@ function runSync(appDir: string, write: boolean, force: boolean) {
     if (entry.status === "remove" || entry.status === "removed-modified") {
       rmSync(target);
       delete nextLock[entry.path];
+      removed.push(entry.path);
     } else {
       mkdirSync(dirname(target), { recursive: true });
       cpSync(join(templateDir, entry.path), target);
       nextLock[entry.path] = sha256(target);
+      if (entry.from !== undefined) {
+        rmSync(join(appDir, entry.from), { force: true });
+        delete nextLock[entry.from];
+        removed.push(entry.from);
+      }
     }
     applied.push(entry);
   }
-  if (write) writeLock(appDir, nextLock);
-  return { entries, applied, pending };
+  if (write) {
+    for (const [file, text] of texts) writeFileSync(join(appDir, file), text);
+    removeEmptyFolders(appDir, removed);
+    writeLock(appDir, nextLock);
+  }
+  return { entries, applied, pending, rewrites, unsafe, written: write };
 }
 
 // ---------------------------------------------------------------- check
@@ -523,12 +759,15 @@ function runCheck(appDir: string): Array<Finding> {
 // installed files. Without one, they are the documented files that the app has.
 function appDocSource(appDir: string, manifest: Manifest): KitSource {
   if (existsSync(join(appDir, lockName))) return appKitSource(appDir, manifest);
-  return { root: appDir, isApp: true, files: documentedFiles(manifest).filter((file) => existsSync(join(appDir, file))) };
+  return { root: appDir, isApp: true, files: documentedFiles(manifest).filter((file) => existsSync(join(appDir, file))), moved: [] };
 }
 
 function kitDocFindings(appDir: string, manifest: Manifest): Array<Finding> {
   const findings: Array<Finding> = [];
-  for (const [file, problems] of kitProblems(readKit(appDocSource(appDir, manifest)))) {
+  const source = appDocSource(appDir, manifest);
+  const moved = movedKitMessage(source);
+  if (moved !== null) findings.push({ rule: "kit-layout", file: lockName, line: 1, text: moved });
+  for (const [file, problems] of kitProblems(readKit(source))) {
     for (const problem of problems) findings.push({ rule: "kit-docs", file, line: 1, text: problem });
   }
   return findings;
@@ -539,6 +778,7 @@ function ruleMessages(): Record<string, string> {
     "forbidden-dependency": "Dependency the stack replaces. Migrate its usages, then bun remove it.",
     "kit-docs":
       "A kit component file has no valid doc comment. In an app, run sync --write to install the documented kit. In the skill, fix the comment in assets/template.",
+    "kit-layout": "The kit files of the app are at old paths. Run sync --write to move them: design read internal-app-kit-update.",
   };
   for (const rule of lineRules(readManifest())) messages[rule.id] = rule.message;
   for (const rule of fileRules()) messages[rule.id] = rule.message;
@@ -824,6 +1064,13 @@ function loadDocs(dir: string | undefined): { source: KitSource; docs: Array<Kit
   return { source, docs: readKit(source) };
 }
 
+// The catalog of an app with the old layout misses the moved files, so the
+// commands that show docs stop instead of showing a part of the kit.
+function requireCurrentLayout(source: KitSource) {
+  const moved = movedKitMessage(source);
+  if (moved !== null) throw new CliError(moved);
+}
+
 function sourceInfo(source: KitSource) {
   return { root: source.root, isApp: source.isApp };
 }
@@ -851,13 +1098,16 @@ function nameWords(name: string): string {
 
 function designEntries(source: KitSource, docs: ReadonlyArray<KitDoc>) {
   const problems = [...kitProblems(docs).entries()].filter(([, items]) => items.length > 0);
+  const moved = movedKitMessage(source);
   return {
     read: docsCommand(),
     source: sourcePhrase(source),
-    problems:
-      problems.length === 0
+    problems: [
+      ...(moved === null ? [] : [moved]),
+      ...(problems.length === 0
         ? []
-        : [`${problems.length} kit files have doc comment problems, for example ${problems[0]![0]}: ${problems[0]![1][0]}. Run internal-app check.`],
+        : [`${problems.length} kit files have doc comment problems, for example ${problems[0]![0]}: ${problems[0]![1][0]}. Run internal-app check.`]),
+    ],
     entries: docs
       .filter((doc) => doc.hasComment)
       .map((doc) => {
@@ -912,15 +1162,29 @@ function main(argv: ReadonlyArray<string>): number {
       return 0;
     }
     case "sync": {
-      const result = runSync(appDir, flags.has("write"), flags.has("force"));
-      const ok = result.pending.length === 0;
-      print(json, { ok, applied: result.applied, pending: result.pending }, () => {
+      const write = flags.has("write");
+      const result = runSync(appDir, write, flags.has("force"));
+      const ok = result.pending.length === 0 && result.unsafe.length === 0;
+      const { written, applied, pending, rewrites, unsafe } = result;
+      print(json, { ok, written, applied, pending, rewrites, unsafe }, () => {
+        const entryLine = (label: string, entry: SyncEntry) =>
+          `${label}  ${entry.status.padEnd(16)} ${entry.path}${entry.from === undefined ? "" : `  (from ${entry.from})`}`;
         const lines = [
-          ...result.applied.map((entry) => `applied  ${entry.status.padEnd(16)} ${entry.path}`),
-          ...result.pending.map((entry) => `pending  ${entry.status.padEnd(16)} ${entry.path}\n         ${entry.detail}`),
+          ...applied.map((entry) => entryLine("applied", entry)),
+          ...pending.map((entry) => entryLine("pending", entry)),
+          ...rewrites.map((item) => `${written ? "applied" : "pending"}  ${"rewrite".padEnd(16)} ${item.file}:${item.line}  ${item.from} -> ${item.to}`),
+          ...unsafe.map((item) => `unsafe   ${"import".padEnd(16)} ${item.file}:${item.line}  ${item.text}`),
         ];
         if (lines.length === 0) lines.push(`All kit files match the skill (${result.entries.length} files).`);
-        if (!ok && !flags.has("write")) lines.push("\nRun with --write to apply. Review modified and conflicting files before adding --force.");
+        const statuses = [...new Set(pending.map((entry) => entry.status))];
+        if (statuses.length > 0) lines.push("", ...statuses.map((status) => `${status}: ${syncDetails[status]}`));
+        if (unsafe.length > 0) {
+          lines.push(
+            "\nsync cannot rewrite the unsafe lines: each one names an old kit path in a form that sync does not resolve. Change each line to the new path, then run sync again.",
+          );
+        }
+        if (write && !written) lines.push("sync wrote nothing, because the kit moves files and a move is all or nothing.");
+        else if (!ok && !write) lines.push("\nRun with --write to apply. Review modified and conflicting files before adding --force.");
         return lines.join("\n");
       });
       return ok ? 0 : 1;
@@ -955,6 +1219,7 @@ function main(argv: ReadonlyArray<string>): number {
     }
     case "components": {
       const { source, docs } = loadDocs(positional[0]);
+      requireCurrentLayout(source);
       const problems = [...kitProblems(docs).values()].flat().length;
       print(json, { source: sourceInfo(source), components: docs.map(catalogItem) }, () => {
         const text = renderCatalog(docs, sourceLine(source), docsCommand());
@@ -966,6 +1231,7 @@ function main(argv: ReadonlyArray<string>): number {
       const target = positional[0];
       if (target === undefined) throw new CliError('Usage: internal-app docs <id>[#part] [dir]. List the ids with "internal-app components".');
       const { source, docs } = loadDocs(positional[1]);
+      requireCurrentLayout(source);
       const found = lookupDoc(docs, target);
       if ("error" in found) throw new CliError(`${found.error}\nList the ids with: ${componentsCommand()}`);
       if (!found.doc.hasComment) {

@@ -1,8 +1,8 @@
 ---
 id: internal-app-kit-update
 topic: internal-app
-summary: Update the kit files of an app to the kit of this skill with sync, with the meaning of each sync status, the use of --force, and the checks after the update.
-keywords: [update the kit, kit update, sync, sync --write, force replace, internal-app.kit.json, kit lock, kit file, edit a kit file, modified, conflict, removed-modified, older kit, outdated kit, kit version, contract rows]
+summary: Update the kit files of an app to the kit of this skill with sync, with the meaning of each sync status, the use of --force, the moves of kit files and the rewrite of their imports, and the checks after the update.
+keywords: [update the kit, kit update, sync, sync --write, force replace, internal-app.kit.json, kit lock, kit file, edit a kit file, modified, conflict, removed-modified, move, move-modified, moved kit files, old kit layout, kit-layout, rewrite imports, import paths, unsafe import, older kit, outdated kit, kit version, contract rows]
 related: [internal-app-project-layout, internal-app-adding-a-primitive, internal-app-upgrade, internal-app-review]
 ---
 
@@ -27,12 +27,28 @@ Never edit a kit file in an app. `sync` reports the edit as `modified`, and `doc
 | `conflict` | The file is different from the skill, and the lock has no record of a previous sync. | Replaces it only with `--force`. |
 | `remove` | The file is not part of the kit now, and the app did not change it. | Deletes it. |
 | `removed-modified` | The file is not part of the kit now, and the app edited it. | Deletes it only with `--force`. |
+| `move` | The kit moved the file to a new path, and the app did not change it. | Deletes the old file, writes the new file, and rewrites the imports. |
+| `move-modified` | The kit moved the file, and the app edited the old file or has a different file at the new path. | Moves it only with `--force`. |
+
+## Moved Kit Files
+
+`moves` in `assets/kit.json` maps each old path of a kit file to its new path. `sync` moves a file only when the lock records the old path. An app file at an old path that the lock does not record stays in place.
+
+When the kit moves files, `sync` also reads the source files of the app. It rewrites each quoted import specifier that points to a moved file: `import`, `export … from`, and `import()`. A rewrite keeps the form of the specifier, such as `@/` or `../`, and its extension. `sync` prints one `rewrite` line for each change, with the file and the line.
+
+A move is all or nothing. `sync --write` writes nothing when one of these is true:
+
+- A line names an old kit path that `sync` cannot rewrite, such as a template literal in `import()` or a pattern in `import.meta.glob`. `sync` prints an `unsafe` line with the file and the line. Change the line by hand, so that it names the new path, then run `sync --write` again.
+- A status needs `--force`, and the command does not have it.
+
+Until the move is done, `check` reports a `kit-layout` finding, and `components` and `docs` fail.
 
 ## Steps
 
 1. On a branch, run `sync` in the app root. Read each status that is not `current`.
-2. For each `modified`, `conflict`, and `removed-modified` file, read the difference. Move each change that the app needs into the skill or into an app file. Use `--force` only after that move.
+2. For each `modified`, `conflict`, `removed-modified`, and `move-modified` file, read the difference. Move each change that the app needs into the skill or into an app file. Use `--force` only after that move. Change each `unsafe` line by hand.
 3. Run `sync --write`. Add `--force` if step 2 approved the replacement of files.
-4. Commit the kit files and `internal-app.kit.json` together.
-5. Run `doctor`. A `contract` row fails when a new kit file imports an export that an app module does not have. [[internal-app-project-layout#app-modules-that-the-kit-imports]] lists the exports.
-6. Run `bun run build`, `bun run tsc`, `bun run lint`, and `check`. Capture `/design-kit` and the pages that use the changed components in the two themes. Then do the gates of [[internal-app-review]].
+4. If `sync` moved files, run `bun run format`, because a rewritten import line can be longer than the line width.
+5. Commit the kit files, the rewritten app files, and `internal-app.kit.json` together.
+6. Run `doctor`. A `contract` row fails when a new kit file imports an export that an app module does not have. [[internal-app-project-layout#app-modules-that-the-kit-imports]] lists the exports.
+7. Run `bun run build`, `bun run tsc`, `bun run lint`, and `check`. Capture `/design-kit` and the pages that use the changed components in the two themes. Then do the gates of [[internal-app-review]].

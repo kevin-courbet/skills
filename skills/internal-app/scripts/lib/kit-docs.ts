@@ -642,6 +642,8 @@ export function readKitDoc(root: string, file: string): KitDoc {
 export interface DocsManifest {
   readonly files: ReadonlyArray<string>;
   readonly docs: ReadonlyArray<string>;
+  // The old path and the new path of each kit file that the kit moved.
+  readonly moves: Readonly<Record<string, string>>;
 }
 
 export interface KitSource {
@@ -650,6 +652,10 @@ export interface KitSource {
   readonly isApp: boolean;
   // The kit files that need a doc comment, in the order of kit.json.
   readonly files: ReadonlyArray<string>;
+  // The installed kit files that the kit moved, as [old path, new path]. The
+  // app has the old layout until `sync --write` moves them, so its docs are
+  // not complete.
+  readonly moved: ReadonlyArray<readonly [string, string]>;
 }
 
 export const LOCK_NAME = "internal-app.kit.json";
@@ -685,14 +691,23 @@ function lockFiles(app: string): string[] {
 // show. The order follows kit.json, so that the catalog is stable.
 export function appKitSource(app: string, manifest: DocsManifest): KitSource {
   const order = new Map(manifest.files.map((file, index) => [file, index]));
-  const files = lockFiles(app)
+  const installed = lockFiles(app);
+  const files = installed
     .filter((file) => isDocumented(manifest, file))
     .sort((left, right) => (order.get(left) ?? order.size) - (order.get(right) ?? order.size) || left.localeCompare(right));
-  return { root: app, isApp: true, files };
+  const moved = installed.flatMap((file) => (manifest.moves[file] === undefined ? [] : [[file, manifest.moves[file]] as const]));
+  return { root: app, isApp: true, files, moved };
 }
 
 export function templateKitSource(templateDir: string, manifest: DocsManifest): KitSource {
-  return { root: templateDir, isApp: false, files: documentedFiles(manifest) };
+  return { root: templateDir, isApp: false, files: documentedFiles(manifest), moved: [] };
+}
+
+// Tells that the app has kit files at old paths, or returns null.
+export function movedKitMessage(source: KitSource): string | null {
+  const [first] = source.moved;
+  if (first === undefined) return null;
+  return `the app has the old kit layout: the kit moved ${source.moved.length} of its files, such as ${first[0]} to ${first[1]}. Run internal-app sync --write to move them and to rewrite the imports of the app.`;
 }
 
 export function kitSource(start: string, templateDir: string, manifest: DocsManifest): KitSource {
