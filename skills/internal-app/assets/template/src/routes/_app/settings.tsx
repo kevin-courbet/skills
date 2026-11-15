@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { CopyButton } from "@/components/ui/copy-button";
-import { Code, Page, PageHeader, SettingRow, SettingsCard } from "@/components/ui/layout";
+import { Identifier } from "@/components/ui/identifier";
+import { Page, PageHeader, SettingRow, SettingsCard } from "@/components/ui/layout";
 import { appLocale, appTimeZone } from "@/lib/locale";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -17,8 +17,7 @@ function SettingsPage() {
       <PageHeader title="Settings" description="Workspace configuration." />
       <SettingsCard title="Workspace">
         <SettingRow label="Workspace ID" description="Use this ID in support requests.">
-          <Code>{workspaceId}</Code>
-          <CopyButton value={workspaceId} label="Copy workspace ID" />
+          <Identifier value={workspaceId} label="workspace ID" />
         </SettingRow>
         <SettingRow label="Mode">
           <Badge>Managed</Badge>

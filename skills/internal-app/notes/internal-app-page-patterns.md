@@ -21,7 +21,7 @@ The template has one working example of each page pattern. Copy the structure of
 | Create | `features/items/ui/create-item-dialog.tsx` | A `Dialog` with a TanStack Form. The submit button in the footer uses `form={formId}`. The status is a `RadioGroup appearance="chips"`. |
 | Long form | `_app/design-kit_.form.tsx` with `components/kit/showcase-form.tsx` | See [[internal-app-forms]]. |
 | Touch queue | `_app/design-kit_.queue.tsx` with `components/kit/showcase-queue.tsx` | See [[internal-app-touch-work-view]]. |
-| Settings | `_app/settings.tsx` | A page of reading width with `SettingsCard` and `SettingRow`. Identifiers use `Code` with a `CopyButton`. |
+| Settings | `_app/settings.tsx` | A page of reading width with `SettingsCard` and `SettingRow`. Identifiers use `Identifier`. |
 
 ## Choose The Container
 
