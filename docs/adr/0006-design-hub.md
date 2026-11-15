@@ -45,7 +45,8 @@ system wins unless the user asks for a new direction, and
 `signature-elements` gives the expressive elements that the app may have.
 
 Its `SKILL.md` gives the taste rules, the process, and the
-note ids for each step. It has at most 900 words.
+note ids for each step. It has at most 900 words, and `graph --check` gives
+the same limit to the `SKILL.md` of each member skill.
 
 ### Notes
 

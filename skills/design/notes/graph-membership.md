@@ -68,6 +68,6 @@ The skill folder can be `.agents/skills/`, `.claude/skills/`, or the `skills/` f
 - `design-graph.json` is valid JSON with the key `notes` and the optional key `entries`.
 - The entries command runs, prints the JSON above, and gives unique ids and known note links.
 - The note folder exists and stays inside the skill folder.
-- The member has a `SKILL.md`.
+- The member has a `SKILL.md` with at most 900 words in its body, as the hub `SKILL.md` has.
 - Each member note id starts with the member skill name and a hyphen.
 - Each member note is reachable from a `SKILL.md` in the graph.

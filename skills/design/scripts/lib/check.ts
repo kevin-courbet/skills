@@ -92,10 +92,14 @@ export function checkGraph(graph: Graph, entries: EntrySet): CheckResult {
     if (message) problems.push({ file: root.file, line: root.line, message });
   }
 
-  if (existsSync(graph.hub.skillFile)) {
-    const words = countWords(stripFrontMatter(readFileSync(graph.hub.skillFile, "utf8")));
+  // An agent reads the SKILL.md of a member in full before each task, as it
+  // reads the hub SKILL.md, so every SKILL.md in the graph has one limit. The
+  // graph loader reports a missing SKILL.md.
+  for (const skill of graph.skills) {
+    if (!existsSync(skill.skillFile)) continue;
+    const words = countWords(stripFrontMatter(readFileSync(skill.skillFile, "utf8")));
     if (words > SKILL_WORD_LIMIT) {
-      problems.push({ file: graph.hub.skillFile, message: `SKILL.md has ${words} words; the limit is ${SKILL_WORD_LIMIT}` });
+      problems.push({ file: skill.skillFile, message: `the SKILL.md of ${skill.name} has ${words} words; the limit is ${SKILL_WORD_LIMIT}` });
     }
   }
 

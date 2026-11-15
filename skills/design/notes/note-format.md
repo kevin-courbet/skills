@@ -15,7 +15,7 @@ The note graph is the only source of design rules. A rule has one place: one not
 - A note is one Markdown file in the `notes` folder of its skill. The folder is flat.
 - The file name is the id followed by `.md`.
 - A note has one topic. Split a note when it covers two topics.
-- A note has at most 1000 words in its body. The hub `SKILL.md` has at most 900 words.
+- A note has at most 1000 words in its body. The `SKILL.md` of each skill in the graph, the hub and each member, has at most 900 words in its body.
 
 ## Front Matter
 
@@ -60,7 +60,7 @@ Do not change an id after other skills use it. An id is part of the contract of 
 - Missing or wrong front matter, an unknown key, or an id that does not match the file name.
 - A duplicate id or a duplicate section title.
 - A broken link to a note or a section.
-- A note over the word limit, or a hub `SKILL.md` over its limit.
+- A note over the word limit, or a `SKILL.md` of the hub or of a member over its limit.
 - An asset path that does not exist.
 - A note that no `SKILL.md` in the graph reaches through links.
 - A hub note that links to a member note.

@@ -3,7 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writ
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { run, type RunResult } from "../scripts/lib/cli.ts";
-import { loadGraph } from "../scripts/lib/graph.ts";
+import { loadGraph, SKILL_WORD_LIMIT } from "../scripts/lib/graph.ts";
 import { search } from "../scripts/lib/search.ts";
 
 const SKILL_DIR = resolve(import.meta.dir, "..");
@@ -247,6 +247,21 @@ describe("graph --check finds problems", () => {
     const { hub } = copyHub();
     edit(join(hub, "notes", "overlays.md"), (text) => `${text}\n## Filler\n\n${"word ".repeat(1000)}\n`);
     failing(hub, "the limit is 1000");
+  });
+
+  test("a SKILL.md over the word limit, in the hub or in a member", () => {
+    const { hub } = copyHub();
+    edit(join(hub, "SKILL.md"), (text) => `${text}\n${"word ".repeat(900)}\n`);
+    failing(hub, "the SKILL.md of design has");
+
+    const other = copyHub();
+    addMember(join(other.root, "skills"), "demo-skill", {
+      "design-graph.json": '{ "notes": "notes" }\n',
+      "SKILL.md": memberSkill("demo-skill", `Before a form, run \`design read demo-skill-forms\`.\n\n${"word ".repeat(900)}`),
+      "notes/demo-skill-forms.md": memberNote("demo-skill-forms"),
+    });
+    const output = failing(other.hub, "the SKILL.md of demo-skill has");
+    expect(output).toContain(`the limit is ${SKILL_WORD_LIMIT}`);
   });
 
   test("an unreachable note", () => {
