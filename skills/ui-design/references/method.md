@@ -141,6 +141,16 @@ In both examples, the header band is a little darker than the container. `refere
 - Keep the primary action of a long form in view, in a footer that stays at the bottom of the window.
 - Place workflow actions consistently across the product. On mobile, stacked full-width actions can work; keep the primary action first.
 
+### Preview Of The End Result
+
+People are visual. When they can see the result while they make it, they find mistakes before the result leaves the screen.
+
+- When a form produces a tangible thing that people see or hold outside the form, show a preview of that thing next to the fields. Examples are a printed check-in tag, a shipping label, an invoice, a rich text document, and an outgoing email or message.
+- Make the preview look like the real thing: its shape, proportions, paper or screen surface, type hierarchy, and the position of each value. An invoice editor shows the invoice page. A rich text editor shows the formatted text. A check-in tag form shows the tag.
+- Update the preview while people type. Show a quiet placeholder for each empty answer, so that the layout of the thing stays visible.
+- Do not preview a record that lives only in the app. When people only update the information of a contact, a preview of a contact card adds nothing that the fields do not show. When the same contact data goes on a printed business card, preview the printed card.
+- Do not add a preview only to fill space. A preview that does not show a real thing takes attention from the fields. Put computed facts, such as a count or an estimate, in the form footer instead.
+
 ## Color
 
 - Build colors by role: primary, neutral, semantic, and surface.
@@ -174,6 +184,16 @@ In both examples, the header band is a little darker than the container. `refere
 - Improve default controls and icons only when the custom result keeps semantics, accessibility, and familiar behavior.
 - Add decorative accents only after hierarchy works. A border, quote mark, illustration, or background detail must reinforce the page voice.
 
+### Signature Elements
+
+A functional design can have expressive elements. An app may have one or two signature elements that come from its domain, such as a printed badge, a ticket stub, a shipping label, or a receipt.
+
+- Tie each signature element to a real thing in the domain. Do not invent an ornament that has no meaning for the user.
+- Build it in the app from the design tokens: colors, type, spacing, radii, and shadows. A shaped edge, a slight rotation, a punched hole, or a paper texture is permitted when it makes the element look like the real thing.
+- Keep the semantics. Real text stays text, the element has an accessible name, and the meaning does not depend on color only.
+- Put it where it carries meaning, such as the preview of the end result. Do not repeat it on every page.
+- Treat it as part of the design, not as decoration that you can remove. It must still follow the hierarchy of the page.
+
 ## Responsive Adaptation
 
 - Preserve priority and relationships, not desktop geometry.
@@ -195,6 +215,9 @@ In both examples, the header band is a little darker than the container. `refere
 - Are numbers easy to compare and statuses easy to interpret?
 - Does each table have its own surface, a quiet header band, and rules only between rows?
 - Are form fields grouped, correctly sized, and clearly labeled?
+- When a form produces a tangible thing, does a preview show that thing in its real shape while people fill in the form?
+- Does each preview show a real thing, and not a record that lives only in the app?
+- Does each signature element come from the domain, use the design tokens, and keep its semantics?
 - Are focus, selected, invalid, disabled, and loading states visible?
 - Can status and selection be understood without color?
 - Can borders be removed without losing structure?

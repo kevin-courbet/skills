@@ -44,7 +44,7 @@ The source gallery covers:
 - For a date that is usually in the next few days, show those days as chips and keep a date input for any other day.
 - Size each input to its expected answer. Mark the optional fields, not the required ones. Use a placeholder only for an example answer that starts with "e.g.".
 - In a long form, put each section title and one sentence about what the answers change in a column beside the fields. Stack the column above the fields on narrow screens.
-- When the answers make a record that users meet later, show a live preview of that record beside the form.
+- When the form produces a tangible thing that users see or hold outside the form, such as a printed tag, an invoice, or an outgoing message, show a live preview of that thing beside the form. Make the preview look like the real thing. Do not preview a record that lives only in the app. "Preview Of The End Result" in `method.md` gives the rules.
 - Keep the submit action and a short live summary, such as a count or an estimate, in a footer that stays at the bottom of the window.
 - Put errors next to the field when one field caused the error. The message names the field and says how to fix the problem: "Enter the floor in 3 characters or fewer, like 12 or B2."
 - Show a message after the user changes a field and leaves it, or after a submit attempt. Do not show it while the user types a first answer.
