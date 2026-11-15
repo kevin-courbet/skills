@@ -76,10 +76,16 @@
   animation: none;
 }
 
+/*
+ * Under reduced motion, a named element does not move: its group takes the new
+ * place and size at once. The old and new images still cross-fade, so an item
+ * that leaves or arrives fades. The values repeat `motion.normal` and
+ * `motion.easeOut`.
+ */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
+  ::view-transition-group(*) {
+    animation-name: none;
+    animation-duration: 180ms;
+    animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
   }
 }

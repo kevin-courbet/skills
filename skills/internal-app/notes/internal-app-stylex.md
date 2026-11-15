@@ -23,7 +23,9 @@ const styles = stylex.create({
     outlineStyle: { default: "none", ":focus-visible": "solid" },
     outlineWidth: "2px",
     outlineColor: color.focus,
-    transitionDuration: { default: motion.fast, [media.reducedMotion]: "0ms" },
+    transitionProperty: "background-color",
+    transitionDuration: motion.fast,
+    transitionTimingFunction: motion.ease,
   },
 });
 ```
@@ -35,7 +37,7 @@ const styles = stylex.create({
 - Give a layout component a `style?: StyleXStyles` prop, so that a parent can set its width or margin. Spread it last.
 - A dynamic value, such as a measured width or a computed color, uses a style function: `stylex.create({ width: (px: number) => ({ width: px }) })`. Use style functions rarely.
 - You can use a custom property as a key: `"--aperture-color-text": color.text`. The chart host bridge uses this.
-- Use `stylex.keyframes` only for enter, exit, change, and loading motion. Each animated property gets a reduced-motion override. Run `design read internal-app-motion`.
+- Use `stylex.keyframes` only for enter, exit, change, and loading motion. Each style that moves an element gets a `media.reducedMotion` override that removes the movement. Color and opacity transitions stay. Run `design read internal-app-motion`.
 - Do not use the pseudo-elements `::before` and `::after`. Render a real element.
 - Set the base font size on `<body>`, not on `<html>`. A rem-based `fontSize` on `<html>` changes the scale of each rem token.
 

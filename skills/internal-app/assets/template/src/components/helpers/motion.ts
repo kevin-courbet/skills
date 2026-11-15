@@ -21,7 +21,9 @@
  *   from the server, such as a new ticket after a refetch.
  * - `useHasChanged(value)` with `motionStyles.changed` marks a value that
  *   changes in place, such as a status badge.
- * - With reduced motion, every change happens at once.
+ * - Under reduced motion, nothing moves. A moved item shows at its new place
+ *   with a short cross-fade, an item that leaves or arrives fades, and a
+ *   changed value fades in.
  * - When two elements have the same name, the browser skips the animation,
  *   and `withViewTransition` reports the error to the window error handlers.
  * - A browser without the View Transitions API runs the update without
@@ -65,16 +67,12 @@ import { media, motion } from "@/styles/tokens.stylex";
 
 let runningTransitions = 0;
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 /**
  * Runs `update` inside a view transition, so elements with a
  * `viewTransitionName` move from their old place to their new place and other
- * named elements fade in or out. Without the API, with reduced motion, or in a
- * hidden tab, it runs `update` at once. Call it from an event handler, not
- * during a render.
+ * named elements fade in or out. Under reduced motion, `app.css` keeps only
+ * the fades. Without the API or in a hidden tab, it runs `update` at once.
+ * Call it from an event handler, not during a render.
  *
  * `update` must change the state synchronously: a React state setter, a
  * `queryClient.setQueryData`, or a router navigation. Put the request after it.
@@ -82,11 +80,7 @@ function prefersReducedMotion(): boolean {
  * an event handler.
  */
 export function withViewTransition(update: () => void): void {
-  if (
-    typeof document.startViewTransition !== "function" ||
-    document.visibilityState === "hidden" ||
-    prefersReducedMotion()
-  ) {
+  if (typeof document.startViewTransition !== "function" || document.visibilityState === "hidden") {
     update();
     return;
   }
@@ -222,11 +216,15 @@ const changedFrames = stylex.keyframes({
   to: { opacity: 1, transform: "none" },
 });
 
+const fadeFrames = stylex.keyframes({ from: { opacity: 0 }, to: { opacity: 1 } });
+
+const changedFadeFrames = stylex.keyframes({ from: { opacity: 0.4 }, to: { opacity: 1 } });
+
 export const motionStyles = stylex.create({
   /** An item that arrives in a list without a view transition. */
   enter: {
-    animationName: enterFrames,
-    animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
+    animationName: { default: enterFrames, [media.reducedMotion]: fadeFrames },
+    animationDuration: motion.normal,
     animationTimingFunction: motion.easeOut,
   },
   /**
@@ -234,8 +232,8 @@ export const motionStyles = stylex.create({
    * not apply to an inline element, so put it on a block or an inline-flex element.
    */
   changed: {
-    animationName: changedFrames,
-    animationDuration: { default: motion.normal, [media.reducedMotion]: "0ms" },
+    animationName: { default: changedFrames, [media.reducedMotion]: changedFadeFrames },
+    animationDuration: motion.normal,
     animationTimingFunction: motion.easeOut,
   },
   /** Sets the `view-transition-name` from `viewTransitionName`. */

@@ -12,8 +12,8 @@
  * with a total, use `ProgressBar`. A route failure renders `RouteError`.
  *
  * ## Behavior
- * - `Skeleton` pulses and `Spinner` turns. Under reduced motion, both stay
- *   still.
+ * - `Skeleton` pulses and `Spinner` turns, so that people see that the work
+ *   runs. Under reduced motion, the spinner turns more slowly.
  * - `EmptyState` shows its `icon` on an `IconTile`.
  * - `ErrorState` has `role="alert"`, so screen readers read it at once.
  *
@@ -158,7 +158,7 @@ const styles = stylex.create({
     borderRadius: radius.sm,
     backgroundColor: color.inset,
     animationName: pulse,
-    animationDuration: { default: "1.6s", [media.reducedMotion]: "0s" },
+    animationDuration: "1.6s",
     animationIterationCount: "infinite",
   },
   spinner: {
@@ -171,7 +171,7 @@ const styles = stylex.create({
     borderTopColor: color.accent,
     borderRadius: radius.full,
     animationName: spin,
-    animationDuration: { default: "0.8s", [media.reducedMotion]: "0s" },
+    animationDuration: { default: "0.8s", [media.reducedMotion]: "1.6s" },
     animationTimingFunction: "linear",
     animationIterationCount: "infinite",
   },

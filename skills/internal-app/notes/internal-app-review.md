@@ -47,7 +47,7 @@ Compare the pages with the tokens. Surfaces, text, borders, and spacing must com
 ## Browser Pitfalls
 
 - Before you capture, make sure of `innerWidth` and `devicePixelRatio` with `ab eval`. A saved page zoom in the browser profile changes the layout width, but the screenshot size stays the same.
-- An automated window can report `document.visibilityState` as `hidden`. The browser then pauses CSS animations and drops key events, and react-aria overlays wait for their exit animation. Run `ab set media reduced-motion` before you examine open and close flows. Open an overlay with a click on its trigger, not with key presses.
+- An automated window can report `document.visibilityState` as `hidden`. The browser then pauses CSS animations and drops key events, and react-aria overlays wait for their exit animation. Run `ab eval 'document.visibilityState'` before you examine open and close flows. When it is `hidden`, bring the browser window to the front. Reduced motion does not remove the wait, because the kit overlays still fade under reduced motion. Open an overlay with a click on its trigger, not with key presses.
 - The page scrolls in the shell panel (`#main-content`), not in the window. Scroll that element, not `window`, before you capture an element below the fold. The scroll restoration of the router can open it again at a scrolled position.
 - Find controls by role and name. A column header and a filter can both have the name "Status".
 

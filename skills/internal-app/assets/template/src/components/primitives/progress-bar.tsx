@@ -13,8 +13,9 @@
  *
  * ## Behavior
  * - The label and the value text connect to the bar for screen readers.
+ * - The fill grows to each new value.
  * - `isIndeterminate` shows a moving fill and hides the value text. Under
- *   reduced motion, the fill does not move.
+ *   reduced motion, a full fill pulses in place.
  *
  * ## Rules
  * - Pass `isIndeterminate` while the total is unknown.
@@ -31,7 +32,7 @@ import {
   ProgressBar as AriaProgressBar,
   type ProgressBarProps as AriaProgressBarProps,
 } from "react-aria-components";
-import { color, font, media, radius, space } from "@/styles/tokens.stylex";
+import { color, font, media, motion, radius, space } from "@/styles/tokens.stylex";
 import { field } from "@/components/helpers/field";
 
 export interface ProgressBarProps extends Omit<
@@ -86,6 +87,12 @@ const slide = stylex.keyframes({
   to: { transform: "translateX(250%)" },
 });
 
+const pulse = stylex.keyframes({
+  "0%": { opacity: 1 },
+  "50%": { opacity: 0.4 },
+  "100%": { opacity: 1 },
+});
+
 const styles = stylex.create({
   root: { gap: space.xs, minWidth: "8rem" },
   labels: {
@@ -108,13 +115,14 @@ const styles = stylex.create({
     borderRadius: radius.full,
     backgroundColor: color.accent,
     transitionProperty: "width",
-    transitionDuration: { default: "200ms", [media.reducedMotion]: "0ms" },
+    transitionDuration: motion.normal,
+    transitionTimingFunction: motion.easeOut,
   },
   width: (percentage: number) => ({ width: `${percentage}%` }),
   indeterminate: {
-    width: "40%",
-    animationName: slide,
-    animationDuration: { default: "1.2s", [media.reducedMotion]: "0s" },
+    width: { default: "40%", [media.reducedMotion]: "100%" },
+    animationName: { default: slide, [media.reducedMotion]: pulse },
+    animationDuration: { default: "1.2s", [media.reducedMotion]: "1.6s" },
     animationTimingFunction: "ease-in-out",
     animationIterationCount: "infinite",
   },

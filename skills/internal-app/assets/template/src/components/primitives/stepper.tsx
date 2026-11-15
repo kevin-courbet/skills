@@ -483,7 +483,7 @@ const styles = stylex.create({
   markerIconBold: { strokeWidth: "3" },
   spin: {
     animationName: spinFrames,
-    animationDuration: { default: "1s", [media.reducedMotion]: "0s" },
+    animationDuration: { default: "1s", [media.reducedMotion]: "2s" },
     animationTimingFunction: "linear",
     animationIterationCount: "infinite",
   },
@@ -509,7 +509,7 @@ const styles = stylex.create({
   segment: { flex: "1", height: "0.375rem", borderRadius: radius.full },
   segmentRunning: {
     animationName: pulseFrames,
-    animationDuration: { default: "1.6s", [media.reducedMotion]: "0s" },
+    animationDuration: "1.6s",
     animationIterationCount: "infinite",
   },
   captionRow: {
