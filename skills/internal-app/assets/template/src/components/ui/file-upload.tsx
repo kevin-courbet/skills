@@ -1,3 +1,44 @@
+/**
+ * A drop zone with a file dialog button and the list of the chosen files with their upload status.
+ *
+ * @layer primitive
+ * @keywords file upload, upload files, drop zone, drag and drop files, attach file, attachment, import csv, choose file
+ * @related ProgressBar, FileTypeIcon, FormLayout, Alert
+ * @notes form-fields, form-errors, internal-app-forms, internal-app-states
+ *
+ * Use it when people send one or more files with a form or start an import.
+ * Do not use it to show files that already exist: show them in an `ItemList`
+ * with a `FileTypeIcon`.
+ *
+ * ## Behavior
+ * The field does these things. Do not build them again:
+ * - People drop files on the zone, or choose them in the file dialog. The
+ *   zone refuses a drop of a type that is not in `acceptedFileTypes`, and the
+ *   dialog shows only those types.
+ * - Without `allowsMultiple`, a drop keeps only the first file.
+ * - Each row shows the name, the size, and the status: "Queued", the percent
+ *   and a `ProgressBar` while it uploads, "Uploaded", or the `error` text.
+ * - With `onRemove`, each row gets a remove button.
+ *
+ * ## Rules
+ * - The field only selects files. The app validates each file, uploads it,
+ *   and updates the `status` and `progress` in `files`.
+ * - Write the `error` of a failed file as the problem and the next action,
+ *   such as "The file is larger than 10 MB. Split it and try again."
+ * - Put the allowed types and the size limit in `description`.
+ *
+ * ## Example
+ * ```tsx
+ * <FileUpload
+ *   label="Price list"
+ *   description="CSV or XLSX, up to 10 MB."
+ *   acceptedFileTypes={["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]}
+ *   files={uploads}
+ *   onSelect={(chosen) => startUploads(chosen)}
+ *   onRemove={removeUpload}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { CircleAlert, CircleCheck, FileText, Upload, X } from "lucide-react";
@@ -14,10 +55,13 @@ export type UploadStatus = "queued" | "uploading" | "done" | "failed";
 
 /** A file the app tracks after selection. The app owns the upload and updates this state. */
 export interface UploadFile {
+  /** Stable id that the app gives the file. `onRemove` receives it. */
   readonly id: string;
+  /** File name, as the row shows it. */
   readonly name: string;
   /** Size in bytes. */
   readonly size: number;
+  /** Where the upload is: queued, uploading, done, or failed. */
   readonly status: UploadStatus;
   /** 0 to 100 while `status` is "uploading". */
   readonly progress?: number;
@@ -26,21 +70,27 @@ export interface UploadFile {
 }
 
 export interface FileUploadProps {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
   /** Allowed types and size, such as "CSV or XLSX, up to 10 MB". */
   readonly description?: string;
   /** Exact MIME types. Drops of other types are refused, and the file dialog filters by them. */
   readonly acceptedFileTypes?: ReadonlyArray<string>;
+  /** Lets people choose or drop more than one file. */
   readonly allowsMultiple?: boolean;
+  /** The chosen files with their upload state. The app owns this list. */
   readonly files: ReadonlyArray<UploadFile>;
+  /** Receives the files that people chose or dropped. Add them to `files` and start the upload. */
   readonly onSelect: (files: ReadonlyArray<File>) => void;
   /** Adds a remove button to each file row. */
   readonly onRemove?: (id: string) => void;
+  /** Disables the drop zone and the file dialog button. */
   readonly isDisabled?: boolean;
   /** Problem with the whole selection, such as a missing required file. */
   readonly errorMessage?: string;
   /** Marks the label "optional" when people may send the form without a file. */
   readonly isOptional?: boolean;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

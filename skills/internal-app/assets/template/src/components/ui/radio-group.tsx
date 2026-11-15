@@ -1,3 +1,47 @@
+/**
+ * One choice from a short list that stays visible, as a list, as cards, or as chips.
+ *
+ * @layer primitive
+ * @keywords radio group, radio buttons, single choice, chips, choice cards, pick one, option cards, person picker, priority picker, decide later
+ * @related Checkbox, Choice, Select, ComboBox, SegmentedControl, FormLayout
+ * @notes form-choices, form-fields, form-errors, internal-app-forms, internal-app-touch-work-view
+ *
+ * Use it for one answer from up to about seven options. Do not use it for
+ * more options: use `Select`, or `ComboBox` when people type the name. For
+ * several answers, use `CheckboxGroup`. To switch a view, use
+ * `SegmentedControl`. The control for each kind of answer is in
+ * `design read internal-app-forms`.
+ *
+ * ## Behavior
+ * The group does these things. Do not build them again:
+ * - Arrow keys move and choose. Tab leaves the group.
+ * - The label, the description, and the error message connect to the group
+ *   for screen readers. `errorMessage` marks the group invalid.
+ * - Chips take the control size of their row.
+ * - It throws on an option field that the appearance cannot show, on an
+ *   option with an empty id, and on `orientation` with `cards` or `chips`.
+ *
+ * ## Rules
+ * - `appearance="list"` (the default) fits a dense panel or a dialog.
+ *   `cards` fit options that people compare, with a `description` each, such
+ *   as a priority. `chips` fit short labels, such as a building or a person.
+ * - When people may skip the answer, add `noneOption`, such as "Decide later".
+ *   Do not make people press a selected chip again to clear it.
+ * - Put a fact that helps the choice in the option `meta`, such as "3 open".
+ *
+ * ## Example
+ * ```tsx
+ * <RadioGroup
+ *   label="Host"
+ *   appearance="chips"
+ *   options={hostOptions}
+ *   noneOption={{ label: "Reception" }}
+ *   value={host}
+ *   onChange={setHost}
+ *   errorMessage={errors.host}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import {
@@ -22,24 +66,31 @@ interface RadioGroupBaseProps<Value extends string> extends Omit<
   AriaRadioGroupProps,
   "className" | "style" | "children" | "value" | "defaultValue" | "onChange" | "orientation"
 > {
+  /** Visible name of the group, in sentence case. */
   readonly label: string;
+  /** Up to about seven options. See ChoiceOption. */
   readonly options: ReadonlyArray<ChoiceOption<Value>>;
   /** Hint between the label and the options, such as what the choice changes. */
   readonly description?: string;
+  /** Error text under the options. It also marks the group invalid. */
   readonly errorMessage?: string;
   /** See ChoiceAppearance. The default is `list`. */
   readonly appearance?: ChoiceAppearance;
   /** Direction of the `list` appearance. Cards and chips always flow in rows. */
   readonly orientation?: "vertical" | "horizontal";
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 
 type RadioGroupValueProps<Value extends string> =
   | {
+      /** Without a none option, people cannot clear the choice. */
       readonly noneOption?: undefined;
       /** The chosen option, or null before people choose one. */
       readonly value?: Value | null;
+      /** The first choice of an uncontrolled group. */
       readonly defaultValue?: Value;
+      /** Receives the id of the chosen option. */
       readonly onChange?: (value: Value) => void;
     }
   | {
@@ -47,7 +98,9 @@ type RadioGroupValueProps<Value extends string> =
       readonly noneOption: ChoiceNoneOption;
       /** The chosen option. Null selects the none option. */
       readonly value: Value | null;
+      /** A group with a none option is always controlled. */
       readonly defaultValue?: undefined;
+      /** Receives the id of the chosen option, or null for the none option. */
       readonly onChange: (value: Value | null) => void;
     };
 

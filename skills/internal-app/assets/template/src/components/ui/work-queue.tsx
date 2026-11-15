@@ -1,3 +1,67 @@
+/**
+ * The work of one person on a touch page, in sections by the next action, with large action buttons on each card.
+ *
+ * @layer pattern
+ * @keywords work queue, work list for a tablet, touch work view, my work, task queue, technician tablet, shared tablet, kiosk, next action, work orders
+ * @related Kanban, Layout, RadioGroup, Sheet, Badge, Alert, Motion, Focus
+ * @notes internal-app-touch-work-view, density, responsive, loading-states
+ *
+ * Use it when one person works through their own items on a tablet, a phone,
+ * or a shared screen, and changes the state of an item more often than its
+ * fields. Do not use it for the people who plan and assign the work: use a
+ * `DataTable` or a `Kanban` on a desktop page. Read
+ * `design read internal-app-touch-work-view` before you build the page.
+ *
+ * ## Behavior
+ * The queue does these things. Do not build them again:
+ * - A card that moves to another section in a `withViewTransition` update
+ *   glides there. A card that leaves fades out, a card that arrives without a
+ *   move fades in, and the count of a section animates when it changes.
+ * - When an action moves or removes the focused card, the focus goes to the
+ *   next card of the section, or to the section heading when it is empty. When
+ *   the section does not show any more, the next heading takes the focus.
+ * - Nothing depends on hover, and every target is 44px or more on a touch page.
+ * - Each part throws an error outside its parent. A `QueueCard` with a `panel`
+ *   and `actions`, or with two primary actions, throws an error.
+ *
+ * ## Rules
+ * - Put it in `Page density="touch"`.
+ * - Change the query cache in `withViewTransition`, then send the request. On
+ *   failure, restore the item in `withViewTransition` and show a toast that
+ *   names the item. Do not show a toast on success: the card in its new
+ *   section shows the result. Do not add motion.
+ * - Do not add `autoFocus` to a field in a `panel`.
+ *
+ * ## QueueSection
+ * One group of cards for one next action. It shows its count beside the title.
+ *
+ * ## QueueCard
+ * One item: a title, the facts that people need to do the work, and the next
+ * steps. Label each action with a verb, such as "Mark as done". Use a
+ * `panel`, not a dialog, for a short answer of one or two fields.
+ *
+ * ## Example
+ * ```tsx
+ * <WorkQueue>
+ *   <QueueSection
+ *     title="In progress"
+ *     icon={Wrench}
+ *     emphasis
+ *     items={queue.inProgress}
+ *     getItemId={(order) => order.id}
+ *     emptyMessage="Nothing in progress. Start the next work order below."
+ *     renderItem={(order) => (
+ *       <QueueCard
+ *         title={order.title}
+ *         link={{ to: "/work", search: (previous) => ({ ...previous, order: order.id }) }}
+ *         subtitle={order.place}
+ *         actions={[{ label: "Mark as done", icon: Check, intent: "primary", onPress: () => finish(order) }]}
+ *       />
+ *     )}
+ *   />
+ * </WorkQueue>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
@@ -27,8 +91,8 @@ const QueueSectionContext = createContext<{ readonly emphasis: boolean } | null>
 /**
  * The work of one person on a touch page, grouped by the next action, such as
  * "In progress", "Up next", and "Waiting". Put it in `Page density="touch"`
- * under a `PageHeader` that says whose work it is. See Touch work view in the
- * component reference.
+ * under a `PageHeader` that says whose work it is. See
+ * `design read internal-app-touch-work-view`.
  *
  * A card that moves to another section in a `withViewTransition` update glides
  * to its new place. A card that leaves the queue fades out, and a card that
@@ -39,7 +103,12 @@ const QueueSectionContext = createContext<{ readonly emphasis: boolean } | null>
  * heading when the section is empty. When the section no longer shows, the
  * focus goes to the heading of the section that takes its place.
  */
-export function WorkQueue({ children }: { readonly children: ReactNode }) {
+export function WorkQueue({
+  children,
+}: {
+  /** The `QueueSection` elements, in the order of work. */
+  readonly children: ReactNode;
+}) {
   const scope = useId();
   const root = useRef<HTMLDivElement>(null);
   return (
@@ -55,6 +124,7 @@ export function WorkQueue({ children }: { readonly children: ReactNode }) {
 export interface QueueSectionProps<Item> {
   /** Names the next action of the group, such as "Up next" or "Waiting for a part". */
   readonly title: string;
+  /** Lucide icon before the title. */
   readonly icon?: LucideIcon;
   /** The items in the order of work: urgent first, then by due date. */
   readonly items: ReadonlyArray<Item>;
@@ -166,11 +236,15 @@ export function QueueSection<Item>({
 }
 
 export interface QueueCardAction {
+  /** A verb and an object, such as "Start work". Never an icon alone. */
   readonly label: string;
+  /** Lucide icon before the label. */
   readonly icon?: LucideIcon;
   /** One `primary` action at most: the next step of the item. */
   readonly intent?: "primary" | "secondary" | "danger";
+  /** Runs the move. */
   readonly onPress: () => void;
+  /** Disables the button, such as while the move is not possible. */
   readonly isDisabled?: boolean;
 }
 

@@ -1,10 +1,36 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * An icon on a small decorative surface, such as the media of an item or the icon of an empty state.
+ *
+ * @layer primitive
+ * @keywords icon tile, icon badge, icon square, icon box, media icon, integration icon, empty state icon
+ * @related Item, FileTypeIcon, Avatar, Feedback, Badge
+ * @notes icons, internal-app-icons
+ *
+ * Use it to give a row or an empty state a quick visual cue. Do not use it for
+ * a person: use `Avatar`. Do not use it for a file: use `FileTypeIcon`. Do not
+ * use it as a control: use an `iconOnly` `Button`.
+ *
+ * ## Behavior
+ * - The tile is hidden from screen readers. The text next to it carries the
+ *   meaning.
+ *
+ * ## Rules
+ * - Keep `tone` neutral unless the tone supports the text, such as `danger` on
+ *   a failed integration that the row also names.
+ *
+ * ## Example
+ * ```tsx
+ * <Item media={<IconTile icon={Webhook} />} title="Deploy hook" />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { LucideIcon } from "lucide-react";
 import { color, radius, shadow } from "@/styles/tokens.stylex";
 import type { BadgeIntent } from "./badge";
 
 export interface IconTileProps {
+  /** A lucide icon. */
   readonly icon: LucideIcon;
   /** `neutral` by default. A tone supports the meaning; the text next to the tile carries it. */
   readonly tone?: BadgeIntent;
@@ -12,6 +38,7 @@ export interface IconTileProps {
   readonly variant?: "soft" | "solid" | "outline";
   /** `sm` 24px for dense rows, `md` 32px for lists, `lg` 40px for empty states and headers. */
   readonly size?: "sm" | "md" | "lg";
+  /** `circle` for a round tile, such as next to round avatars. */
   readonly shape?: "square" | "circle";
 }
 

@@ -1,4 +1,53 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A run as a column of quiet step lines that open in place, and a waterfall of the spans of a distributed trace.
+ *
+ * @layer pattern
+ * @keywords trace, agent steps, run steps, ci jobs, checks, step list, span waterfall, distributed trace, spans, tracing, import steps
+ * @related Stepper, Timeline, LogViewer, CodeBlock, Badge, Tree
+ * @notes loading-states, motion, internal-app-composition
+ *
+ * Use `Trace` for the steps of one run, such as agent turns, CI jobs, checks,
+ * or an import. Use `SpanWaterfall` for a distributed trace. Do not use them
+ * for a short fixed pipeline: use `Stepper` with `mode="status"`. Do not use
+ * them for an audit feed: use `Timeline`.
+ *
+ * ## Behavior
+ * - A step with `detail` or child `steps` opens in place. A step without them
+ *   is a plain line.
+ * - A failed step is red, a running step shimmers, and a pending step is
+ *   faint. Screen readers hear the status word before the title.
+ * - Without `expandedIds`, the trace keeps the open steps in its own state.
+ *
+ * ## Rules
+ * - Write `title` as what happened: "Ran unit tests", not "Tests".
+ * - Put long output in `detail` as a `CodeBlock` with `variant="embedded"`.
+ * - To open the running step, pass `expandedIds` with `onExpandedChange`.
+ *
+ * ## SpanWaterfall
+ * The spans nest under their parent on a shared time axis. The arrow keys move
+ * between the spans and open or close them. The selected span shows its
+ * duration, self time, start, status, and `attributes` below. The span with
+ * the most self time shows its share of the trace, and it is selected first.
+ *
+ * ## Example
+ * ```tsx
+ * <Trace
+ *   label="Deployment checks"
+ *   steps={[
+ *     { id: "lint", icon: FileCheck, title: "Linted 214 files", meta: "4.1 s" },
+ *     {
+ *       id: "test",
+ *       icon: FlaskConical,
+ *       title: "Ran unit tests",
+ *       status: "failed",
+ *       meta: "38 s",
+ *       detail: <CodeBlock variant="embedded" language="text" code={output} />,
+ *     },
+ *   ]}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { ChevronRight, Circle, type LucideIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
@@ -19,6 +68,7 @@ import { field } from "./field";
 export type TraceStatus = "done" | "running" | "failed" | "pending" | "skipped";
 
 export interface TraceStep {
+  /** Stable id of the step, unique in the trace. */
   readonly id: string;
   /** What the step did, as a sentence fragment: "Searched 14 files", "Ran unit tests". */
   readonly title: ReactNode;
@@ -42,10 +92,13 @@ export interface TraceStep {
 export interface TraceProps {
   /** Names the list, such as "Agent steps" or "Deployment checks". */
   readonly label: string;
+  /** The steps, in the order they ran. */
   readonly steps: ReadonlyArray<TraceStep>;
   /** Open steps. Pass it with `onExpandedChange` to control them, such as opening a running step. */
   readonly expandedIds?: ReadonlyArray<string>;
+  /** Open steps at the first render, when the trace keeps them in its own state. */
   readonly defaultExpandedIds?: ReadonlyArray<string>;
+  /** Receives the open step ids when people open or close a step. */
   readonly onExpandedChange?: (ids: ReadonlyArray<string>) => void;
 }
 
@@ -158,18 +211,23 @@ function StepLine({ step }: { readonly step: TraceStep }) {
 }
 
 export interface TraceSpan {
+  /** Stable id of the span, unique in the trace. */
   readonly id: string;
   /** Operation name, such as "POST /api/checkout" or "SELECT cart_items". */
   readonly name: string;
   /** Service or component that recorded the span. */
   readonly service?: string;
+  /** Icon for the kind of span. */
   readonly icon?: LucideIcon;
   /** Start, in milliseconds after the start of the trace. */
   readonly startMs: number;
+  /** Length of the span, in milliseconds. */
   readonly durationMs: number;
+  /** Marks a span that failed. */
   readonly isError?: boolean;
   /** Span attributes in display order, such as `["http.response.status_code", "409"]`. */
   readonly attributes?: ReadonlyArray<readonly [string, string]>;
+  /** The spans that this span started. */
   readonly children?: ReadonlyArray<TraceSpan>;
 }
 
@@ -180,6 +238,7 @@ export interface SpanWaterfallProps {
   readonly span: TraceSpan;
   /** The span shown in the detail panel. It defaults to the span with the most self time. */
   readonly selectedId?: string | null;
+  /** Receives the selected span id, or `null` when people clear the selection. */
   readonly onSelectionChange?: (id: string | null) => void;
   /** Open spans. Every span with children is open by default. */
   readonly defaultExpandedIds?: ReadonlyArray<string>;

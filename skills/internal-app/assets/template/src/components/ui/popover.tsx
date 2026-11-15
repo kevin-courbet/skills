@@ -1,3 +1,35 @@
+/**
+ * A panel that is not modal and that opens next to its trigger, such as a filter panel.
+ *
+ * @layer primitive
+ * @keywords popover, dropdown panel, filter panel, floating panel, quick details, panel next to a button
+ * @related Dialog, Menu, HoverCard, Sheet, Filters, Tooltip
+ * @notes overlays
+ *
+ * Use it for a few controls or quick details that belong to one trigger. Do
+ * not use it for a list of actions: use `Menu`. Do not use it for a task that
+ * must interrupt: use `Dialog`. For detail next to the page, use `Sheet`.
+ *
+ * ## Behavior
+ * - Focus moves into the panel. Escape or a click outside closes it, and the
+ *   focus goes back to the trigger.
+ * - The panel takes the density of the page and the `md` control size, because
+ *   React context passes into portals.
+ * - The panel flips to stay on the screen.
+ *
+ * ## Rules
+ * - Wrap the trigger button and the `Popover` in `PopoverTrigger`.
+ *
+ * ## Example
+ * ```tsx
+ * <PopoverTrigger>
+ *   <Button>Columns</Button>
+ *   <Popover title="Columns" showTitle>
+ *     <CheckboxGroup label="Visible columns" options={columns} value={visible} onChange={setVisible} />
+ *   </Popover>
+ * </PopoverTrigger>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import {
@@ -18,7 +50,9 @@ export { DialogTrigger as PopoverTrigger };
 export interface PopoverProps extends Pick<AriaPopoverProps, "placement" | "offset"> {
   /** Accessible name; shown as a heading when visible. */
   readonly title: string;
+  /** Shows `title` as a heading in the panel. */
   readonly showTitle?: boolean;
+  /** Panel content: a few controls or quick details. */
   readonly children: ReactNode;
 }
 

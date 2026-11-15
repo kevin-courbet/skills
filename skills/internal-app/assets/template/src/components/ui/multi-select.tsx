@@ -1,3 +1,38 @@
+/**
+ * Several choices from a fixed list in a popover, with optional removable tags.
+ *
+ * @layer primitive
+ * @keywords multi select, multiselect, multiple choice dropdown, several values, pick many, select many, tags, labels picker
+ * @related Checkbox, Select, ComboBox, TagGroup, Filters, ListBox
+ * @notes form-choices, internal-app-forms
+ *
+ * Use it for several choices from a long list. For several choices from a short
+ * list, use `CheckboxGroup` with chips or cards, which shows all the options.
+ * To filter a list page, use `Filters`.
+ *
+ * ## Behavior
+ * - The popover stays open while people choose.
+ * - The trigger names the first choice and counts the rest, such as "Pump and 2
+ *   more".
+ * - With `showTags`, each tag has a remove button, and Backspace and Delete
+ *   remove the focused tag.
+ * - `onChange` receives the ids in the order of `options`.
+ *
+ * ## Rules
+ * - Give every field a `width` from the length of its trigger text.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <MultiSelect
+ *   label="Skills"
+ *   showTags
+ *   options={skillOptions}
+ *   value={skills}
+ *   onChange={setSkills}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronDown } from "lucide-react";
@@ -40,21 +75,29 @@ type AriaMultipleSelectProps<Value extends string> = Omit<
 >;
 
 export interface MultiSelectProps<Value extends string> extends AriaMultipleSelectProps<Value> {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
+  /** The choices, in the order that they show. */
   readonly options: ReadonlyArray<ListOption<Value>>;
+  /** Ids of the chosen options. */
   readonly value: ReadonlyArray<Value>;
+  /** Receives the ids of the chosen options. */
   readonly onChange: (value: ReadonlyArray<Value>) => void;
   /** Hide the visible label in dense toolbars. The label stays available to screen readers. */
   readonly hideLabel?: boolean;
   /** Lists the chosen values as removable tags under the field. Use in forms, not toolbars. */
   readonly showTags?: boolean;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
   /** Control width from the expected length of the answer. See FieldWidth. */
   readonly width?: FieldWidth;
+  /** Trigger text while nothing is chosen. */
   readonly placeholder?: string;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

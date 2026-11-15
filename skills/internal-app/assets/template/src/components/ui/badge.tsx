@@ -1,4 +1,38 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A short status word with an intent color, as a `Badge` that stands alone or as a dense `StatusDot`.
+ *
+ * @layer primitive
+ * @keywords status badge, badge, status dot, status label, tag, count badge, pill, state indicator, intent color
+ * @related DataTable, Layout, Item, WorkQueue, IconTile
+ * @notes internal-app-composition, internal-app-touch-work-view, color, accessibility
+ *
+ * Use `Badge` for a status, a count, or a tag that stands alone, such as in a
+ * card header or an `Item` meta. Use `StatusDot` in table cells, dense lists,
+ * and detail headers. Do not use them for a notice about the page: use
+ * `Alert`. Do not use them for progress: use `Stepper` or `ProgressBar`.
+ *
+ * ## Behavior
+ * - The `outline` appearance adds a dot before the text when the intent is not
+ *   `neutral` and there is no `icon`.
+ * - A `Badge` keeps its size in all densities.
+ *
+ * ## Rules
+ * - Always write the status in text. The color only supports it.
+ * - On a touch page, use `Badge size="lg"`, so the badge stays legible next to
+ *   the larger text.
+ * - In a `PageHeader` title, put a `StatusDot` or a `Badge size="lg"` after
+ *   the `Identifier`.
+ * - Use the same intent for the same status across the app.
+ *
+ * ## Example
+ * ```tsx
+ * <StatusDot intent="warning" isActive detail={<MetaLine items={["Build", "1m 12s"]} />}>
+ *   Building
+ * </StatusDot>
+ * <Badge intent="danger" appearance="solid" shape="pill">3</Badge>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
@@ -9,13 +43,17 @@ export type BadgeAppearance = "subtle" | "solid" | "outline";
 export type BadgeSize = "sm" | "md" | "lg";
 
 export interface BadgeProps {
+  /** The meaning of the status. */
   readonly intent?: BadgeIntent;
+  /** Use `solid` for a count and `outline` for a quiet tag. */
   readonly appearance?: BadgeAppearance;
+  /** The height and the text size of the badge. */
   readonly size?: BadgeSize;
   /** `pill` rounds the ends fully, for counts and short tags such as "Current". */
   readonly shape?: "rounded" | "pill";
   /** A lucide icon element before the text. It is decorative; the text carries the meaning. */
   readonly icon?: ReactNode;
+  /** The status word, the count, or the tag. */
   readonly children: ReactNode;
 }
 
@@ -54,6 +92,7 @@ export function Badge({
 }
 
 export interface StatusDotProps {
+  /** The meaning of the status, which sets the dot color. */
   readonly intent?: BadgeIntent;
   /** The status word, such as "Building". Never leave it out: the dot alone is color only. */
   readonly children: ReactNode;

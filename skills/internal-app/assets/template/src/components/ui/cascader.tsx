@@ -1,4 +1,43 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A choice of one option from a tree, such as a region, a country, and a city, in columns that open as people move.
+ *
+ * @layer primitive
+ * @keywords cascader, cascading select, hierarchical select, nested select, tree select, region country city, category path, team and service
+ * @related Select, ComboBox, Tree, TextField
+ * @notes form-choices, form-fields, internal-app-forms
+ *
+ * Use it when the answer is a path in a hierarchy. Do not use it for a flat
+ * list: use `Select`, or `ComboBox` when people type the name. To show or
+ * edit the hierarchy itself, use `Tree`.
+ *
+ * ## Behavior
+ * The field does these things. Do not build them again:
+ * - A popover shows one column for each level. Arrow keys move in a column,
+ *   Right opens a branch, Left goes back, and Enter chooses.
+ * - The search box finds options at every level. It shows by default when
+ *   the tree has more than 12 options in all.
+ * - The trigger shows the labels of the path, such as "Europe / France / Lyon".
+ * - The height follows the control size of its row.
+ * - A `value` with an unknown id throws an error.
+ *
+ * ## Rules
+ * - Give the field a `width` from its answer. See
+ *   `design read internal-app-forms`.
+ * - The field has no error message. Validate the path before the submit, or
+ *   show the error in an `ErrorSummary`.
+ *
+ * ## Example
+ * ```tsx
+ * <Cascader
+ *   label="Location"
+ *   options={regions}
+ *   value={location}
+ *   onChange={setLocation}
+ *   width="lg"
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { Check, ChevronDown, ChevronRight, Search } from "lucide-react";
@@ -24,23 +63,30 @@ import { useOverlayDensity } from "./density";
 export interface CascaderOption {
   /** Unique among its siblings. The value is the path of ids from the root. */
   readonly id: string;
+  /** Visible text of the option. */
   readonly label: string;
+  /** The options one level down. An option with children is a branch. */
   readonly children?: ReadonlyArray<CascaderOption>;
+  /** Shows the option but people cannot choose it or open it. */
   readonly isDisabled?: boolean;
 }
 
 export interface CascaderProps {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
   /** Hide the visible label in dense toolbars. Screen readers keep it. */
   readonly hideLabel?: boolean;
+  /** The options of the top level, with their children. */
   readonly options: ReadonlyArray<CascaderOption>;
   /** Path of ids from the root to the chosen option, or null. */
   readonly value: ReadonlyArray<string> | null;
+  /** Receives the path of ids to the chosen option. */
   readonly onChange: (path: ReadonlyArray<string>) => void;
   /** Lets people choose an option that has children, such as a whole region. */
   readonly allowsBranchSelection?: boolean;
   /** Shows a search box that finds options at every level. Defaults to on above 12 options. */
   readonly isSearchable?: boolean;
+  /** Text of the trigger while no option is chosen. */
   readonly placeholder?: string;
   /** Hint between the label and the control. */
   readonly description?: string;
@@ -48,6 +94,7 @@ export interface CascaderProps {
   readonly isOptional?: boolean;
   /** Control width from the expected length of the answer. See FieldWidth. */
   readonly width?: FieldWidth;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

@@ -1,4 +1,41 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Rows of records that people scan and act on one at a time, each with media, a title, meta, and actions.
+ *
+ * @layer primitive
+ * @keywords item, list row, item list, list of records, integrations list, members list, connected accounts, settings list, row with actions
+ * @related DataTable, IconTile, Avatar, Badge, Switch, Menu, Layout, SortableList
+ * @notes spacing, hierarchy, internal-app-cards, internal-app-composition
+ *
+ * Use it for a short list of records that people read one by one, such as
+ * integrations, members, or connected accounts. Do not use it when people
+ * compare values across rows or sort them: use `DataTable`. For a list that
+ * people put in order, use `SortableList`.
+ *
+ * ## Behavior
+ * - `ItemList` divides the rows with lines and is a list for screen readers.
+ * - With `onAction`, the title is a button, a click anywhere else on the row
+ *   does the same, and a chevron shows at the end. A click on a control in
+ *   the row, or a text selection, does not open the item.
+ *
+ * ## Rules
+ * - Put an `IconTile` or an `Avatar` in `media`, a `Badge`, a count, or a date
+ *   in `meta`, and a `Switch`, a button, or a row menu in `actions`.
+ * - Inside a `Card`, set `framed={false}` on the `ItemList`.
+ *
+ * ## Example
+ * ```tsx
+ * <ItemList label="Integrations">
+ *   <Item
+ *     media={<IconTile icon={Github} />}
+ *     title="GitHub"
+ *     description="Syncs pull requests every 5 minutes."
+ *     meta={<Badge intent="success">Connected</Badge>}
+ *     actions={<Switch aria-label="Sync GitHub" isSelected={on} onChange={setOn} />}
+ *   />
+ * </ItemList>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronRight } from "lucide-react";
@@ -16,6 +53,7 @@ export interface ItemListProps {
    * Keep the default on a page.
    */
   readonly framed?: boolean;
+  /** StyleX styles for the list, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 
@@ -33,7 +71,9 @@ export function ItemList({ label, children, framed = true, style }: ItemListProp
 }
 
 export interface ItemProps {
+  /** The name of the record. */
   readonly title: ReactNode;
+  /** Quiet line under the title. */
   readonly description?: ReactNode;
   /** Leading IconTile or Avatar. */
   readonly media?: ReactNode;

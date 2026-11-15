@@ -1,3 +1,38 @@
+/**
+ * Tabs that switch between sections of one page, with a tab list and one panel for each tab.
+ *
+ * @layer primitive
+ * @keywords tabs, tab list, tab panel, sections of a page, switch views, tabbed content
+ * @related SegmentedControl, Disclosure, Scrollspy, AppShell
+ * @notes navigation, hierarchy
+ *
+ * Use it for sections that people read one at a time. Do not use it to go to
+ * another route: use the app navigation or a link. Do not use it to switch
+ * between views of the same content: use `SegmentedControl`. Do not use it
+ * for a section that people show and hide: use `Disclosure`.
+ *
+ * ## Behavior
+ * The tabs come from react-aria-components. Do not build them again:
+ * - Arrow keys move between tabs, and Tab moves into the panel.
+ * - The selected tab has an accent underline and `aria-selected`.
+ *
+ * ## Rules
+ * - Give each `Tab` and its `TabPanel` the same `id`.
+ * - Keep the selected tab in a search param when people share the view, with
+ *   `selectedKey` and `onSelectionChange`.
+ *
+ * ## Example
+ * ```tsx
+ * <Tabs selectedKey={tab} onSelectionChange={(key) => setTab(String(key))}>
+ *   <TabList aria-label="Run">
+ *     <Tab id="summary">Summary</Tab>
+ *     <Tab id="logs">Logs</Tab>
+ *   </TabList>
+ *   <TabPanel id="summary">{summary}</TabPanel>
+ *   <TabPanel id="logs">{logs}</TabPanel>
+ * </Tabs>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import {
@@ -26,7 +61,10 @@ export function TabList<Item extends object>(
 export function Tab({
   children,
   ...props
-}: Omit<AriaTabProps, "className" | "style" | "children"> & { readonly children: ReactNode }) {
+}: Omit<AriaTabProps, "className" | "style" | "children"> & {
+  /** The visible name of the tab. */
+  readonly children: ReactNode;
+}) {
   return (
     <AriaTab
       {...props}

@@ -1,4 +1,82 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Month, week, day, and agenda views of events, such as on-call shifts, maintenance windows, scheduled jobs, or bookings.
+ *
+ * @layer pattern
+ * @keywords event calendar, schedule of shifts, calendar of bookings, on-call rota, shift schedule, booking calendar, maintenance windows, month view, week view, agenda, recurring events, resource calendar
+ * @related Gantt, Calendar, DatePicker, Timeline, Sheet, Toaster
+ * @notes patterns, accessibility, internal-app-url-filters, internal-app-composition
+ *
+ * Use it when people plan or check events by date and time. Do not use it to
+ * pick one date: use `DatePicker`. For tasks with a length, progress, and
+ * dependencies, use `Gantt`. For the history of a record, use `Timeline`.
+ *
+ * ## Behavior
+ * The calendar does these things. Do not build them again:
+ * - A toolbar with Today, previous and next buttons, the period heading, and
+ *   the view switch.
+ * - Times show in the app time zone.
+ * - The time grids pack overlapping events side by side.
+ * - A recurring event shows a repeat icon, and its label says the rule.
+ * - With `onEventChange`, a hint under the calendar tells people how to move
+ *   events.
+ *
+ * ## Views
+ * - The month view shows up to three events in a day. A day with more shows
+ *   "N more", which opens the full list of the day.
+ * - Below `md`, the month view shows dots and lists the events of the
+ *   focused day.
+ * - The agenda view lists the events of the month by day, and says when the
+ *   month has no events.
+ *
+ * ## Recurrence
+ * A rule that is not valid throws, such as a rule with both `until`
+ * and `count`, or with `weekdays` when it is not weekly. `recurrenceLabel(rule)`
+ * gives the rule in words, such as "Repeats every 2 weeks on Mon, Wed, 6
+ * times", for a form or a detail sheet.
+ *
+ * ## Moves
+ * - A press on an event after a drag does not open the event.
+ * - The moved event keeps the focus, and a live region announces its new
+ *   time and resource.
+ * - `onEventChange` does not run when the event stays at the same time and
+ *   resource.
+ *
+ * ## Keyboard
+ * In the month view, the arrow keys move between days, Home and End go to
+ * the edges of the week, and Page Up and Page Down change the month. A press
+ * on a day also calls `onDayAction`. With an event focused:
+ * - Alt and Left or Right move it one day, or to the resource column beside
+ *   it in the resource day view.
+ * - Alt and Up or Down move it `minuteStep` in a time grid, one week in the
+ *   month view, or to the resource row beside it in the resource week view.
+ * - Alt, Shift, and Up or Down change the end of a timed event. Alt, Shift,
+ *   and Left or Right change the end of an all-day event.
+ *
+ * ## Rules
+ * - Handle `onEventChange` as Optimistic moves in `references/data.md` tells.
+ *   On a failure, restore the event and show an error toast.
+ * - Open an event with `onEventAction`, for example in a peek `Sheet`.
+ *
+ * ## Example
+ * ```tsx
+ * <EventCalendar
+ *   label="On-call rota"
+ *   events={shifts}
+ *   resources={engineers}
+ *   views={["week", "day"]}
+ *   today={today}
+ *   now={now}
+ *   view={search.view}
+ *   onViewChange={(view) => navigate({ search: (prev) => ({ ...prev, view }) })}
+ *   date={search.date}
+ *   onDateChange={(date) => navigate({ search: (prev) => ({ ...prev, date }) })}
+ *   onEventAction={(shift) => openShift(shift.id)}
+ *   onEventChange={(shift, change) => moveShift.mutate({ id: shift.id, ...change })}
+ *   onDayAction={(date, resourceId) => startShift(date, resourceId)}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import {
   type CalendarDate,
@@ -107,6 +185,7 @@ export interface CalendarEventChange {
 export interface EventCalendarProps {
   /** Names the calendar, such as "On-call schedule". */
   readonly label: string;
+  /** The events to show. Recurring events repeat from this list. */
   readonly events: ReadonlyArray<CalendarEvent>;
   /** Today's ISO date from the loader, so the server and the browser agree. */
   readonly today: string;
@@ -114,10 +193,15 @@ export interface EventCalendarProps {
   readonly now?: string;
   /** An ISO date inside the shown period. Pass it with `onDateChange` to keep it in the URL. */
   readonly date?: string;
+  /** The first date in view when `date` is not set. Defaults to `today`. */
   readonly defaultDate?: string;
+  /** Runs when people go to another period, with an ISO date inside it. */
   readonly onDateChange?: (date: string) => void;
+  /** The view to show. Pass it with `onViewChange` to keep it in the URL. */
   readonly view?: CalendarView;
+  /** The first view when `view` is not set. Defaults to "month". */
   readonly defaultView?: CalendarView;
+  /** Runs when people choose another view. */
   readonly onViewChange?: (view: CalendarView) => void;
   /** The views people can switch between, in order. Defaults to all four. */
   readonly views?: ReadonlyArray<CalendarView>;

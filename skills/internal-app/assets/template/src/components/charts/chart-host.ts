@@ -1,3 +1,28 @@
+/**
+ * The StyleX bridge that maps the CSS variables of Aperture to the app tokens.
+ *
+ * @layer helper
+ * @keywords chart theme, aperture theme, chart tokens, chart colors, chart styles, chart bridge
+ * @related TrendChart, Sparkline
+ * @notes charts, semantic-tokens, dark-theme
+ *
+ * Use it on every Aperture root that a new chart widget renders. Do not use it
+ * for a chart that the kit already has: `TrendChart` and `Sparkline` apply it.
+ * The wiring of Aperture is in `references/charts.md`.
+ *
+ * ## Rules
+ * - Apply it to `ChartWidget.Root` and to each chart component, through
+ *   `className` and `style`. Each chart renders its own `[data-aperture-root]`,
+ *   where the dark rule of Aperture declares the variables again.
+ * - Do not map the series colors. Aperture keeps its own light and dark
+ *   palettes, so that the series stay different from each other in both themes.
+ *
+ * ## Example
+ * ```tsx
+ * const host = stylex.props(chartHost.root);
+ * <LineChart ariaLabel="Jobs" state={chartData(data)} className={host.className} style={host.style} />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { color, font, radius, space } from "@/styles/tokens.stylex";
 

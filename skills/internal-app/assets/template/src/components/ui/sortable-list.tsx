@@ -1,4 +1,51 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A list or a grid of tiles that people put in order with a drag or the keyboard.
+ *
+ * @layer pattern
+ * @keywords sortable list, reorder a list, drag to reorder, priority order, escalation chain, column order, rank items, arrange widgets
+ * @related Tree, Kanban, Item, Card
+ * @notes motion, accessibility, internal-app-composition
+ *
+ * Use it when the order of the items is the data, such as an escalation chain,
+ * the order of table columns, or dashboard widgets. Do not use it for items
+ * that nest: use `Tree`. Do not use it for items that move between statuses:
+ * use `Kanban`. For a list with a fixed order, use `ItemList` from `Item`.
+ *
+ * ## Behavior
+ * - Each row has a grip. People drag the row by the grip, or focus the grip,
+ *   press Enter, move with the arrow keys, and press Enter to drop. Escape
+ *   cancels.
+ * - `onReorder` runs in a view transition, so the other rows glide to their new
+ *   places. A row that the pointer dropped does not glide.
+ * - A moved row keeps the focus. When the row with the focus leaves the list,
+ *   the next row takes the focus, then the row before, then the list.
+ * - The position numbers are visual only. Screen readers get the order from the
+ *   list.
+ * - `framed` has an effect only with `layout="list"`. A grid has no frame.
+ *
+ * ## Rules
+ * - A reorder is optimistic: apply the new order at once, persist it with a
+ *   mutation, and on failure restore the previous order and show an error
+ *   toast.
+ * - Change the order synchronously in `onReorder`. The view transition records
+ *   the new places when `onReorder` returns.
+ * - Every drag has a keyboard path. Do not add a control that only a drag can
+ *   use.
+ *
+ * ## Example
+ * ```tsx
+ * <SortableList
+ *   label="Escalation order"
+ *   items={responders}
+ *   getItemId={(person) => person.id}
+ *   getItemLabel={(person) => person.name}
+ *   renderItem={(person) => <Item title={person.name} description={person.role} />}
+ *   onReorder={(next) => reorder.mutate(next)}
+ *   showPosition
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { GripVertical } from "lucide-react";
@@ -17,14 +64,18 @@ import { renderStyles } from "@/lib/rac";
 import { color, font, media, motion, radius, shadow, size, space } from "@/styles/tokens.stylex";
 
 export interface SortableMove {
+  /** Id of the moved item. With several moved items, the first one. */
   readonly itemId: string;
+  /** 0-based index of the item before the move. */
   readonly fromIndex: number;
+  /** 0-based index of the item after the move. */
   readonly toIndex: number;
 }
 
 export interface SortableListProps<Item> {
   /** Names the list, such as "Escalation order". */
   readonly label: string;
+  /** Items in their current order. */
   readonly items: ReadonlyArray<Item>;
   /**
    * Receives the items in their new order and the move. Apply it
@@ -32,9 +83,11 @@ export interface SortableListProps<Item> {
    * toast if it fails.
    */
   readonly onReorder: (items: ReadonlyArray<Item>, move: SortableMove) => void;
+  /** Unique id of an item. Focus and motion follow the item by this id. */
   readonly getItemId: (item: Item) => string;
   /** Plain-text name, for typeahead and drag announcements. */
   readonly getItemLabel: (item: Item) => string;
+  /** Content of a row, between the grip and the actions. */
   readonly renderItem: (item: Item) => ReactNode;
   /** Trailing controls of a row, such as a remove button. */
   readonly itemActions?: (item: Item) => ReactNode;
@@ -49,7 +102,9 @@ export interface SortableListProps<Item> {
    * or a CardSection. Keep the default on a page.
    */
   readonly framed?: boolean;
+  /** Shown when `items` is empty. */
   readonly emptyState?: ReactNode;
+  /** Layout styles for the list, such as a height or a margin. */
   readonly style?: StyleXStyles;
 }
 

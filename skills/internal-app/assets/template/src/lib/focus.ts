@@ -1,3 +1,49 @@
+/**
+ * A hook that keeps the keyboard focus in a collection when a change removes the focused item.
+ *
+ * @layer helper
+ * @keywords focus after removal, focus management, lost focus, keyboard focus, focus restore, remove item, move item, useFocusAfterRemoval, isFocusLost
+ * @related Kanban, SortableList, WorkQueue, Item
+ * @notes accessibility, internal-app-composition, internal-app-adding-a-primitive
+ *
+ * Use `useFocusAfterRemoval` in a new collection where an action moves or
+ * removes the focused item. `Kanban`, `SortableList`, and `WorkQueue` already
+ * use it, so do not add it to them. Do not use it for a dialog: the dialog
+ * gives the focus back to its trigger.
+ *
+ * ## Behavior
+ * - When the focused item leaves, the focus goes to the next item in the
+ *   order of `ids`, then to the item before, then to `emptyTarget()`.
+ * - When the item stays but the browser drops the focus, such as after a
+ *   move, the focus goes back to the item.
+ * - It acts only when the focus is lost. A change that the person did not
+ *   cause never takes the focus from a control in another place.
+ * - It watches the elements of the container, not the renders, because a
+ *   react-aria collection removes its items in a later render than the one
+ *   that changes `ids`.
+ * - It throws when the container is not mounted, when no item is left and
+ *   `emptyTarget()` returns `null`, and when it finds no element for the next
+ *   id.
+ *
+ * ## Rules
+ * - A change never leaves the focus on the page body. With no item left, give
+ *   the focus to the heading of the group or to the collection.
+ * - When a panel or an inline form closes, give the focus back to the control
+ *   that opened it.
+ * - Before you move the focus after a change, make sure that `isFocusLost()`
+ *   is true.
+ *
+ * ## Example
+ * ```tsx
+ * const listRef = useRef<HTMLDivElement>(null);
+ * useFocusAfterRemoval({
+ *   container: listRef,
+ *   ids: rows.map((row) => row.id),
+ *   itemSelector: "[data-key]",
+ *   emptyTarget: () => headingRef.current,
+ * });
+ * ```
+ */
 import { type RefObject, useEffect, useLayoutEffect, useRef } from "react";
 
 /**

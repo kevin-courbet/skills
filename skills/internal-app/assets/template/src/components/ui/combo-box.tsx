@@ -1,3 +1,39 @@
+/**
+ * A single choice from a long list, where typing filters the options.
+ *
+ * @layer primitive
+ * @keywords combo box, combobox, autocomplete, typeahead, searchable select, long list, type to filter, lookup, pick a customer
+ * @related Select, MultiSelect, Cascader, ListBox, SearchField
+ * @notes form-choices, form-fields, internal-app-forms
+ *
+ * Use it when the list is long and people know the name that they look for,
+ * such as a customer or a host. Do not use it for a short list: use `Select` or
+ * a `RadioGroup`. For several values, use `MultiSelect`. To search the records
+ * of a list page, use `SearchField`.
+ *
+ * ## Behavior
+ * - Typing filters the options. The chevron button opens the full list.
+ * - An option shows its `description` under the label. An option with `intent`
+ *   shows a status dot.
+ * - The popover takes the width of the field and the density of the page.
+ * - The height follows the nearest `ControlSizeProvider`.
+ *
+ * ## Rules
+ * - The label always shows: the field has no `hideLabel`.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <ComboBox
+ *   label="Customer"
+ *   width="lg"
+ *   placeholder="e.g. Acme"
+ *   options={customers.map((customer) => ({ id: customer.id, label: customer.name }))}
+ *   value={customerId}
+ *   onChange={setCustomerId}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronDown } from "lucide-react";
@@ -42,17 +78,25 @@ type AriaSingleComboBoxProps<Value extends string> = Omit<
 >;
 
 export interface ComboBoxProps<Value extends string> extends AriaSingleComboBoxProps<Value> {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
+  /** The choices, in the order that they show. */
   readonly options: ReadonlyArray<ListOption<Value>>;
+  /** Id of the chosen option, or null when nothing is chosen. */
   readonly value?: Value | null;
+  /** Receives the id of the chosen option, or null when people clear the text. */
   readonly onChange?: (value: Value | null) => void;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
   /** Control width from the expected length of the answer. See FieldWidth. */
   readonly width?: FieldWidth;
+  /** An example answer that starts with "e.g.". Never the only instruction. */
   readonly placeholder?: string;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

@@ -1,3 +1,25 @@
+/**
+ * A monospaced record ID, commit SHA, or host with a copy button.
+ *
+ * @layer primitive
+ * @keywords identifier, record id, id with copy, commit sha, hash, host name, copy id, monospace id
+ * @related CopyButton, Layout, DataTable, Sheet
+ * @notes internal-app-writing, typography
+ *
+ * Use it for a value that people paste elsewhere. Do not use it for inline
+ * code or a command: use `Code` from `Layout`. Do not use it for a long
+ * payload: use `CodeBlock`.
+ *
+ * ## Behavior
+ * - The copy button copies the full `value`, also when `display` shows a
+ *   short form. The full value shows on hover.
+ * - Long values end with an ellipsis instead of wrapping.
+ *
+ * ## Example
+ * ```tsx
+ * <Identifier value={deployment.sha} display={deployment.sha.slice(0, 7)} label="commit SHA" />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { color, font, space } from "@/styles/tokens.stylex";
 import { CopyButton } from "./copy-button";

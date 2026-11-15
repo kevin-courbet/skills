@@ -1,3 +1,45 @@
+/**
+ * A side panel for detail or editing next to the page, or for records that people read one after another.
+ *
+ * @layer primitive
+ * @keywords sheet, side panel, drawer, slide over, peek, detail panel, record preview, edit panel, next and previous record
+ * @related Dialog, DataTable, WorkQueue, Kanban, Identifier, Button
+ * @notes overlays, navigation, internal-app-page-patterns, internal-app-touch-work-view
+ *
+ * Use it for detail or editing that benefits from the list behind it. Use
+ * `size="peek"` for records that people read one after another from a list. Do
+ * not use it for a short task that must interrupt: use `Dialog`. Do not use it
+ * for a long form: use a route with `FormLayout`.
+ *
+ * ## Behavior
+ * - It is modal. Focus stays inside, and Escape, the close button, or a click
+ *   outside closes it.
+ * - A side sheet slides in from `side`. A `peek` sheet opens over the list.
+ *   Under reduced motion, a sheet appears at once.
+ * - The j and k keys of `navigation` do nothing while people type in a field.
+ * - It takes the density of the page and the `md` control size.
+ *
+ * ## Rules
+ * - In a peek, put the identifier in `meta`, an "Open page" link to the detail
+ *   route in `headerActions`, and give `navigation`.
+ * - Keep the id of the open record in a search param, so that a reload and a
+ *   link show the same record.
+ *
+ * ## Example
+ * ```tsx
+ * <Sheet
+ *   size="peek"
+ *   isOpen={job !== undefined}
+ *   onOpenChange={(isOpen) => isOpen || closeJob()}
+ *   title={job.title}
+ *   meta={<Identifier value={job.id} />}
+ *   headerActions={<LinkButton to="/jobs/$jobId" params={{ jobId: job.id }} intent="ghost">Open page</LinkButton>}
+ *   navigation={{ onPrevious: previousJob, onNext: nextJob }}
+ * >
+ *   <JobDetail job={job} />
+ * </Sheet>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
@@ -39,7 +81,9 @@ export interface SheetProps extends Pick<
   ModalOverlayProps,
   "isOpen" | "onOpenChange" | "defaultOpen"
 > {
+  /** Heading and accessible name: the name of the record or of the task. */
   readonly title: string;
+  /** One line under the title. */
   readonly description?: string;
   /** Inline context after the title, such as an identifier with a CopyButton. */
   readonly meta?: ReactNode;
@@ -47,9 +91,13 @@ export interface SheetProps extends Pick<
   readonly headerActions?: ReactNode;
   /** Previous and next buttons, also bound to the k and j keys. */
   readonly navigation?: SheetNavigation;
+  /** Edge that the sheet slides in from. A `peek` sheet ignores it. */
   readonly side?: SheetSide;
+  /** Maximum width: `sm` 20rem, `md` 28rem, `lg` 40rem, or `peek`. */
   readonly size?: SheetSize;
+  /** Footer content, usually the primary and cancel buttons. */
   readonly actions?: (close: () => void) => ReactNode;
+  /** The body. A function receives `close`, for a form that closes after its submit. */
   readonly children: ReactNode | ((close: () => void) => ReactNode);
 }
 

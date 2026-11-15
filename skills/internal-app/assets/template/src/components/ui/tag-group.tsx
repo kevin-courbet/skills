@@ -1,3 +1,36 @@
+/**
+ * A labeled set of short values, such as labels, recipients, or the chosen options of a field.
+ *
+ * @layer primitive
+ * @keywords tag group, tags, labels, chips, recipients, removable tags, tag list, token list
+ * @related Filters, MultiSelect, Checkbox, Badge
+ * @notes grouped-values, form-fields, internal-app-forms
+ *
+ * Use it to show a set of short values and, with `onRemove`, to let people
+ * remove some. Do not use it to filter a list: use `Filters`. Do not use it to
+ * pick values from a list: use `MultiSelect`, or a `CheckboxGroup` with
+ * `appearance="chips"`. For one status, use `Badge`.
+ *
+ * ## Behavior
+ * The group does these things. Do not build them again:
+ * - Arrow keys move between the tags.
+ * - With `onRemove`, each tag gets a remove button with the name
+ *   "Remove <label>", and Backspace and Delete remove the focused tag.
+ * - Without tags, the group shows `emptyLabel`.
+ *
+ * ## Rules
+ * - Give each tag one short value. Do not join several facts in one tag.
+ *
+ * ## Example
+ * ```tsx
+ * <TagGroup
+ *   label="Recipients"
+ *   items={recipients.map((person) => ({ id: person.id, label: person.name }))}
+ *   onRemove={(ids) => removeRecipients(ids)}
+ *   emptyLabel="No recipients"
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { X } from "lucide-react";
@@ -7,19 +40,26 @@ import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { field, FieldDescription, FieldLabel } from "./field";
 
 export interface TagItem<Value extends string> {
+  /** Stable id of the value. `onRemove` receives it. */
   readonly id: Value;
+  /** Visible text of the tag. */
   readonly label: string;
 }
 
 export interface TagGroupProps<Value extends string> {
+  /** Visible name of the group, in sentence case. */
   readonly label: string;
+  /** Hides the visible label where the context already names the group. Screen readers keep it. */
   readonly hideLabel?: boolean;
+  /** The tags, in the order that they show. */
   readonly items: ReadonlyArray<TagItem<Value>>;
   /** Adds a remove button to each tag. Backspace and Delete remove the focused tag. */
   readonly onRemove?: (ids: ReadonlyArray<Value>) => void;
   /** Shown when there are no tags, such as "No labels". */
   readonly emptyLabel?: string;
+  /** Hint between the label and the tags. */
   readonly description?: string;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

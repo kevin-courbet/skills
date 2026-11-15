@@ -1,3 +1,36 @@
+/**
+ * The shared parts of DatePicker, DateRangePicker, and the date editor of
+ * Filters.
+ *
+ * @layer helper
+ * @keywords calendar parts, date segments, calendar button, month header, range calendar, calendar styles, date input parts
+ * @related DatePicker, DateRangePicker, Filters, EventCalendar
+ * @notes internal-app-adding-a-primitive
+ *
+ * Do not use these parts on a page: use `DatePicker` or `DateRangePicker`. For
+ * a calendar of events, use `EventCalendar`.
+ *
+ * ## Behavior
+ * - `DateSegments` renders the parts of a date that people type, in the order
+ *   of the locale.
+ * - `CalendarButton` opens the popover. Its accessible name is "Open calendar".
+ * - `CalendarHeader` names the month and goes to the previous or the next
+ *   month.
+ * - `RangeCalendarView` reads the state of the `DateRangePicker` around it. On
+ *   its own, it takes `value` and `onChange`, as in the `Filters` editor.
+ *
+ * ## Rules
+ * - Use the parts in a new kit date field, inside a react-aria date picker.
+ *   `calendar` holds the shared styles.
+ *
+ * ## Example
+ * ```tsx
+ * <Group {...stylex.props(control.base, calendar.group)}>
+ *   <DateSegments />
+ *   <CalendarButton />
+ * </Group>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import type { CalendarDate } from "@internationalized/date";
@@ -18,7 +51,12 @@ import { color, font, radius, size, space } from "@/styles/tokens.stylex";
  * Shared parts of DatePicker and DateRangePicker: the segmented date input,
  * the calendar button, the month header, and the calendar cell styles.
  */
-export function DateSegments({ slot }: { readonly slot?: "start" | "end" }) {
+export function DateSegments({
+  slot,
+}: {
+  /** The date of a range that this input edits. Leave it out for one date. */
+  readonly slot?: "start" | "end";
+}) {
   return (
     <DateInput slot={slot} {...stylex.props(calendar.input)}>
       {(segment) => (

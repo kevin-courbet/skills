@@ -1,4 +1,45 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A labeled number input with locale formatting, an optional unit, and optional
+ * step buttons.
+ *
+ * @layer primitive
+ * @keywords number field, number input, numeric input, quantity, amount, currency, unit, stepper, plus minus buttons, integer
+ * @related TextField, Slider, Field, FormLayout, Layout
+ * @notes form-fields, internal-app-forms
+ *
+ * Use it when people type an exact number. Do not use it to pick a value on a
+ * scale, where the place matters more than the exact number: use `Slider`. Do
+ * not use it for a code that has digits, such as a postal code or a phone
+ * number: use `TextField`.
+ *
+ * ## Behavior
+ * - The value shows in the format of the locale, right-aligned in tabular
+ *   figures.
+ * - Arrow keys step the value by `step`, also without `showStepper`.
+ * - The value is a number, or `NaN` when the field is empty.
+ * - The height follows the nearest `ControlSizeProvider`.
+ *
+ * ## Rules
+ * - Give a currency through `formatOptions`, such as `{ style: "currency",
+ *   currency: "EUR" }`, not through `unit`.
+ * - Give every field a `width` from the length of its answer: `xs` fits a
+ *   quantity or a floor.
+ * - Handle `NaN` in `onChange` as an empty answer.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <NumberField
+ *   label="Timeout"
+ *   unit="seconds"
+ *   width="xs"
+ *   minValue={1}
+ *   value={timeoutSeconds}
+ *   onChange={setTimeoutSeconds}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { Minus, Plus } from "lucide-react";
@@ -27,20 +68,25 @@ export interface NumberFieldProps extends Omit<
   AriaNumberFieldProps,
   "className" | "style" | "children"
 > {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
   /** Hide the visible label where a SettingRow or toolbar names the field. Screen readers keep it. */
   readonly hideLabel?: boolean;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
   /** Control width from the expected length of the answer. See FieldWidth. */
   readonly width?: FieldWidth;
+  /** An example answer that starts with "e.g.". Never the only instruction. */
   readonly placeholder?: string;
   /** Unit after the number, such as "ms", "rows", or "%". Use `formatOptions` for currency. */
   readonly unit?: string;
   /** Adds decrement and increment buttons that step by `step`. Arrow keys step without them. */
   readonly showStepper?: boolean;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

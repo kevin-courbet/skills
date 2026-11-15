@@ -1,3 +1,34 @@
+/**
+ * The option list inside the popovers of Select, MultiSelect, ComboBox, and
+ * Filters.
+ *
+ * @layer helper
+ * @keywords option list, list box, listbox, options in a popover, option status dot, dropdown options, list option
+ * @related Select, MultiSelect, ComboBox, Filters, Item
+ * @notes internal-app-adding-a-primitive
+ *
+ * It is a part of the kit fields. Do not use it on a page: use `Select`,
+ * `ComboBox`, `MultiSelect`, or `Filters`. For rows of records, use `ItemList`
+ * in `Item`.
+ *
+ * ## Behavior
+ * - An option shows its `description` under the label, and a check mark while
+ *   it is selected.
+ * - An option with `intent` shows a status dot before the label.
+ * - The list scrolls when it is higher than 18rem.
+ *
+ * ## Rules
+ * - Use it in a new kit field that opens a list of options in a popover. Inside
+ *   a react-aria `Select` or `ComboBox`, the field owns the selection.
+ *   Otherwise, pass the selection props.
+ *
+ * ## Example
+ * ```tsx
+ * <Popover {...stylex.props(overlay.popover, overlay.matchTrigger)}>
+ *   <OptionList options={options} />
+ * </Popover>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { Check } from "lucide-react";
 import { ListBox, ListBoxItem, type ListBoxProps } from "react-aria-components";
@@ -6,8 +37,11 @@ import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import type { BadgeIntent } from "./badge";
 
 export interface ListOption<Value extends string> {
+  /** Stable id of the option. The field value holds it. */
   readonly id: Value;
+  /** Visible text of the option, in sentence case. */
   readonly label: string;
+  /** Quiet line under the label. */
   readonly description?: string;
   /** Shows a status dot before the label, for options that are statuses. */
   readonly intent?: BadgeIntent;
@@ -17,6 +51,7 @@ export type OptionListProps<Value extends string> = Omit<
   ListBoxProps<ListOption<Value>>,
   "items" | "children" | "className" | "style"
 > & {
+  /** The options, in the order that they show. */
   readonly options: ReadonlyArray<ListOption<Value>>;
 };
 

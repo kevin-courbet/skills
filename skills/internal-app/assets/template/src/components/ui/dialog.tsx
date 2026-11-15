@@ -1,3 +1,46 @@
+/**
+ * A centered modal dialog for a short task, such as a create form of up to about six fields.
+ *
+ * @layer primitive
+ * @keywords dialog, modal, modal dialog, popup form, create dialog, edit dialog, modal window
+ * @related ConfirmDialog, Sheet, Popover, FormLayout, Button
+ * @notes overlays, forms, internal-app-page-patterns, internal-app-forms
+ *
+ * Use it for a short task that must interrupt the page. Do not use it for a
+ * form of more than about six fields or of several parts: use a route with
+ * `FormLayout`. For detail or editing next to the list behind it, use `Sheet`.
+ * To confirm a destructive step, use `ConfirmDialog`.
+ *
+ * ## Behavior
+ * - Focus moves into the dialog and stays there. Escape, the close button, and
+ *   a click on the backdrop close it, and the focus goes back to the trigger.
+ * - The dialog takes the density of the page and the `md` control size.
+ * - It fades and rises in. Under reduced motion, it appears at once.
+ *
+ * ## Rules
+ * - Wrap the trigger and the `Dialog` in `DialogTrigger`, or control it with
+ *   `isOpen` and `onOpenChange`.
+ * - Give the form in the body an `id`. The submit `Button` in `actions` takes
+ *   `type="submit"` and `form={formId}`.
+ *
+ * ## Example
+ * ```tsx
+ * <DialogTrigger>
+ *   <Button intent="primary">Create item</Button>
+ *   <Dialog
+ *     title="Create item"
+ *     actions={(close) => (
+ *       <>
+ *         <Button onPress={close}>Cancel</Button>
+ *         <Button intent="primary" type="submit" form={formId}>Create item</Button>
+ *       </>
+ *     )}
+ *   >
+ *     <CreateItemForm id={formId} />
+ *   </Dialog>
+ * </DialogTrigger>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
@@ -33,12 +76,15 @@ export interface DialogProps extends Pick<
   ModalOverlayProps,
   "isOpen" | "onOpenChange" | "defaultOpen" | "isDismissable" | "isKeyboardDismissDisabled"
 > {
+  /** Heading and accessible name. It names the task, such as "Create item". */
   readonly title: string;
   /** One paragraph under the title. It can hold inline elements such as Code. */
   readonly description?: ReactNode;
+  /** Maximum width: `sm` 24rem, `md` 32rem, and `lg` 44rem. */
   readonly size?: DialogSize;
   /** Footer content, usually the primary and cancel buttons. */
   readonly actions?: (close: () => void) => ReactNode;
+  /** The body. A function receives `close`, for a form that closes after its submit. */
   readonly children: ReactNode | ((close: () => void) => ReactNode);
 }
 

@@ -1,3 +1,38 @@
+/**
+ * The image or the initials of a person or a service account, alone or in an overlapping group.
+ *
+ * @layer primitive
+ * @keywords avatar, user picture, profile image, initials, people, assignee, avatar group, team members, owners
+ * @related Item, Timeline, IconTile, HoverCard, Layout
+ * @notes accessibility, grouped-values, internal-app-composition
+ *
+ * Use it to show who a person is next to the name. Do not use it for a thing
+ * that is not a person, such as an integration or a file type: use `IconTile`
+ * or `FileTypeIcon`.
+ *
+ * ## Behavior
+ * - The avatar shows the initials of the first and the last word of `name`
+ *   when `src` is missing or the image fails to load.
+ * - `name` is the accessible name and the hover title.
+ * - `AvatarGroup` shows `max` avatars and one "+N" count for the rest. The
+ *   count names the other people for screen readers and on hover.
+ *
+ * ## Rules
+ * - Show the name in text where the name matters. An avatar alone is not
+ *   enough to know a person.
+ * - Use `size="xs"` inline in a metadata line, such as a `MetaLine`.
+ *
+ * ## AvatarGroup
+ * Overlapping avatars for a team or the people on a record, such as the
+ * owners of a service. Give each person a unique `name`: the group uses it as
+ * the key.
+ *
+ * ## Example
+ * ```tsx
+ * <MetaLine items={[<><Avatar name="Sam Lee" size="xs" /> Sam Lee</>, "2h ago"]} />
+ * <AvatarGroup label="Owners" people={owners} max={3} />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 import { color, font, radius, space } from "@/styles/tokens.stylex";
@@ -10,6 +45,7 @@ export interface AvatarProps {
   readonly name: string;
   /** Image URL. The initials show when it is missing or fails to load. */
   readonly src?: string;
+  /** `xs` 18px sits inline in a line of text. `sm` is 24px, `md` 32px, and `lg` 40px. */
   readonly size?: AvatarSize;
 }
 
@@ -31,9 +67,11 @@ export function Avatar({ name, src, size = "md" }: AvatarProps) {
 export interface AvatarGroupProps {
   /** Names the group, such as "Owners". */
   readonly label: string;
+  /** The people, in the order they show. Each `name` must be unique. */
   readonly people: ReadonlyArray<{ readonly name: string; readonly src?: string }>;
   /** Avatars shown before the rest collapse into a count. */
   readonly max?: number;
+  /** The size of each avatar in the group. */
   readonly size?: AvatarSize;
 }
 

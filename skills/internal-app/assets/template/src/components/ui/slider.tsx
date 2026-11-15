@@ -1,4 +1,43 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A number or a range that people pick on a track, such as a threshold or a
+ * latency band.
+ *
+ * @layer primitive
+ * @keywords slider, range slider, track, threshold, percentage, min and max, latency band, sampling rate, drag a value
+ * @related NumberField, Meter, Filters
+ * @notes form-fields, internal-app-forms
+ *
+ * Use `Slider` for one value and `RangeSlider` for a low and a high value, when
+ * the place on the scale matters more than the exact number. Do not use it when
+ * people type an exact value: use `NumberField`. Do not use it to show a level
+ * that people do not change: use `Meter`.
+ *
+ * ## Behavior
+ * - Arrow keys step by `step`. Page Up and Page Down move a tenth of the range.
+ *   Home and End go to the ends.
+ * - The value text above the track follows `formatOptions`.
+ * - Screen readers skip the `marks`, because the value text already gives the
+ *   value.
+ *
+ * ## Rules
+ * - Set `minValue`, `maxValue`, and `step` from the domain.
+ * - Give a unit through `formatOptions`, such as `{ style: "unit", unit:
+ *   "millisecond" }`.
+ *
+ * ## Example
+ * ```tsx
+ * <RangeSlider
+ *   label="Latency band"
+ *   maxValue={2000}
+ *   step={50}
+ *   marks={[0, 1000, 2000]}
+ *   formatOptions={{ style: "unit", unit: "millisecond" }}
+ *   value={band}
+ *   onChange={setBand}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import {
@@ -13,20 +52,28 @@ import { color, font, motion, radius, shadow, size, space } from "@/styles/token
 import { field } from "./field";
 
 interface SliderBaseProps {
+  /** Visible name of the slider, in sentence case. */
   readonly label: string;
+  /** Lowest value of the track. */
   readonly minValue?: number;
+  /** Highest value of the track. */
   readonly maxValue?: number;
+  /** Distance between two values that people can pick. */
   readonly step?: number;
   /** Formats the value text, such as `{ style: "percent" }` or a unit. */
   readonly formatOptions?: Intl.NumberFormatOptions;
   /** Values labeled under the track, such as `[0, 50, 100]`. */
   readonly marks?: ReadonlyArray<number>;
+  /** Shows the slider and blocks changes. */
   readonly isDisabled?: boolean;
+  /** StyleX styles for the root, such as a width in a toolbar. */
   readonly style?: StyleXStyles;
 }
 
 export interface SliderProps extends SliderBaseProps {
+  /** The current value. */
   readonly value: number;
+  /** Receives the next value during a drag and after each key press. */
   readonly onChange: (value: number) => void;
 }
 
@@ -50,7 +97,9 @@ export function Slider({ value, onChange, ...props }: SliderProps) {
 }
 
 export interface RangeSliderProps extends SliderBaseProps {
+  /** The low and the high value. */
   readonly value: readonly [number, number];
+  /** Receives the next low and high value. */
   readonly onChange: (value: readonly [number, number]) => void;
   /** Names the two thumbs. Default "Minimum" and "Maximum". */
   readonly thumbLabels?: readonly [string, string];

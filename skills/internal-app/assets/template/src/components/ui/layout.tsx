@@ -1,4 +1,120 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * The parts of a page: the header, sections, cards, overview numbers, read-only facts, settings rows, and the toolbar of a list.
+ *
+ * @layer primitive
+ * @keywords page layout, page header, section, split form section, card, card sections, stat tiles, overview numbers, kpi, stat strip, description list, key facts, settings page, settings card, setting row, toolbar, filter row, meta line, inline code, keyboard key, separator, reading width
+ * @related DataTable, Filters, FormLayout, ControlSize, Density, Identifier, Badge, Sparkline, AppShell
+ * @notes internal-app-page-patterns, internal-app-composition, internal-app-cards, internal-app-forms, internal-app-writing, hierarchy, spacing, dashboards
+ *
+ * Build every page from these parts, and do not restyle them in an app. Do
+ * not use them for the fields of a long form: use `FormLayout` with one
+ * `Section layout="split"` for each part. Do not use `Card` rows for records
+ * that people compare: use `DataTable`, or `ItemList` for records that people
+ * act on one at a time.
+ *
+ * ## Behavior
+ * - `Page` sets the width, the padding, and the density of all its content,
+ *   and of the overlays that the content opens.
+ * - `PageHeader` renders the only `<h1>` of the page. `Section`,
+ *   `SettingsCard`, and `Card` render an `<h2>`, or an `<h3>` for a `Card`
+ *   with `headingLevel={3}`.
+ *
+ * ## Rules
+ * - Start each page with a `PageHeader`.
+ * - Use `Page width="reading"` for a detail page, a form, and a settings page.
+ * - For the general page rules, see internal-app-page-patterns and
+ *   internal-app-composition.
+ *
+ * ## Example
+ * ```tsx
+ * <Page width="reading">
+ *   <PageHeader title="Settings" description="These settings apply to the whole workspace." />
+ *   <SettingsCard title="Notifications">
+ *     <SettingRow label="Daily summary" description="A summary of failed runs arrives at 08:00.">
+ *       <Switch aria-label="Daily summary" isSelected={daily} onChange={setDaily} />
+ *     </SettingRow>
+ *   </SettingsCard>
+ * </Page>
+ * ```
+ *
+ * ## PageHeader
+ * - Put a `{" "}` between the parts of a rich title, so that the heading
+ *   reads with a space.
+ * - Put one primary action at most in `actions`. The actions never grow wider
+ *   than the header, so a wrapping control such as
+ *   `RadioGroup appearance="chips"` wraps in place.
+ *
+ * ## Section
+ * A `Section` holds its content directly, with spacing. It has two layouts:
+ * - `stacked` puts the title over the content, with `actions` at the end of
+ *   the title row.
+ * - `split` puts the title and the description in a column on the left and
+ *   the content on the right. Use it for the parts of a long form or a
+ *   settings page, and let the description say what the answers change.
+ *
+ * The split section is a container, so its own width sets the layout. The
+ * title column is 15rem wide, 10rem wide when the section is narrower than
+ * the `md` breakpoint, and goes over the content when the section is
+ * narrower than `sm` (640px). The 10rem column keeps a section next to a
+ * `FormPreview` split on a wide screen. A line divides consecutive split
+ * sections.
+ *
+ * Put a `Card` in a `Section` only for distinct, comparable, or actionable
+ * groups, such as two cards side by side.
+ *
+ * ## Card
+ * A raised surface for one distinct, comparable, or actionable group. Do not
+ * put a card, a framed panel, or any second bordered box in a card. To divide
+ * a card, use `layout="sections"` with one `CardSection` for each block. See
+ * internal-app-cards.
+ *
+ * ## StatTile
+ * - Put the tiles of an overview in a grid that has one column below
+ *   `media.sm`.
+ * - Format `value` with `src/lib/locale.ts`, and name the source of the
+ *   number in `footnote`.
+ * - Use the kit `Sparkline` (`src/components/charts/sparkline.tsx`) for
+ *   `chart`.
+ *
+ * ## StatStrip
+ * A divided row of key facts. Use it at the top of a detail page or a peek
+ * sheet, where `StatTile` cards are too heavy.
+ *
+ * ## DescriptionList
+ * The read-only facts of a record, as label and value pairs. Use `StatStrip`
+ * for the few facts that people read first.
+ *
+ * ## SettingsCard
+ * A card of `SettingRow` rows for a settings page. Each row puts the label on
+ * the left and the value or the control on the right.
+ * - Set `hideLabel` on a field in a `SettingRow`, because the row names it.
+ *
+ * ## Toolbar
+ * A row of filters and view controls above a list. It sets the control size
+ * of its row, so all controls in it have the same height.
+ * - Put the search field first.
+ * - Put the toolbar on the page, above the table, when it holds only a search
+ *   and `Filters` and the table is the one subject of the page.
+ * - Put it in the `DataTable` frame, with the `toolbar` prop, when it holds
+ *   more controls, such as a scope `Select` or the column menu. Do this also
+ *   when the page has several tables, so the controls show which table they
+ *   change.
+ * - Do not set `size` on the controls in a toolbar. `check` fails on a
+ *   `Button` with a `size` in a `Toolbar`. Set `size` on the `Toolbar` only
+ *   when the default is wrong.
+ *
+ * ## MetaLine
+ * Separate facts on one line, such as an environment and an attempt under a
+ * run name. A gap separates the facts, so do not add a separator character.
+ * The line wraps between facts, never in one fact. Give the identifying fact
+ * a stronger role, such as `Code` or a status word, when it needs one.
+ *
+ * ## Code
+ * Use `Code` for inline code and commands, and `Kbd` for a key. Use
+ * `Identifier` for a value that people copy, and `CodeBlock` for code on
+ * several lines.
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
@@ -22,6 +138,7 @@ export interface PageHeaderProps {
   readonly title: ReactNode;
   /** Secondary line under the title. Inline content flows as text: links, `Code`, and a `Kbd`. */
   readonly description?: ReactNode;
+  /** Controls at the end of the title row. */
   readonly actions?: ReactNode;
 }
 
@@ -45,7 +162,9 @@ export function Page({
   width = "full",
   density = "default",
 }: {
+  /** The content of the page: a `PageHeader`, then the sections. */
   readonly children: ReactNode;
+  /** `reading` makes the page narrower, for a detail page, a form, or a settings page. */
   readonly width?: "full" | "reading";
   /**
    * "touch" makes controls and text larger for a shared tablet or kiosk. Use it
@@ -95,10 +214,15 @@ export function Section({
   actions,
   layout = "stacked",
 }: {
+  /** The name of the part. The split layout needs it. */
   readonly title?: string;
+  /** One sentence under the title. In the split layout, it says what the answers change. */
   readonly description?: string;
+  /** Content at the end of the title row, such as one button. The split layout has no actions. */
   readonly actions?: ReactNode;
+  /** `stacked` puts the title over the content. `split` puts the title in a column on the left. */
   readonly layout?: "stacked" | "split";
+  /** The content of the part. */
   readonly children: ReactNode;
 }) {
   const titleId = useId();
@@ -161,7 +285,9 @@ export interface CardProps {
    * against the edges, divided by lines, for tables, steppers, and logs.
    */
   readonly layout?: "default" | "sections";
+  /** The content, or `CardSection` rows with `layout="sections"`. */
   readonly children: ReactNode;
+  /** StyleX styles for the root, such as a width or a grid position. */
   readonly style?: StyleXStyles;
 }
 
@@ -219,6 +345,7 @@ export interface CardSectionProps {
    * logs or payloads. It is not a nested card: never use it for section content.
    */
   readonly tone?: "default" | "inset";
+  /** The content of the row. */
   readonly children: ReactNode;
 }
 
@@ -238,17 +365,22 @@ export function CardSection({ padding = "default", tone = "default", children }:
 }
 
 export interface StatDelta {
+  /** The formatted change, such as "12%". */
   readonly value: string;
+  /** Sets the arrow before the value. */
   readonly direction: "up" | "down" | "flat";
   /** States whether the change is good; it defaults to up is good. */
   readonly tone?: "good" | "bad" | "neutral";
 }
 
 export interface StatTileProps {
+  /** What the number counts, such as "Open incidents". */
   readonly label: string;
+  /** The formatted number. */
   readonly value: string;
   /** Short context such as "vs last month". */
   readonly hint?: string;
+  /** The change since the previous period, after the value. */
   readonly delta?: StatDelta;
   /** A compact chart under the value. Build it with Aperture; see references/charts.md. */
   readonly chart?: ReactNode;
@@ -298,7 +430,9 @@ export type StatStripLink = Omit<
 >;
 
 export interface StatStripItem {
+  /** The name of the fact. It must be unique in the strip. */
   readonly label: string;
+  /** The number or the status word. */
   readonly value: ReactNode;
   /** Quiet context after the value, such as a unit or a count. */
   readonly hint?: string;
@@ -314,6 +448,7 @@ export interface StatStripItem {
 }
 
 export interface StatStripProps {
+  /** The facts, in the order that people read them. */
   readonly items: ReadonlyArray<StatStripItem>;
   /**
    * `metric` shows large numbers. `status` shows one status word per cell with
@@ -388,13 +523,16 @@ function StatStripCell({
 }
 
 export interface DescriptionItem {
+  /** The label. It must be unique in the list. */
   readonly term: string;
+  /** The value. */
   readonly detail: ReactNode;
   /** In the grid layout, `wide` spans two columns and `full` the whole row. */
   readonly span?: "wide" | "full";
 }
 
 export interface DescriptionListProps {
+  /** The facts, in the order that people read them. */
   readonly items: ReadonlyArray<DescriptionItem>;
   /**
    * `rows` puts each label left of its value, for detail pages and sheets.
@@ -445,9 +583,13 @@ export function SettingsCard({
   actions,
   children,
 }: {
+  /** The name of the group of settings. */
   readonly title: string;
+  /** One sentence that says what the group changes. */
   readonly description?: string;
+  /** Content at the end of the title row, such as one button. */
   readonly actions?: ReactNode;
+  /** `SettingRow` elements. */
   readonly children: ReactNode;
 }) {
   return (
@@ -469,6 +611,7 @@ export function SettingRow({
   description,
   children,
 }: {
+  /** The name of the setting. */
   readonly label: string;
   /** The consequence of the setting, in one short sentence. */
   readonly description?: string;
@@ -495,7 +638,9 @@ export function Toolbar({
   size: explicitSize,
   actions,
 }: {
+  /** The controls of the row. */
   readonly children: ReactNode;
+  /** The accessible name of the row, such as "Filter items". */
   readonly label: string;
   /**
    * Height of every control in the row. Defaults to the size of the
@@ -551,11 +696,21 @@ export function MetaLine({ items }: MetaLineProps) {
 }
 
 /** Identifier, hash, or code value. Mono at the small size, quieter than prose. */
-export function Code({ children }: { readonly children: ReactNode }) {
+export function Code({
+  children,
+}: {
+  /** The code, the command, or the value. */
+  readonly children: ReactNode;
+}) {
   return <code {...stylex.props(styles.code)}>{children}</code>;
 }
 
-export function Kbd({ children }: { readonly children: ReactNode }) {
+export function Kbd({
+  children,
+}: {
+  /** The name of the key, such as "Esc" or "/". */
+  readonly children: ReactNode;
+}) {
   return <kbd {...stylex.props(styles.kbd)}>{children}</kbd>;
 }
 

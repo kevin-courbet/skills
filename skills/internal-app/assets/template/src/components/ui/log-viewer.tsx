@@ -1,3 +1,47 @@
+/**
+ * Monospaced log output with line numbers, a level filter, search, and a line count.
+ *
+ * @layer pattern
+ * @keywords log viewer, logs, build output, console output, streaming logs, log search, terminal output, job logs, stdout
+ * @related CodeBlock, Stepper, Trace, Layout, Filters
+ * @notes typography, internal-app-cards, internal-app-url-filters
+ *
+ * Use it for long or streaming output, such as the logs of a build or a job.
+ * Do not use it for short read-only config or output: use `CodeBlock`. Do not
+ * use it for an inline value or a command: use `Code` from `Layout`.
+ *
+ * ## Behavior
+ * The viewer does these things. Do not build them again:
+ * - It renders only the lines in view, and it opens at the first error line.
+ * - The source column aligns, and the times show in the app time zone.
+ * - Warning and error lines show their level in words.
+ * - The "All" and "Warnings and errors" switch shows only when the output has
+ *   such lines. The search highlights each match.
+ * - The footer shows the line count, then `footnote`, each as its own element.
+ * - The header row takes the `sm` control size, so controls in `filters` match
+ *   it.
+ * - Below the `sm` width of its own frame, the time column hides and the lines
+ *   wrap, so a phone never scrolls the log sideways.
+ *
+ * ## Rules
+ * - Pass `query` with `onQueryChange` and `level` with `onLevelChange` to keep
+ *   them in the URL, so that a link shows the same lines.
+ * - Inside a `Card`, use `variant="embedded"` in a `CardSection` with
+ *   `padding="flush"`.
+ *
+ * ## Example
+ * ```tsx
+ * <LogViewer
+ *   label="Build output"
+ *   title="Build logs"
+ *   lines={lines}
+ *   emptyState="Waiting for a runner"
+ *   follow={run.status === "running"}
+ *   downloadName={`build-${run.id}.log`}
+ *   footnote="Retained for 30 days"
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDownToLine, Download } from "lucide-react";
@@ -16,18 +60,22 @@ export type LogLevel = "debug" | "info" | "warn" | "error";
 export type LogLevelFilter = "all" | "problems";
 
 export interface LogLine {
+  /** Stable id of the line. */
   readonly id: string;
   /** ISO timestamp. Shown as a time in the app time zone. */
   readonly at?: string;
+  /** Severity. Warning and error lines show it in words. */
   readonly level?: LogLevel;
   /** Short origin, such as a stage, service, or pod name. Shown in its own column. */
   readonly source?: string;
+  /** The text of the line. */
   readonly text: string;
 }
 
 export interface LogViewerProps {
   /** Names the output region, such as "Build output". */
   readonly label: string;
+  /** All lines, oldest first. */
   readonly lines: ReadonlyArray<LogLine>;
   /** Shown while there are no lines at all, such as "Waiting for a runner". */
   readonly emptyState: ReactNode;
@@ -35,12 +83,14 @@ export interface LogViewerProps {
   readonly title?: ReactNode;
   /** Search text. Pass it with `onQueryChange` to keep the search in the URL. */
   readonly query?: string;
+  /** Receives the search text when people change it. */
   readonly onQueryChange?: (query: string) => void;
   /**
    * Level filter. The "All" and "Warnings and errors" switch shows when the
    * output has warnings or errors. Pass it with `onLevelChange` to keep it in the URL.
    */
   readonly level?: LogLevelFilter;
+  /** Receives the level filter when people change it. */
   readonly onLevelChange?: (level: LogLevelFilter) => void;
   /** More filters before the search, such as a stage Select. */
   readonly filters?: ReactNode;

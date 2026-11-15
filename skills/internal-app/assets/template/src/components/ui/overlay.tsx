@@ -1,3 +1,37 @@
+/**
+ * The shared surface and the enter and exit motion of popovers, menus, option lists, and tooltips.
+ *
+ * @layer helper
+ * @keywords overlay styles, popover surface, dropdown surface, overlay animation, enter animation, exit animation
+ * @related Popover, Menu, ListBox, Tooltip, HoverCard, Density
+ * @notes depth, component-feel, reduced-motion, internal-app-adding-a-primitive
+ *
+ * Use it only in kit code that builds a new overlay. Pages do not use it: they
+ * use `Popover`, `Menu`, `Select`, or another kit overlay.
+ *
+ * ## Behavior
+ * - `overlay.popover` gives the surface, the border, the radius, the shadow,
+ *   and the layer.
+ * - `overlay.entering` fades in from a slightly smaller scale.
+ *   `overlay.exiting` fades out faster. Under reduced motion, both take 0 ms.
+ * - `overlay.matchTrigger` makes a popover at least as wide as its field.
+ *
+ * ## Rules
+ * - A new overlay puts `...useOverlayDensity()` first in the styles of its
+ *   portal root, then `overlay.popover`.
+ *
+ * ## Example
+ * ```tsx
+ * <Popover
+ *   {...renderStyles<{ isEntering: boolean; isExiting: boolean }>((state) => [
+ *     ...overlayDensity,
+ *     overlay.popover,
+ *     state.isEntering && overlay.entering,
+ *     state.isExiting && overlay.exiting,
+ *   ])}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { color, layer, media, motion, radius, shadow } from "@/styles/tokens.stylex";
 

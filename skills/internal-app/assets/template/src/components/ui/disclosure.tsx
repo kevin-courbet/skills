@@ -1,3 +1,34 @@
+/**
+ * A section that people show and hide, alone or as one row of an `Accordion`.
+ *
+ * @layer primitive
+ * @keywords disclosure, accordion, collapsible section, expand collapse, show more, advanced settings, raw payload, faq
+ * @related Tabs, Layout, CodeBlock
+ * @notes hierarchy, finishing-details
+ *
+ * Use `Disclosure` for one section that most people do not need, such as
+ * advanced settings or a raw payload. Use `Accordion` for several such rows.
+ * Do not use it when people compare sections: use `Tabs`. Do not hide
+ * information that people need to finish the task.
+ *
+ * ## Behavior
+ * - The title is a button in a level 3 heading. Enter and Space open and close
+ *   it, and the chevron turns.
+ * - In an `Accordion`, one row opens at a time unless
+ *   `allowsMultipleExpanded` is set.
+ *
+ * ## Example
+ * ```tsx
+ * <Accordion>
+ *   <Disclosure id="retry" title="Retry policy" hint="3 rules">
+ *     <RetryRules rules={rules} />
+ *   </Disclosure>
+ *   <Disclosure id="payload" title="Raw payload">
+ *     <CodeBlock language="json" code={payload} />
+ *   </Disclosure>
+ * </Accordion>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronRight } from "lucide-react";
@@ -19,10 +50,13 @@ export interface DisclosureProps extends Omit<
   AriaDisclosureProps,
   "className" | "style" | "children"
 > {
+  /** The visible name of the section. */
   readonly title: string;
   /** Short context after the title, such as a count. */
   readonly hint?: string;
+  /** The content that shows when the section is open. */
   readonly children: ReactNode;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 
@@ -64,6 +98,7 @@ export interface AccordionProps extends Omit<
 > {
   /** Disclosure elements. */
   readonly children: ReactNode;
+  /** StyleX styles for the frame, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

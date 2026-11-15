@@ -1,4 +1,43 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Links to the sections of a long page that mark the section in view.
+ *
+ * @layer primitive
+ * @keywords scrollspy, on this page, table of contents, section links, jump links, anchor navigation, page outline, settings navigation
+ * @related Tabs, Layout, Breadcrumbs, Disclosure
+ * @notes navigation, internal-app-page-patterns
+ *
+ * Use it on a long page with named parts, such as settings or a record with
+ * many sections. Do not use it to switch between views of the same content:
+ * use `Tabs`. Do not use it to move between routes: use the app navigation.
+ *
+ * ## Behavior
+ * The links do these things. Do not build them again:
+ * - The link of the section in view has `aria-current="location"` and the
+ *   selected surface. At the end of the scroll, the last link is current.
+ * - It finds the scroll container of the sections, or uses the window.
+ * - A link scrolls its section into view, instantly under reduced motion, and
+ *   moves the focus to the section.
+ * - An `id` with no element on the page throws an error when people press its
+ *   link.
+ *
+ * ## Rules
+ * - Give each section on the page the `id` of its item and a heading with the
+ *   same words as the label.
+ * - Set `offset` to the height of a sticky bar above the sections.
+ *
+ * ## Example
+ * ```tsx
+ * <Scrollspy
+ *   label="On this page"
+ *   items={[
+ *     { id: "general", label: "General" },
+ *     { id: "alerts", label: "Alerts" },
+ *     { id: "danger-zone", label: "Danger zone" },
+ *   ]}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
@@ -9,17 +48,20 @@ import { color, font, media, motion, radius, space } from "@/styles/tokens.style
 export interface ScrollspyItem {
   /** Id of the section element on the page. */
   readonly id: string;
+  /** Visible link text. Use the words of the section heading. */
   readonly label: string;
 }
 
 export interface ScrollspyProps {
   /** Names the navigation, such as "On this page". */
   readonly label: string;
+  /** The sections, in page order. */
   readonly items: ReadonlyArray<ScrollspyItem>;
   /** `vertical` for a side column; `horizontal` for a bar above the sections. */
   readonly orientation?: "vertical" | "horizontal";
   /** Space above a section when the page scrolls to it, in pixels, such as the height of a sticky bar. */
   readonly offset?: number;
+  /** StyleX styles for the navigation, such as a sticky position in a side column. */
   readonly style?: StyleXStyles;
 }
 

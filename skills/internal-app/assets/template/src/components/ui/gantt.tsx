@@ -1,4 +1,75 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Tasks on a time line, such as a migration plan, a project timeline, or a release plan.
+ *
+ * @layer pattern
+ * @keywords gantt chart, project timeline, release plan, release schedule, migration plan, roadmap, task dependencies, milestones, workload per assignee, schedule tasks
+ * @related EventCalendar, Tree, Timeline, DateRangePicker, Sheet, EmptyState
+ * @notes patterns, accessibility, internal-app-composition, internal-app-states
+ *
+ * Use it when tasks run over days or weeks and the order and overlap of the
+ * tasks matter. Do not use it for events at a time of day: use
+ * `EventCalendar`. For a hierarchy without dates, use `Tree`. For the history
+ * of a record, use `Timeline`.
+ *
+ * ## Behavior
+ * The chart does these things. Do not build them again:
+ * - The task list is a tree. The names stay in view while the chart scrolls
+ *   sideways. The dates of each task show from `md`.
+ * - The chart opens with `today` in view.
+ * - A group bar spans its tasks. Its progress is the mean of their progress,
+ *   weighted by their length in days.
+ * - An arrow leaves its source bar through the bottom edge near the end and
+ *   goes into the target from the left, so that it does not cover the labels
+ *   after the bars. Where an arrow crosses the label of a row between them,
+ *   the label stays on top.
+ * - With `onTaskChange` or `onReorder`, a hint under the chart tells people
+ *   how to move tasks.
+ *
+ * ## Moves
+ * - Groups do not move. A milestone moves, but its end does not change.
+ * - The end of a task cannot go before its start.
+ * - A moved row keeps the focus, and a live region announces the new dates
+ *   or the new position.
+ *
+ * ## Keyboard
+ * - The arrow keys move between tasks. Right and Left open and close a group.
+ * - Alt and Left or Right move the selected task one day. Alt, Shift, and
+ *   Left or Right change its end.
+ *
+ * ## Load
+ * Tasks without an `assignee` do not count. For screen readers, each row of
+ * the load lane says in words which days go over the limit, such as "over the
+ * limit of 2 on 19 Oct – 21 Oct".
+ *
+ * ## Rules
+ * - A task without children needs a `start`. A task that ends before it
+ *   starts throws.
+ * - With no tasks, the chart shows nothing. Show an `EmptyState` instead.
+ * - Handle `onTaskChange` and `onReorder` as Optimistic moves in
+ *   `references/data.md` tells. On a failure, restore the tasks and show an
+ *   error toast.
+ *
+ * ## Example
+ * ```tsx
+ * <Gantt
+ *   label="Ledger migration plan"
+ *   tasks={plan}
+ *   today={today}
+ *   scale="week"
+ *   load={{ limit: 2 }}
+ *   onTaskAction={(task) => openTask(task.id)}
+ *   onTaskChange={(task, change) => {
+ *     setPlan(applyChange(plan, task.id, change));
+ *     moveTask.mutate({ id: task.id, ...change });
+ *   }}
+ *   onReorder={(next, move) => {
+ *     setPlan(next);
+ *     reorderTask.mutate(move);
+ *   }}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import {
   type CalendarDate,
@@ -76,13 +147,17 @@ export interface GanttLoad {
 export interface GanttProps {
   /** Names the chart, such as "Migration plan". */
   readonly label: string;
+  /** The top-level tasks and groups, in order. */
   readonly tasks: ReadonlyArray<GanttTask>;
   /** Today's ISO date from the loader. A line marks it. */
   readonly today: string;
   /** `day` shows each day; `week` fits longer plans. */
   readonly scale?: "day" | "week";
+  /** The groups that are open at first. Defaults to all groups. */
   readonly defaultExpandedIds?: ReadonlyArray<string>;
+  /** The id of the selected task, or null for none. Pass it with `onSelectionChange`. */
   readonly selectedId?: string | null;
+  /** Runs when people select a task, with its id, or null when no task is selected. */
   readonly onSelectionChange?: (id: string | null) => void;
   /** Opens a task, such as a sheet with its details. Enter and a double click call it. */
   readonly onTaskAction?: (task: GanttTask) => void;

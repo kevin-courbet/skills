@@ -1,3 +1,54 @@
+/**
+ * The TanStack Form options and the message helpers that every kit form uses.
+ *
+ * @layer helper
+ * @keywords form validation, field error, error message, error summary entries, tanstack form, useForm, formBehavior, submit attempt
+ * @related FormLayout, TextField, RadioGroup, Checkbox
+ * @notes form-errors, form-fields, internal-app-forms
+ *
+ * Use these helpers in each form that uses TanStack Form `useForm` and a
+ * schema. Do not use them for a single control that saves at once, such as a
+ * `Switch` in a settings row: that control has no submit.
+ *
+ * ## Behavior
+ * - The submit stays enabled when the form is invalid. A submit attempt
+ *   shows every message and the ErrorSummary.
+ * - A field shows its message after a change and a blur, or after a submit
+ *   attempt. See `fieldError`.
+ *
+ * ## Rules
+ * - Do not disable the submit button while the form is invalid.
+ * - Give `fieldError` to the `errorMessage` of each field. Do not write a
+ *   different rule for when a message shows.
+ * - Call `formErrors` only after a submit attempt. Give each entry the `id`
+ *   of its field, so that the ErrorSummary link moves the focus to it.
+ *
+ * ## Example
+ * ```tsx
+ * const form = useForm({
+ *   ...formBehavior,
+ *   defaultValues,
+ *   validators: { onDynamic: schema },
+ *   onSubmit: ({ value }) => save(value),
+ * });
+ * const hasSubmitAttempt = useStore(form.store, (state) => state.submissionAttempts > 0);
+ *
+ * <form.Field name="title">
+ *   {(field) => (
+ *     <TextField
+ *       id="title"
+ *       label="Title"
+ *       value={field.state.value}
+ *       onChange={field.handleChange}
+ *       onBlur={field.handleBlur}
+ *       errorMessage={fieldError(field, hasSubmitAttempt)}
+ *     />
+ *   )}
+ * </form.Field>
+ *
+ * const errors = hasSubmitAttempt ? formErrors(fieldMeta, [{ name: "title", id: "title" }]) : [];
+ * ```
+ */
 import { revalidateLogic } from "@tanstack/react-form";
 import type { FormError } from "@/components/ui/form-layout";
 

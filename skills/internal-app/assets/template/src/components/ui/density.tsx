@@ -1,3 +1,40 @@
+/**
+ * The density of a page, `default` or `touch`, and the hooks that pass it to overlays and to the app shell.
+ *
+ * @layer helper
+ * @keywords density, touch density, touch page, tablet, kiosk, overlay density, useDensity, useOverlayDensity
+ * @related Layout, AppShell, ControlSize, WorkQueue, Overlay
+ * @notes density, internal-app-touch-work-view, internal-app-adding-a-primitive
+ *
+ * A page sets its density with `Page density`. Do not set the density with
+ * these providers in a page: use `Page`. Do not use it to change the height
+ * of one row: use `ControlSizeProvider`.
+ *
+ * ## Behavior
+ * - `Page` sets `DensityProvider` and reports its density to `AppShell`
+ *   through `ShellDensityProvider` and `useShellPageDensity`. `AppShell` then
+ *   sets the density again for its sheet and its top bar menus.
+ * - Every kit dialog, sheet, popover, hover card, menu, option list, and
+ *   tooltip puts `useOverlayDensity()` on its portal root.
+ *
+ * ## Rules
+ * - Only `Page` and `AppShell` use `DensityProvider`, `ShellDensityProvider`,
+ *   and `useShellPageDensity`.
+ * - Use `useDensity()` when a component must know that it renders on a touch
+ *   page.
+ * - A new overlay puts `...useOverlayDensity()` first in the styles of its
+ *   portal root. See Touch density in `references/styling.md`.
+ *
+ * ## Example
+ * ```tsx
+ * const overlayDensity = useOverlayDensity();
+ * return (
+ *   <AriaPopover {...renderStyles(() => [...overlayDensity, overlay.popover, styles.popover])}>
+ *     {children}
+ *   </AriaPopover>
+ * );
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { createContext, type ReactNode, useContext, useEffect } from "react";
 import type { StyleArg } from "@/lib/rac";
@@ -21,7 +58,9 @@ export function DensityProvider({
   density,
   children,
 }: {
+  /** The density of the subtree. */
   readonly density: Density;
+  /** The content that takes the density. */
   readonly children: ReactNode;
 }) {
   return <DensityContext.Provider value={density}>{children}</DensityContext.Provider>;
@@ -55,7 +94,9 @@ export function ShellDensityProvider({
   onPageDensity,
   children,
 }: {
+  /** Receives the density of the page. `null` stops a nested page from reporting. */
   readonly onPageDensity: ReportPageDensity | null;
+  /** The page, or the content of a page. */
   readonly children: ReactNode;
 }) {
   return (

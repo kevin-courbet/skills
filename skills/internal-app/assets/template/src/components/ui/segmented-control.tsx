@@ -1,3 +1,39 @@
+/**
+ * A row of two to five segments that switch between views or modes of the same content.
+ *
+ * @layer primitive
+ * @keywords segmented control, view switch, toggle view, mode switch, period switch, list or grid, tabs in a toolbar
+ * @related Tabs, ToggleGroup, RadioGroup, Select, Layout
+ * @notes form-choices, density, internal-app-composition
+ *
+ * Use it to change how a page shows the same content, such as a list or a
+ * board, or a period of a chart. Do not use it for sections with different
+ * content: use `Tabs`. Do not use it for an answer that a form submits: use a
+ * `RadioGroup` with `appearance="chips"`. For more than five options, use
+ * `Select`. For options that each turn on or off, use `ToggleGroup`.
+ *
+ * ## Behavior
+ * The control does these things. Do not build them again:
+ * - One segment is always selected. Arrow keys move between the segments.
+ * - The height follows the control size of its row, so it has no `size` prop.
+ *
+ * ## Rules
+ * - Keep the labels short. An `icon` adds to a label and never replaces it.
+ * - Keep the view in the URL when people share it.
+ *
+ * ## Example
+ * ```tsx
+ * <SegmentedControl
+ *   label="View"
+ *   options={[
+ *     { id: "list", label: "List", icon: List },
+ *     { id: "board", label: "Board", icon: Columns3 },
+ *   ]}
+ *   value={view}
+ *   onChange={setView}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { LucideIcon } from "lucide-react";
 import { ToggleButton, ToggleButtonGroup } from "react-aria-components";
@@ -6,16 +42,22 @@ import { color, font, motion, radius, shadow, size, space } from "@/styles/token
 import { useControlSize } from "./control-size";
 
 export interface SegmentOption<Value extends string> {
+  /** Stable id of the view. `value` and `onChange` use it. */
   readonly id: Value;
+  /** Visible text of the segment. */
   readonly label: string;
+  /** Lucide icon before the label. */
   readonly icon?: LucideIcon;
 }
 
 export interface SegmentedControlProps<Value extends string> {
   /** Accessible name for the group, such as "View" or "Period". */
   readonly label: string;
+  /** Two to five segments, in the order that they show. */
   readonly options: ReadonlyArray<SegmentOption<Value>>;
+  /** Id of the selected segment. */
   readonly value: Value;
+  /** Receives the id of the segment that people select. */
   readonly onChange: (value: Value) => void;
 }
 

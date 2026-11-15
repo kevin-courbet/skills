@@ -1,3 +1,38 @@
+/**
+ * The HTML document of the root route, with the global CSS, the theme, the locale, and the router head and scripts.
+ *
+ * @layer shell
+ * @keywords html document, root document, theme provider, dark theme setup, locale provider, head and scripts
+ * @related AppShell, ThemeSwitch, RouteError
+ * @notes dark-theme
+ *
+ * The root route renders it once, around every page. Do not render it in a
+ * layout route or a page. For the frame of the signed-in pages, use
+ * `AppShell`.
+ *
+ * ## Behavior
+ * - It owns the theme state through `ThemeContext`. `ThemeSwitch` and
+ *   `useTheme()` read and change it. A change of the theme does not reload
+ *   the app data.
+ * - It sets `data-theme` on `<html>` before the first paint, also for the
+ *   system theme, so that CSS keyed on `[data-theme]`, such as the dark series
+ *   palette of Aperture, matches. It follows a later change of the system
+ *   theme.
+ * - It gives every react-aria field the app locale, so that dates and numbers
+ *   match the formatters of `src/lib/locale.ts`.
+ *
+ * ## Rules
+ * - Read the theme in `beforeLoad` of the root route with `getThemeChoice()`,
+ *   which reads the cookie without a request on client navigations.
+ *
+ * ## Example
+ * ```tsx
+ * function RootDocument({ children }: { readonly children: ReactNode }) {
+ *   const { theme } = Route.useRouteContext();
+ *   return <AppDocument theme={theme ?? "system"}>{children}</AppDocument>;
+ * }
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { HeadContent, Scripts } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
@@ -9,7 +44,9 @@ import { darkTheme, lightTheme } from "@/styles/themes";
 import { color, font } from "@/styles/tokens.stylex";
 
 export interface AppDocumentProps {
+  /** The saved theme choice from the cookie, which the root route reads in `beforeLoad`. */
   readonly theme: ThemeChoice;
+  /** The root route content. */
   readonly children: ReactNode;
 }
 

@@ -1,4 +1,58 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Steps in order: the position in a multi-step task, or the status of each stage of a run.
+ *
+ * @layer primitive
+ * @keywords stepper, steps, wizard, multi-step form, pipeline stages, stage status, progress steps, build stages, segmented progress
+ * @related Trace, Timeline, ProgressBar, LogViewer, Layout, DataTable
+ * @notes loading-states, forms, internal-app-composition
+ *
+ * Use `mode="wizard"` (the default) for the position in a task that people do
+ * in steps. Use `mode="status"` for a short fixed list of stages that run on
+ * their own, such as a pipeline on a detail page. Do not use it for an
+ * activity or audit history: use `Timeline`. For a long or nested run, such
+ * as agent turns, use `Trace`. In cards and table rows, use
+ * `SegmentedProgress`.
+ *
+ * ## Behavior
+ * - Wizard: the steps before `currentStep` show as complete. With
+ *   `onStepPress`, the complete steps are buttons that go back to them. An
+ *   unknown `currentStep` throws an error.
+ * - Status: each step shows its status icon and word in the status color, its
+ *   `duration`, and its `note`.
+ * - With `onSelectionChange`, the status steps are a radio group: the arrow
+ *   keys move, Space or Enter selects, and a press on the selected step clears
+ *   the selection.
+ * - `orientation="responsive"`, the default, is vertical below the `md`
+ *   breakpoint.
+ *
+ * ## Rules
+ * - Use the selected step to drive the detail below it, such as its logs in a
+ *   `LogViewer`.
+ * - Use `stepStatusDisplay` for the word, the intent, and the icon of a
+ *   `StepStatus` elsewhere, so that one status always looks the same.
+ *
+ * ## SegmentedProgress
+ * The read-only form for cards and rows: one colored segment per step, and a
+ * caption with the name, the status word, and the duration of the current
+ * step. The current step is the running one, else the one that stopped the
+ * run, else the last one that ran.
+ *
+ * ## Example
+ * ```tsx
+ * <Stepper
+ *   mode="status"
+ *   label="Pipeline stages"
+ *   steps={[
+ *     { id: "build", label: "Build", status: "success", duration: "38s" },
+ *     { id: "test", label: "Test", status: "running", duration: "Running 14s" },
+ *     { id: "deploy", label: "Deploy", status: "pending" },
+ *   ]}
+ *   selectedStep={stage}
+ *   onSelectionChange={setStage}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import {
   Check,
@@ -31,13 +85,16 @@ export const stepStatusDisplay: Record<
 };
 
 export interface StepperStep<Id extends string> {
+  /** Stable id of the step. */
   readonly id: Id;
   /** Short noun phrase, such as "Source" or "Build". */
   readonly label: string;
+  /** Quiet line under the label. */
   readonly description?: string;
 }
 
 export interface StatusStep<Id extends string> extends StepperStep<Id> {
+  /** The state of the step. It sets the icon, the word, and the color. */
   readonly status: StepStatus;
   /** Formatted duration, such as "38s" or "Running 14s". */
   readonly duration?: string;
@@ -49,20 +106,26 @@ export interface StatusStep<Id extends string> extends StepperStep<Id> {
 export type StepperOrientation = "horizontal" | "vertical" | "responsive";
 
 export interface WizardStepperProps<Id extends string> {
+  /** Shows the position in a multi-step task. */
   readonly mode?: "wizard";
   /** Names the process, such as "Import steps". */
   readonly label: string;
+  /** The steps, in order. */
   readonly steps: ReadonlyArray<StepperStep<Id>>;
+  /** The step that people are on. The steps before it show as complete. */
   readonly currentStep: Id;
   /** Makes completed steps buttons that go back to them. */
   readonly onStepPress?: (id: Id) => void;
+  /** The direction of the steps. */
   readonly orientation?: StepperOrientation;
 }
 
 export interface StatusStepperProps<Id extends string> {
+  /** Shows steps that run on their own, each with its status. */
   readonly mode: "status";
   /** Names the process, such as "Pipeline stages". */
   readonly label: string;
+  /** The steps, in order. */
   readonly steps: ReadonlyArray<StatusStep<Id>>;
   /**
    * The step whose detail shows below, such as its logs. With
@@ -70,7 +133,9 @@ export interface StatusStepperProps<Id extends string> {
    * steps, and pressing the selected step again clears the selection.
    */
   readonly selectedStep?: Id | null;
+  /** Makes the steps selectable. Receives the selected id, or `null` when people clear it. */
   readonly onSelectionChange?: (id: Id | null) => void;
+  /** The direction of the steps. */
   readonly orientation?: StepperOrientation;
 }
 
@@ -289,6 +354,7 @@ function StatusStepContent<Id extends string>({
 export interface SegmentedProgressProps<Id extends string> {
   /** Names the process for screen readers, such as "Pipeline for dpl_6M91fxF8A". */
   readonly label: string;
+  /** The steps, in order. */
   readonly steps: ReadonlyArray<StatusStep<Id>>;
   /** Lists the step names under the bar on wide screens. */
   readonly showStepLabels?: boolean;

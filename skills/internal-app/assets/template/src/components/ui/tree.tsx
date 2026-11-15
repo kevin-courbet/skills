@@ -1,4 +1,47 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A hierarchy of records that people open, close, select, and move, such as folders or permissions.
+ *
+ * @layer pattern
+ * @keywords tree, folder tree, file tree, hierarchy, nested list, org chart, categories, permission tree, drag and drop nesting
+ * @related Cascader, SortableList, Checkbox, Kanban
+ * @notes hierarchy, accessibility, internal-app-composition, internal-app-url-filters
+ *
+ * Use it when the records nest and people must see more than one level at a
+ * time, such as a file browser, an org chart, categories, or a permission set.
+ * Do not use it to choose one value from a hierarchy in a form, such as a
+ * region and a city: use `Cascader`. For a flat list that people put in order,
+ * use `SortableList`.
+ *
+ * ## Behavior
+ * - Arrow keys move between rows. Right and Left open and close a branch.
+ *   Space selects.
+ * - The chevron opens and closes a branch. A leaf shows a spacer, so the labels
+ *   stay aligned.
+ * - With `selection.mode="single"`, the selected row has a fill. With
+ *   `"checkbox"`, each row shows a checkbox and the fill does not show.
+ * - With `onMove`, people drag rows before, after, or into another row. The
+ *   tree cancels a drop into the dragged node or into a node under it.
+ * - `moveTreeNodes` throws an error when a node moves into itself.
+ *
+ * ## Rules
+ * - A move is optimistic: apply it with `moveTreeNodes` at once, persist it with
+ *   a mutation, and on failure restore the previous nodes and show an error
+ *   toast. Every drag has a keyboard path; never add a drag-only control.
+ * - To keep the open branches in the URL, pass `expandedIds` and
+ *   `onExpandedChange`.
+ *
+ * ## Example
+ * ```tsx
+ * <Tree
+ *   label="Files"
+ *   nodes={files}
+ *   selection={{ mode: "single", value: fileId, onChange: setFileId }}
+ *   onAction={openFile}
+ *   onMove={(move) => saveFiles(moveTreeNodes(files, move))}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronRight, type LucideIcon } from "lucide-react";
@@ -19,8 +62,11 @@ import { color, font, media, motion, radius, size, space } from "@/styles/tokens
 import { Checkbox } from "./checkbox";
 
 export interface TreeNode {
+  /** Unique in the whole tree. Selection, expansion, and moves use it. */
   readonly id: string;
+  /** Row text. Type-ahead and the drag preview use it too. */
   readonly label: string;
+  /** Icon before the label. */
   readonly icon?: LucideIcon;
   /** Icon of an open branch, such as FolderOpen next to Folder. */
   readonly openIcon?: LucideIcon;
@@ -28,7 +74,12 @@ export interface TreeNode {
   readonly description?: string;
   /** Trailing content, such as a count or a Badge. */
   readonly meta?: ReactNode;
+  /**
+   * People cannot focus or select a disabled node. A disabled leaf does not
+   * count for the checkbox of its branch.
+   */
   readonly isDisabled?: boolean;
+  /** Child nodes. A node with children is a branch. */
   readonly children?: ReadonlyArray<TreeNode>;
 }
 
@@ -36,6 +87,7 @@ export type TreeSelection =
   | {
       /** One selected node, such as the open folder of a file browser. */
       readonly mode: "single";
+      /** Id of the selected node, or `null` when no node is selected. */
       readonly value: string | null;
       readonly onChange: (id: string | null) => void;
     }
@@ -47,11 +99,14 @@ export type TreeSelection =
        */
       readonly mode: "checkbox";
       readonly value: ReadonlyArray<string>;
+      /** Receives the selected leaf ids in the order of the tree. */
       readonly onChange: (ids: ReadonlyArray<string>) => void;
     };
 
 export interface TreeMove {
+  /** Ids of the dragged nodes. */
   readonly ids: ReadonlyArray<string>;
+  /** Id of the node that the drop is relative to. */
   readonly targetId: string;
   /** `inside` appends the nodes to the children of the target. */
   readonly position: "before" | "after" | "inside";
@@ -60,12 +115,17 @@ export interface TreeMove {
 export interface TreeProps {
   /** Names the tree, such as "Files" or "Permissions". */
   readonly label: string;
+  /** Root nodes. */
   readonly nodes: ReadonlyArray<TreeNode>;
+  /** Without it, people can open nodes but cannot select them. */
   readonly selection?: TreeSelection;
   /** Opens a node, such as a file. Enter and a double click call it. */
   readonly onAction?: (id: string) => void;
+  /** Ids of the open branches, when the parent controls them. */
   readonly expandedIds?: ReadonlyArray<string>;
+  /** Ids of the branches that are open at first, when the tree controls them. */
   readonly defaultExpandedIds?: ReadonlyArray<string>;
+  /** Receives the ids of the open branches after a branch opens or closes. */
   readonly onExpandedChange?: (ids: ReadonlyArray<string>) => void;
   /**
    * Enables drag and drop to reorder and nest nodes. Apply the move with
@@ -76,6 +136,7 @@ export interface TreeProps {
   readonly guides?: boolean;
   /** Shown when `nodes` is empty. */
   readonly emptyState?: ReactNode;
+  /** Layout styles for the tree, such as a height or a margin. */
   readonly style?: StyleXStyles;
 }
 

@@ -1,4 +1,48 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Read-only code, config, a payload, a query, or a command, with syntax colors, a copy button, and a wrap toggle.
+ *
+ * @layer primitive
+ * @keywords code block, code snippet, syntax highlighting, config file, json payload, sql query, shell command, diff view, copy code
+ * @related LogViewer, Layout, Trace, Card
+ * @notes typography, internal-app-cards
+ *
+ * Use it for code that people read or copy, such as a config file, a request
+ * payload, a query, a command, or short output. Do not use it for long or
+ * streaming logs: use `LogViewer`. For a short value inside a sentence, such as
+ * an id, use `Code` from `Layout`. It is not an editor.
+ *
+ * ## Behavior
+ * - A built-in highlighter colors comments, strings, numbers, keywords, keys,
+ *   functions, types, and tags. It adds no dependency to the bundle.
+ * - `title` or `headerActions` gives a header row with the language name, the
+ *   wrap toggle, and the copy button. Without them, the buttons pin to the top
+ *   corner of the code.
+ * - The copy button copies all of `code`, also when `maxLines` collapses it.
+ * - One line can have only one mark. The order is added, removed, a diff hunk
+ *   (`@@`), then highlighted. An error tint replaces a warning tint.
+ * - Screen readers hear "Added" or "Removed" before a marked line. The line
+ *   numbers are visual only.
+ * - The code region takes the focus, so people can scroll it with the keyboard.
+ * - `highlightedLines`, `diff`, and `diagnostics` use the line numbers that
+ *   show, so they include `startLine`.
+ *
+ * ## Rules
+ * - Give a `title` when the code is a file or a command that people run.
+ * - Use `language="text"` for plain output, such as terminal output.
+ * - Set `maxLines` for code that is longer than the space for it on the page.
+ *
+ * ## Example
+ * ```tsx
+ * <CodeBlock
+ *   title="billing.yaml"
+ *   language="yaml"
+ *   code={config}
+ *   diagnostics={[{ line: 4, level: "error", message: "plan must be one of: free, team" }]}
+ *   maxLines={20}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronDown, WrapText } from "lucide-react";
@@ -34,12 +78,16 @@ export type CodeLanguage =
 export type CodeLineSpec = ReadonlyArray<number | readonly [number, number]>;
 
 export interface CodeDiagnostic {
+  /** Line number that shows next to the line. */
   readonly line: number;
+  /** Tint of the line and of the message. */
   readonly level: "error" | "warning";
+  /** Shows under the line after "Error:" or "Warning:". */
   readonly message: string;
 }
 
 export interface CodeBlockProps {
+  /** The full text. Lines split at each newline. */
   readonly code: string;
   /** Highlighting grammar. `text` shows plain output, such as terminal logs. */
   readonly language?: CodeLanguage;
@@ -51,6 +99,7 @@ export interface CodeBlockProps {
   readonly showLineNumbers?: boolean;
   /** Number of the first line, for an excerpt of a longer file. */
   readonly startLine?: number;
+  /** Lines with a highlight tint, such as the lines that a step changed. */
   readonly highlightedLines?: CodeLineSpec;
   /** Added and removed lines. With `language="diff"`, the +/- prefixes mark them instead. */
   readonly diff?: { readonly added?: CodeLineSpec; readonly removed?: CodeLineSpec };
@@ -67,6 +116,7 @@ export interface CodeBlockProps {
    * CardSection with `padding="flush"` or a Trace step.
    */
   readonly variant?: "standalone" | "embedded";
+  /** Layout styles for the block, such as a margin or a maximum height. */
   readonly style?: StyleXStyles;
 }
 

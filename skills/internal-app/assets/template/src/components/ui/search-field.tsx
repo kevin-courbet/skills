@@ -1,3 +1,40 @@
+/**
+ * A search input with a clear button, for the free-text search of a list.
+ *
+ * @layer primitive
+ * @keywords search field, search input, search box, search a list, find, query, slash shortcut, clear search, toolbar search
+ * @related Filters, DataTable, Layout, CommandPalette, ComboBox
+ * @notes internal-app-url-filters, internal-app-composition, internal-app-page-patterns
+ *
+ * Use it for the free-text search of a list, such as the search before
+ * `Filters` in a page `Toolbar`. Do not use it to find pages and app actions:
+ * `AppShell` mounts the `CommandPalette` for that. Do not use it to choose one
+ * value: use `ComboBox`.
+ *
+ * ## Behavior
+ * - A clear button shows while the field has text. Escape clears the value.
+ * - With `focusShortcut`, a `/` hint shows while the field is empty.
+ * - The height follows the nearest `ControlSizeProvider`.
+ *
+ * ## Rules
+ * - Put the search first in its row, before `Filters`.
+ * - Keep the query in a search param, so that a reload and a link show the same
+ *   results. Reset the page when the query changes.
+ *
+ * ## Example
+ * ```tsx
+ * <SearchField
+ *   label="Search items"
+ *   hideLabel
+ *   focusShortcut
+ *   placeholder="Search by name or owner"
+ *   value={search.q ?? ""}
+ *   onChange={(q) =>
+ *     navigate({ search: (prev) => ({ ...prev, q: q || undefined, page: undefined }) })
+ *   }
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { Search, X } from "lucide-react";
@@ -16,12 +53,15 @@ export interface SearchFieldProps extends Omit<
   AriaSearchFieldProps,
   "className" | "style" | "children"
 > {
+  /** Visible name of the field, such as "Search items". It names what the field searches. */
   readonly label: string;
   /** Hide the visible label in dense toolbars. The label stays available to screen readers. */
   readonly hideLabel?: boolean;
+  /** Text in the empty field that tells what people can search by, such as "Search by name or owner". */
   readonly placeholder?: string;
   /** Pressing "/" outside a text field focuses this field. Use it for the main list search only. */
   readonly focusShortcut?: boolean;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

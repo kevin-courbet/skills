@@ -1,4 +1,38 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * An inline notice about the page or the object on it.
+ *
+ * @layer primitive
+ * @keywords alert, notice, banner, callout, inline message, warning message, success message, info box, held state
+ * @related Feedback, FormLayout, Toaster, Badge, Layout
+ * @notes overlays, form-errors, ux-writing, edge-accents, internal-app-states, internal-app-writing
+ *
+ * Use it for a fact that people must see on the page, such as a paused deploy
+ * or the result of a submit. Do not use it for a failed load: use `ErrorState`
+ * of `Feedback`. For a failure with no place on the page, use a toast. For the
+ * errors of a form, use `ErrorSummary` of `FormLayout`.
+ *
+ * ## Behavior
+ * - Each intent has its own icon and colors. `icon` replaces the icon.
+ *
+ * ## Rules
+ * - Match the intent to the severity. Do not use `danger` for information.
+ * - After a successful submit, replace the form with a success `Alert` with
+ *   `announce="status"`. The title names the new record, and one action starts
+ *   the next task.
+ *
+ * ## Example
+ * ```tsx
+ * <Alert
+ *   intent="success"
+ *   announce="status"
+ *   title="Badge V-2318 is printing at reception"
+ *   actions={<Button onPress={reset}>Register another visitor</Button>}
+ * >
+ *   The host gets a message when the visitor arrives.
+ * </Alert>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import {
   CircleAlert,
@@ -16,6 +50,7 @@ import { Button } from "./button";
 export type AlertIntent = "neutral" | "info" | "success" | "warning" | "danger";
 
 export interface AlertProps {
+  /** Severity: `success` for a result, `warning` for a risk, `danger` for a failure or a block, and `neutral` for a plain note. */
   readonly intent?: AlertIntent;
   /**
    * States the fact in one sentence. It wraps to as many lines as it needs and

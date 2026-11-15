@@ -1,3 +1,81 @@
+/**
+ * The parts of a long form on its own route: the form, the field rows, the error summary, the live preview, and the sticky footer.
+ *
+ * @layer pattern
+ * @keywords form layout, long form, multi section form, split form section, error summary, form errors, preview of a printed tag, live preview, badge preview, sticky footer, submit bar, field row
+ * @related Layout, Form, TextField, RadioGroup, Checkbox, Button, Alert, Dialog
+ * @notes forms, form-layout, form-errors, form-preview, signature-elements, internal-app-forms, internal-app-page-patterns
+ *
+ * Use `FormLayout` for a form with more than about six fields or more than
+ * one part. Do not use it for a short form: put that in a `Dialog`. Do not
+ * use it for settings that apply at once: use a `SettingsCard`. The
+ * `/design-kit/form` route shows a complete form with every part.
+ *
+ * ## Behavior
+ * The parts do these things. Do not build them again:
+ * - `FormLayout` renders a `<form>` without browser validation and without a
+ *   page reload. The sections take the main column. The `preview` stays in
+ *   view beside them while the form is wider than the `lg` breakpoint, and
+ *   goes under them when the form is narrower.
+ * - `FormFooter` sticks to the bottom of the window. A focused field never
+ *   goes under it.
+ * - `ErrorSummary` takes the focus on each new submit attempt, links each
+ *   problem to its field, and renders nothing without errors.
+ *
+ * ## Rules
+ * - Put the `ErrorSummary` first, then one `Section layout="split"` for each
+ *   part of the form.
+ * - Give a `preview` only when the form makes a thing that people see or
+ *   hold outside the app, such as a printed badge.
+ * - After a successful submit, replace the form with a success `Alert`.
+ *
+ * ## FieldRow
+ * Puts fields that belong together on one line, such as a floor and a room.
+ * Each field keeps the width of its answer. The row wraps when it is narrow.
+ *
+ * ## FormPreview
+ * Holds a live preview of the thing that the form makes, such as a printed
+ * badge, a tag, an invoice, or a message. The kit gives no frame, because
+ * each thing has its own shape. Build the thing as an app component from kit
+ * tokens. The preview does not announce changes, because it changes on every
+ * key. The rules for the thing are in `design read internal-app-forms`.
+ *
+ * ## FormFooter
+ * Shows live facts in `summary`, such as a count or an estimate, then a quiet
+ * cancel action and one primary `Button type="submit"` that names the action,
+ * such as "Print badge".
+ *
+ * ## ErrorSummary
+ * Lists the problems of a failed submit, at the top of the form. Build
+ * `errors` with `formErrors` from `src/lib/form.ts`, in the order of the
+ * fields on the page, and give each field the `id` that its `FormError`
+ * names. A link to an unknown id throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <FormLayout
+ *   id={formId}
+ *   onSubmit={() => void form.handleSubmit()}
+ *   aria-label="Register a visitor"
+ *   preview={
+ *     <FormPreview label="Visitor badge preview" description="Prints at the reception desk.">
+ *       <VisitorBadge values={values} />
+ *     </FormPreview>
+ *   }
+ *   footer={
+ *     <FormFooter summary={<FooterSummary />}>
+ *       {cancel}
+ *       <Button intent="primary" type="submit">Print badge</Button>
+ *     </FormFooter>
+ *   }
+ * >
+ *   <ErrorSummary title={title} errors={errors} submitCount={submissionAttempts} />
+ *   <Section layout="split" title="Host" description="The host gets a message when the visitor arrives.">
+ *     {hostField}
+ *   </Section>
+ * </FormLayout>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { CircleAlert } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
@@ -62,7 +140,12 @@ export function FormLayout({
  * floor and a room. Each field keeps the width of its answer, and the row
  * wraps when it is narrow.
  */
-export function FieldRow({ children }: { readonly children: ReactNode }) {
+export function FieldRow({
+  children,
+}: {
+  /** The fields of the row, each with its own `width`. */
+  readonly children: ReactNode;
+}) {
   return <div {...stylex.props(styles.fieldRow)}>{children}</div>;
 }
 

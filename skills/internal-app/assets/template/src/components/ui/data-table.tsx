@@ -1,4 +1,89 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A sortable table of records that people compare across rows, with row links, selection, pages, and columns that adapt to a narrow frame.
+ *
+ * @layer pattern
+ * @keywords data table, sortable table, table with filters, server sorting, list page, row link, row selection, bulk actions, pinned columns, column menu, hidden columns, resizable columns, expandable rows, table pagination, responsive table, virtualized table, numeric columns, summary row, meter cell, two line cell
+ * @related Layout, Filters, FilterParams, SearchField, Badge, Pagination, Sheet, ConfirmDialog, Item, WorkQueue
+ * @notes tables, internal-app-page-patterns, internal-app-url-filters, internal-app-composition, internal-app-states
+ *
+ * Use it on a list page for records that people compare across rows. The
+ * server sorts and pages the rows. Do not use it for records that people act
+ * on one at a time: use `ItemList`. Do not use it for the work of one person
+ * on a tablet: use `WorkQueue`. Do not use it for the facts of one record:
+ * use `DescriptionList`.
+ *
+ * ## Behavior
+ * - It renders a semantic `<table>` with a hidden `<caption>` and a sticky
+ *   header. A header button changes the sort of its column, and `aria-sort`
+ *   tells the sort state. It sorts by one column at a time.
+ * - The `rowHeader` column renders a `<th scope="row">` with the link or the
+ *   button of `rowAction`. Tab and Enter open the row, and a click on the row
+ *   does the same.
+ * - The toolbar row, the bulk-action bar, and the pagination footer use the
+ *   `sm` control size.
+ * - When the frame is narrower than `sm`, the cell text wraps and the cell
+ *   padding gets smaller, so the columns that stay fit the frame.
+ * - It throws when a column has no `id` and no string `accessorKey`, when
+ *   `pinnedColumns` or `responsiveColumns` names an unknown column, when the
+ *   row header column is responsive, and when `virtualize` and `expansion`
+ *   are both set.
+ *
+ * ## Rules
+ * - Keep the sort, the page, the search, and the filters in the URL. See
+ *   internal-app-url-filters.
+ * - Align text left and numbers right. Put each number column in
+ *   `numericColumns`, and format the values with `src/lib/locale.ts`.
+ * - Show the status with a `StatusDot` and a status word.
+ * - For the place of the search and the filters, see the `Toolbar` part of
+ *   `Layout`.
+ *
+ * ## Example
+ * ```tsx
+ * <DataTable
+ *   caption="Items"
+ *   columns={columns}
+ *   data={data.items}
+ *   getRowId={(item) => item.id}
+ *   numericColumns={["amount"]}
+ *   rowAction={{ link: (item) => ({ to: "/items/$itemId", params: { itemId: item.id } }) }}
+ *   sorting={sorting}
+ *   onSortingChange={setSorting}
+ *   emptyState={<EmptyState icon={Package} title="No items yet" />}
+ *   pagination={{ page, pageSize, total, onPageChange: setPage }}
+ * />
+ * ```
+ *
+ * ## Selection
+ * - Keep the selection in page state, not in the URL. The ids of rows on
+ *   other pages stay selected, and the bulk-action bar counts all of them.
+ * - Name the count in a bulk button, such as "Delete 3 items". A destructive
+ *   bulk action opens a `ConfirmDialog`.
+ *
+ * ## Columns
+ * - Keep the hidden columns in a search param when people share the view, or
+ *   in page state otherwise.
+ * - Pin the name column at the start and a row menu at the end.
+ * - With `resizableColumns`, set `size` on each column.
+ *
+ * ## Narrow frames
+ * `responsiveColumns` uses a container query on the scroller, so a table in a
+ * narrow panel adapts too. The breakpoints are `sm` (640px), `md` (768px),
+ * and `lg` (1024px).
+ * - Keep the row header and the status. Hide secondary facts, such as the
+ *   source, the author, or the date.
+ * - Use `stack` for short values, such as a region or an owner.
+ *
+ * ## Pages and long lists
+ * Use `pagination` for a table that the server pages. Use `virtualize` only
+ * for a long list that the client already holds, such as a log export or a
+ * full lookup table. Use `Pagination` only for a paged list that is not a
+ * table.
+ *
+ * ## MeterCell
+ * The text carries the value, and the bar only helps people scan the column.
+ * Outside a table, use `Meter`.
+ */
 import * as stylex from "@stylexjs/stylex";
 import {
   type Column,
@@ -56,6 +141,7 @@ export type DataTableColumn<TData extends RowData> = ColumnDef<DataTableFeatures
 export interface DataTableSelection<TData extends RowData> {
   /** Selected row ids. Ids of rows on other pages stay selected. */
   readonly selectedIds: ReadonlyArray<string>;
+  /** Receives the next selected ids. */
   readonly onChange: (ids: ReadonlyArray<string>) => void;
   /** Names the row in its checkbox label, such as "Select Ledger sync". */
   readonly rowLabel: (row: TData) => string;
@@ -68,6 +154,7 @@ export interface DataTableSelection<TData extends RowData> {
 export interface DataTableColumnVisibility {
   /** Ids of hidden columns. Columns with `enableHiding: false` always show. */
   readonly hidden: ReadonlyArray<string>;
+  /** Receives the next hidden column ids. */
   readonly onChange: (hidden: ReadonlyArray<string>) => void;
 }
 
@@ -112,7 +199,9 @@ export type DataTableRowLink = Omit<
 >;
 
 export interface DataTableExpansion<TData extends RowData> {
+  /** Ids of the expanded rows. */
   readonly expandedIds: ReadonlyArray<string>;
+  /** Receives the next expanded ids. */
   readonly onChange: (ids: ReadonlyArray<string>) => void;
   /** Detail under the row, such as the stages of a run or a raw payload. */
   readonly render: (row: TData) => ReactNode;
@@ -132,24 +221,32 @@ export interface DataTablePinning {
 export interface DataTablePagination {
   /** One-based page number. */
   readonly page: number;
+  /** Rows on one page. */
   readonly pageSize: number;
   /** Total rows across all pages, from the server. */
   readonly total: number;
+  /** Receives the page that people go to. */
   readonly onPageChange: (page: number) => void;
   /** Adds a rows-per-page select. Keep the size in the URL with the page. */
   readonly onPageSizeChange?: (pageSize: number) => void;
+  /** The sizes in the rows-per-page select. The default is 10, 25, 50, and 100. */
   readonly pageSizeOptions?: ReadonlyArray<number>;
 }
 
 export interface DataTableProps<TData extends RowData> {
+  /** TanStack column definitions. Each column needs an `id` or a string `accessorKey`. */
   readonly columns: ReadonlyArray<DataTableColumn<TData>>;
+  /** The rows of the current page, in the server order. */
   readonly data: ReadonlyArray<TData>;
+  /** A stable id for each row, used by selection, expansion, and `activeRowId`. */
   readonly getRowId: (row: TData) => string;
   /** Sorting is server-driven and lives in the URL. */
   readonly sorting: SortingState;
+  /** Receives the next sort. Write it to the URL and reset the page. */
   readonly onSortingChange: (next: SortingState) => void;
   /** Rendered only when data resolved to zero rows. The toolbar stays visible. */
   readonly emptyState: ReactNode;
+  /** The name of the table for screen readers. It is also the name of the scroll region. */
   readonly caption: string;
   /** Marks a numeric column so values align right with tabular figures. */
   readonly numericColumns?: ReadonlyArray<string>;
@@ -1039,6 +1136,7 @@ export function TwoLineCell({ primary, secondary }: TwoLineCellProps) {
 export interface MeterCellProps {
   /** Formatted value shown as text. */
   readonly label: string;
+  /** The number that sets the length of the bar. */
   readonly value: number;
   /** The largest value in the column, usually from the visible page. */
   readonly max: number;

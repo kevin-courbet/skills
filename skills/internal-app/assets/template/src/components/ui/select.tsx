@@ -1,3 +1,43 @@
+/**
+ * A single choice from a fixed list in a popover.
+ *
+ * @layer primitive
+ * @keywords select, dropdown, single choice, pick one option, option list, picker, toolbar select, choose from a list
+ * @related RadioGroup, ComboBox, Cascader, MultiSelect, ListBox, Layout
+ * @notes form-choices, form-fields, internal-app-forms
+ *
+ * Use it for one choice from more than about seven options, or from a short
+ * list where the row has no space for chips, such as a toolbar or a
+ * `SettingRow`. In a form, show a short list as a `RadioGroup` with chips or
+ * cards: a dropdown hides the options and costs two clicks. When people know
+ * the name and type it, use `ComboBox`. For a path in a hierarchy, use
+ * `Cascader`.
+ *
+ * ## Behavior
+ * - An option shows its `description` under the label. An option with `intent`
+ *   shows a status dot.
+ * - The selected option shows a check mark. The trigger shows only the label.
+ * - The popover takes the width of the trigger and the density of the page.
+ * - The height follows the nearest `ControlSizeProvider`.
+ *
+ * ## Rules
+ * - Give every field a `width` from the length of its longest option.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <Select
+ *   label="Region"
+ *   width="md"
+ *   options={[
+ *     { id: "eu", label: "Europe" },
+ *     { id: "us", label: "United States" },
+ *   ]}
+ *   value={region}
+ *   onChange={setRegion}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronDown } from "lucide-react";
@@ -41,24 +81,33 @@ type AriaSingleSelectProps<Value extends string> = Omit<
 >;
 
 export interface SelectProps<Value extends string> extends AriaSingleSelectProps<Value> {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
+  /** The choices, in the order that they show. */
   readonly options: ReadonlyArray<SelectOption<Value>>;
   /** Hide the visible label in dense toolbars. The label stays available to screen readers. */
   readonly hideLabel?: boolean;
+  /** Id of the chosen option, or null when nothing is chosen. */
   readonly value?: Value | null;
+  /** Id of the first choice when the field keeps its own state. */
   readonly defaultValue?: Value;
+  /** Receives the id of the chosen option. */
   readonly onChange?: (value: Value) => void;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
   /** Control width from the expected length of the answer. See FieldWidth. */
   readonly width?: FieldWidth;
+  /** Trigger text while nothing is chosen. */
   readonly placeholder?: string;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 
-/** Single choice from a short, fixed list. Use ComboBox when users need to type to find. */
+/** Single choice from a fixed list. Use ComboBox when users need to type to find. */
 export function Select<Value extends string>({
   label,
   hideLabel = false,

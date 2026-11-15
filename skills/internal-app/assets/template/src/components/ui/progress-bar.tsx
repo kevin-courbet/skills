@@ -1,3 +1,29 @@
+/**
+ * A bar that shows the progress of a task that finishes, such as an upload or an import.
+ *
+ * @layer primitive
+ * @keywords progress bar, progress, upload progress, import progress, loading bar, percent complete, indeterminate progress
+ * @related Meter, Feedback, FileUpload, Stepper
+ * @notes loading-states, internal-app-states
+ *
+ * Use it while a task runs toward an end. Do not use it for a level that
+ * stays, such as quota or disk use: use `Meter`. For the steps of a pipeline,
+ * use `Stepper`. For a short wait in a button or a field, use `Spinner` of
+ * `Feedback`.
+ *
+ * ## Behavior
+ * - The label and the value text connect to the bar for screen readers.
+ * - `isIndeterminate` shows a moving fill and hides the value text. Under
+ *   reduced motion, the fill does not move.
+ *
+ * ## Rules
+ * - Pass `isIndeterminate` while the total is unknown.
+ *
+ * ## Example
+ * ```tsx
+ * <ProgressBar label="Import" value={done} maxValue={total} valueLabel={`${done} of ${total} files`} />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import {
@@ -12,11 +38,13 @@ export interface ProgressBarProps extends Omit<
   AriaProgressBarProps,
   "className" | "style" | "children" | "aria-label"
 > {
+  /** Names the task, such as "Import". */
   readonly label: string;
   /** Keeps the label for assistive technology only, for example in a file row. */
   readonly hideLabel?: boolean;
   /** Text next to the label, such as "3 of 12 files". Defaults to the percentage. */
   readonly valueLabel?: string;
+  /** Layout overrides, such as a width. */
   readonly style?: StyleXStyles;
 }
 

@@ -1,3 +1,41 @@
+/**
+ * A modal search for pages and app actions that Command-K or Control-K opens.
+ *
+ * @layer pattern
+ * @keywords command palette, command k, cmd k, quick search, search pages, jump to page, app actions, spotlight, keyboard launcher
+ * @related AppShell, Menu, SearchField
+ * @notes navigation, internal-app-page-patterns
+ *
+ * `AppShell` mounts the only palette of the app. Do not mount another one: give
+ * app-wide actions to the `commands` prop of `AppShell`, and open the palette
+ * from a page with `useCommandPalette().open()`. To search a list on a page,
+ * use `SearchField`.
+ *
+ * ## Behavior
+ * - Command-K or Control-K toggles the palette. The top bar of `AppShell` shows
+ *   a "Search" button with the shortcut hint of the platform.
+ * - Typing filters the commands by their label and `keywords`, and ignores case
+ *   and accents.
+ * - The arrow keys move, Enter runs a command or opens its route, and Escape
+ *   closes the palette. The palette closes before a command runs.
+ * - `AppShell` lists its `commands` first, then every navigation item under its
+ *   group label.
+ *
+ * ## Rules
+ * - A `Command` has `href` or `onAction`, never both. The type enforces it.
+ * - Only app-wide actions go into the palette. Page-specific actions stay on
+ *   their page.
+ * - Label a command with a verb phrase or a destination in sentence case, such
+ *   as "Create item" or "Settings".
+ *
+ * ## Example
+ * ```tsx
+ * const commands: ReadonlyArray<CommandGroup> = [
+ *   { label: "Items", commands: [{ id: "create-item", label: "Create item", icon: Plus, href: "/items/new" }] },
+ * ];
+ * <AppShell appName="Repairs" nav={nav} commands={commands}>{children}</AppShell>;
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { type LucideIcon, Search } from "lucide-react";
 import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
@@ -31,9 +69,11 @@ import { MenuItem } from "./menu";
 import { overlay } from "./overlay";
 
 interface CommandBase {
+  /** Unique in all groups. It is the key of the item. */
   readonly id: string;
   /** Sentence case verb phrase or destination, such as "Create item" or "Settings". */
   readonly label: string;
+  /** Shown before the label. */
   readonly icon?: LucideIcon;
   /** Extra words that find the command, such as synonyms or the group name. */
   readonly keywords?: ReadonlyArray<string>;
@@ -49,14 +89,20 @@ export type Command = CommandBase &
   );
 
 export interface CommandGroup {
+  /** Heading of the group, such as "Navigation". */
   readonly label: string;
+  /** The commands of the group. A group without matching commands does not show. */
   readonly commands: ReadonlyArray<Command>;
 }
 
 export interface CommandPaletteProps {
+  /** All the commands, in the order that they show. */
   readonly groups: ReadonlyArray<CommandGroup>;
+  /** Whether the palette shows. */
   readonly isOpen: boolean;
+  /** Receives the next state on Escape, on a click outside, on Command-K, and `false` before a command runs. */
   readonly onOpenChange: (isOpen: boolean) => void;
+  /** Text in the empty search field. */
   readonly placeholder?: string;
 }
 
@@ -162,6 +208,7 @@ export function CommandPalette({
 }
 
 export interface CommandPaletteControls {
+  /** Opens the palette of AppShell. */
   readonly open: () => void;
 }
 

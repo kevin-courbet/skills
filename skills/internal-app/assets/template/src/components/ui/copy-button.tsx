@@ -1,3 +1,29 @@
+/**
+ * An icon button that copies a value, such as an identifier or a URL, to the clipboard.
+ *
+ * @layer primitive
+ * @keywords copy button, copy to clipboard, clipboard, copy id, copy url, copy link
+ * @related Identifier, TextField, Layout, CodeBlock, Toaster
+ * @notes ux-writing, internal-app-writing
+ *
+ * Put it next to a value that people paste elsewhere. For a record id, a SHA,
+ * or a host, use `Identifier`, which already holds a `CopyButton`. A
+ * `CodeBlock` with a `title` has its own copy button.
+ *
+ * ## Behavior
+ * - A check mark confirms the copy for 1.5 seconds, and the accessible name
+ *   says "copied". So a copy needs no success toast.
+ * - A refused clipboard shows an error toast.
+ *
+ * ## Rules
+ * - In a `TextField`, put it in `suffix`.
+ *
+ * ## Example
+ * ```tsx
+ * <Code>{deployment.url}</Code>
+ * <CopyButton value={deployment.url} label="Copy deployment URL" />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";

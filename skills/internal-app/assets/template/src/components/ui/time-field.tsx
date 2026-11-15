@@ -1,4 +1,38 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A time of day field with typed parts and a popover of hours and minutes.
+ *
+ * @layer primitive
+ * @keywords time field, time picker, time of day, hour and minute, daily run time, schedule time, opening hours, time input, clock
+ * @related DatePicker, DateRangePicker, EventCalendar, NumberField, Layout
+ * @notes form-fields, internal-app-forms
+ *
+ * Use it for a time without a date, such as a daily run time or the start of a
+ * maintenance window. Do not use it for a date: use `DatePicker`. For a
+ * duration, use `NumberField` with a `unit`.
+ *
+ * ## Behavior
+ * - People type the digits or use the arrow keys on each part, or open the
+ *   clock button.
+ * - The popover lists the hours and the minutes in two columns. The hour list
+ *   takes the focus on the current hour, and Tab moves to the minutes. A press
+ *   on a minute closes the popover and returns the focus to the button.
+ * - The value is an ISO time string, so that schemas and server functions never
+ *   handle time objects.
+ *
+ * ## Rules
+ * - `granularity="second"` adds seconds. The value is then "HH:mm:ss".
+ * - `minuteStep` must be a whole number that divides 60, or the field throws an
+ *   error.
+ * - Give `zoneLabel` when people can misread the time zone, such as "UTC" for a
+ *   server job.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <TimeField label="Daily run" width="sm" zoneLabel="UTC" value={runAt} onChange={setRunAt} />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { parseTime, type Time } from "@internationalized/date";
@@ -44,14 +78,17 @@ export interface TimeFieldProps extends Omit<
   | "minValue"
   | "maxValue"
 > {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
   /** Hide the visible label where a SettingRow names the field. Screen readers keep it. */
   readonly hideLabel?: boolean;
   /** Time of day as "HH:mm" or "HH:mm:ss", or null when empty. */
   readonly value: string | null;
+  /** Receives the ISO time, or null when people clear the field. */
   readonly onChange: (value: string | null) => void;
   /** Earliest allowed time, such as "08:30". Earlier times show as invalid. */
   readonly minValue?: string;
+  /** Latest allowed time, such as "18:00". Later times show as invalid. */
   readonly maxValue?: string;
   /**
    * Minutes between the choices in the popover: 5 offers :00, :05, and so on.
@@ -60,12 +97,15 @@ export interface TimeFieldProps extends Omit<
   readonly minuteStep?: number;
   /** Time zone or place shown after the time, such as "UTC". */
   readonly zoneLabel?: string;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
   /** Control width from the expected length of the answer. See FieldWidth. */
   readonly width?: FieldWidth;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

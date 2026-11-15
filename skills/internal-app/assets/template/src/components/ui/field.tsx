@@ -1,3 +1,48 @@
+/**
+ * The parts and the styles of every kit field: the label, the hint, the error,
+ * the control box, and the widths.
+ *
+ * @layer helper
+ * @keywords field label, field hint, field error message, optional marker, field width, control styles, build a new field, input styles, hidden label
+ * @related TextField, NumberField, Select, FormLayout, ControlSize
+ * @notes form-fields, form-errors, internal-app-forms, internal-app-adding-a-primitive
+ *
+ * Use these parts only to build a new kit field in `src/components/ui`. Do not
+ * use them on a page: use `TextField`, `NumberField`, `Select`, or another kit
+ * field, which already composes them.
+ *
+ * ## Behavior
+ * - `FieldLabel` with `isOptional` adds a quiet "optional", which is part of
+ *   the accessible name.
+ * - `FieldDescription` renders nothing when its content is empty.
+ * - `FieldErrorMessage` shows only while the react-aria field is invalid, and
+ *   starts with an icon.
+ * - `control.invalid` doubles the border with an inset ring, so that an invalid
+ *   field stands out in both themes.
+ *
+ * ## Rules
+ * - Put the parts in this order: `FieldLabel`, `FieldDescription`, the control,
+ *   and `FieldErrorMessage`.
+ * - Style an input that is itself the box with `control.base` and
+ *   `control.textInput`. Reset an input inside a box with `inputText.base`.
+ *   Never put both on one element: the reset removes the box.
+ * - Size the control with `fieldWidth[width]`. Read the control size with
+ *   `useControlSize()` and add `control.compact` for `sm`. A field has no
+ *   `size` prop.
+ * - A text-like kit field takes `width` and `isOptional`, and throws an error
+ *   when `isOptional` and `isRequired` are both set. A new field does the same.
+ * - `field.hiddenLabel` keeps a label for screen readers only.
+ *
+ * ## Example
+ * ```tsx
+ * <AriaTextField isInvalid={isInvalid} {...stylex.props(field.root)}>
+ *   <FieldLabel isOptional={isOptional}>{label}</FieldLabel>
+ *   <FieldDescription>{description}</FieldDescription>
+ *   <Input {...stylex.props(control.base, control.textInput, fieldWidth[width])} />
+ *   <FieldErrorMessage>{errorMessage}</FieldErrorMessage>
+ * </AriaTextField>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { CircleAlert } from "lucide-react";
 import type { ReactNode } from "react";
@@ -14,6 +59,7 @@ import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex
 export type FieldWidth = "xs" | "sm" | "md" | "lg" | "full";
 
 export interface FieldLabelProps {
+  /** The label text. */
   readonly children: ReactNode;
   /** Adds a quiet "optional" after the label text. Mark the optional fields, not the required ones. */
   readonly isOptional?: boolean;
@@ -21,6 +67,7 @@ export interface FieldLabelProps {
   readonly isHidden?: boolean;
   /** For a field that is not a react-aria field, which links the label by id. */
   readonly id?: string;
+  /** A `span` for a group that is not a form control, such as a choice group. */
   readonly elementType?: "label" | "span";
 }
 
@@ -52,6 +99,7 @@ export function FieldDescription({
   children,
   id,
 }: {
+  /** The hint text. An empty hint renders nothing. */
   readonly children: ReactNode;
   /** For a field that is not a react-aria field, which links the hint by id. */
   readonly id?: string;
@@ -73,7 +121,12 @@ export function FieldDescription({
  * field is invalid. Write what to do, such as "Enter the floor as a number from
  * 0 to 40", not only what is wrong.
  */
-export function FieldErrorMessage({ children }: { readonly children?: string }) {
+export function FieldErrorMessage({
+  children,
+}: {
+  /** The error text. Without it, the message joins the validation errors of react-aria. */
+  readonly children?: string;
+}) {
   return (
     <FieldError {...stylex.props(field.error)}>
       {({ validationErrors }) => (

@@ -1,3 +1,82 @@
+/**
+ * The frame of every signed-in page: the sidebar navigation, the top bar, and the page in a recessed panel.
+ *
+ * @layer shell
+ * @keywords app shell, sidebar navigation, side nav, app frame, top bar, layout of the app, navigation groups, brand, command palette, mobile navigation
+ * @related NavLink, RouteBreadcrumbs, ThemeSwitch, CommandPalette, Toaster, Sheet, Density, Layout
+ * @notes navigation, responsive, density, internal-app-touch-work-view, internal-app-page-patterns
+ *
+ * The `_app` layout route renders it once around the `Outlet`. Do not render
+ * it in a page, and do not build a second sidebar or top bar: a page starts
+ * with `Page` from `Layout`. For the `<html>` document, use `AppDocument`.
+ *
+ * ## Behavior
+ * - The sidebar is on the lighter `frame` color. The page panel is inset by
+ *   `size.frameGap` and scrolls on its own, in the element with the id
+ *   `mainContentId`.
+ * - The top bar holds the breadcrumbs, the search button, the `actions`, and
+ *   the `ThemeSwitch`.
+ * - "Hide sidebar" gives the panel the full width, and the top bar then shows
+ *   "Show sidebar". The choice does not persist after a reload.
+ * - The shell mounts the `CommandPalette` and the `Toaster`. Do not mount
+ *   them again.
+ *
+ * ## Navigation
+ * - Each group of `nav` is a collapsible section of the sidebar, open at
+ *   first. `NavLink` renders each item.
+ * - The brand block links to "/".
+ * - The command palette lists every navigation item under its group label,
+ *   after `commands`. A search for the group label also finds the item. Pages
+ *   open the palette with `useCommandPalette().open()`.
+ *
+ * ## Responsive
+ * - Below `lg` (1024px), the sidebar moves into a left `Sheet` that the menu
+ *   button of the top bar opens. A 240px sidebar takes 23% to 31% of a tablet
+ *   in portrait, so the page gets that width. The sheet and the command
+ *   palette keep the navigation one tap away.
+ * - Below `md`, the panel loses its border, its radius, and its inset.
+ * - Below `sm`, the page title has priority: the breadcrumbs show only the
+ *   current page, and the search button shows only its icon. The shortcut
+ *   keys of the search button show from `md`.
+ *
+ * ## Touch density
+ * On a page with `density="touch"` on a touch device, which is a coarse
+ * pointer or a window below `lg`, the sidebar stays in the sheet at every
+ * width. The top bar, the sheet, and the top bar menus then take the touch
+ * density. On a desktop with a mouse, the frame does not change, and only the
+ * page content takes the touch density. See Touch density in
+ * `references/styling.md`.
+ *
+ * ## Rules
+ * - Give each group a unique label, and each item a unique label in its
+ *   group. The labels are the keys of the items.
+ * - Never put a banner in `sidebarFooter` or across the page.
+ *
+ * ## Example
+ * ```tsx
+ * // src/routes/_app.tsx
+ * const nav: ReadonlyArray<NavGroup> = [
+ *   {
+ *     label: "Workspace",
+ *     items: [
+ *       { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
+ *       { to: "/items", label: "Items", icon: Package },
+ *     ],
+ *   },
+ *   { label: "System", items: [{ to: "/settings", label: "Settings", icon: Settings }] },
+ * ];
+ *
+ * function AppLayout() {
+ *   return (
+ *     <ChartProvider locale={appLocale} timeZone={appTimeZone}>
+ *       <AppShell appName="Repair desk" environment="Preview" nav={nav}>
+ *         <Outlet />
+ *       </AppShell>
+ *     </ChartProvider>
+ *   );
+ * }
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { Link, type LinkProps, useNavigate } from "@tanstack/react-router";
 import {
@@ -40,9 +119,13 @@ import { shellMarker } from "./shell.stylex";
 import { ThemeSwitch } from "./theme-switch";
 
 export interface NavItem {
+  /** The route of the item. */
   readonly to: LinkProps["to"];
+  /** The params of a typed dynamic route. */
   readonly params?: LinkProps["params"];
+  /** The name of the page in the sidebar and in the command palette. */
   readonly label: string;
+  /** A lucide icon before the label. */
   readonly icon: LucideIcon;
   /** Match only this exact path, for the index route. */
   readonly exact?: boolean;
@@ -51,12 +134,14 @@ export interface NavItem {
 export interface NavGroup {
   /** Group label by user goal, such as "Workspace" or "System". */
   readonly label: string;
+  /** The pages of the group, in order. */
   readonly items: ReadonlyArray<NavItem>;
 }
 
 export type AppLogo = "initial" | "wordmark";
 
 export interface AppShellProps {
+  /** The name of the app in the brand block and the title of the navigation sheet. */
   readonly appName: string;
   /** Short context under the app name, such as the environment or the tenant. */
   readonly environment?: string;
@@ -66,6 +151,7 @@ export interface AppShellProps {
    * its name in type.
    */
   readonly logo?: AppLogo;
+  /** The groups of the sidebar navigation. */
   readonly nav: ReadonlyArray<NavGroup>;
   /**
    * Global actions at the end of the top bar, such as a user menu. Below the
@@ -83,6 +169,7 @@ export interface AppShellProps {
    * items. Page-specific actions stay on their page.
    */
   readonly commands?: ReadonlyArray<CommandGroup>;
+  /** The page, usually the router `Outlet`. */
   readonly children: ReactNode;
 }
 

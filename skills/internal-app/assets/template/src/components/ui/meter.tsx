@@ -1,3 +1,28 @@
+/**
+ * A bar that shows a level within a known range, such as quota, capacity, or disk use.
+ *
+ * @layer primitive
+ * @keywords meter, quota, usage bar, capacity, disk use, level, gauge, limit
+ * @related ProgressBar, DataTable, Layout, Badge
+ * @notes dashboards, color, accessibility
+ *
+ * Use it for a level that stays. Do not use it for a task that finishes: use
+ * `ProgressBar`. In a table, use `MeterCell` of `DataTable`. For a key number
+ * with a trend, use `StatTile` of `Layout`.
+ *
+ * ## Behavior
+ * - The label and the value text connect to the bar for screen readers.
+ * - The bar turns to the warning color at `warningAt` and to the danger color
+ *   at `dangerAt`. At `dangerAt`, the value text also takes the danger color.
+ *
+ * ## Rules
+ * - The value text carries the meaning. Do not let the color be the only cue.
+ *
+ * ## Example
+ * ```tsx
+ * <Meter label="Storage" value={72} maxValue={100} valueLabel="72 GB of 100 GB" warningAt={80} dangerAt={95} />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import {
@@ -12,6 +37,7 @@ export interface MeterProps extends Omit<
   AriaMeterProps,
   "className" | "style" | "children" | "aria-label"
 > {
+  /** Names what the bar measures, such as "Storage". */
   readonly label: string;
   /** Text next to the label, such as "72 GB of 100 GB". Defaults to the percentage. */
   readonly valueLabel?: string;
@@ -19,6 +45,7 @@ export interface MeterProps extends Omit<
   readonly warningAt?: number;
   /** Value at which the bar turns to the danger color. */
   readonly dangerAt?: number;
+  /** Layout overrides, such as a width. */
   readonly style?: StyleXStyles;
 }
 

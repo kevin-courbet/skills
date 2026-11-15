@@ -1,10 +1,43 @@
+/**
+ * Previous and next buttons with the page position, for a server-paged list that is not a table.
+ *
+ * @layer primitive
+ * @keywords pagination, pager, next page, previous page, paging, page buttons, card grid paging
+ * @related DataTable, Item, Layout
+ * @notes navigation, internal-app-url-filters
+ *
+ * Use it under a card grid or an `ItemList` that the server pages. Do not use
+ * it for a table: use the `pagination` footer of `DataTable`. Do not use it for
+ * a list that the client already holds.
+ *
+ * ## Behavior
+ * - It renders nothing when there is one page or no page.
+ * - Previous is disabled on the first page, and Next on the last page.
+ *
+ * ## Rules
+ * - Keep the page in a search param, so a reload and a link show the same
+ *   page.
+ *
+ * ## Example
+ * ```tsx
+ * <Pagination
+ *   page={search.page ?? 1}
+ *   pageCount={Math.ceil(total / pageSize)}
+ *   onPageChange={(page) => navigate({ search: (previous) => ({ ...previous, page }) })}
+ *   format={formatInteger}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { color, font, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 
 export interface PaginationProps {
+  /** The current page. The first page is 1. */
   readonly page: number;
+  /** The number of pages, from the server total. */
   readonly pageCount: number;
+  /** Receives the page that people go to. */
   readonly onPageChange: (page: number) => void;
   /** Formats page numbers with the app locale. */
   readonly format?: (value: number) => string;

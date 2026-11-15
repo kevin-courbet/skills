@@ -1,19 +1,64 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * The field definitions of `Filters` and the pure functions that validate, read, and write the filters as URL search params.
+ *
+ * @layer helper
+ * @keywords url filters, filter params, filter fields, search params, url codec, filter schema, parse filters, serialize filters, shareable filters
+ * @related Filters, DataTable, DateRangePicker, Badge
+ * @notes internal-app-url-filters, internal-app-page-patterns
+ *
+ * Use it for the filters of every list, so that a reload and a link show the
+ * same rows. Do not keep the filters in component state. Do not use it for
+ * the search text or the sort: give each its own search param, such as `q`
+ * and `sort`.
+ *
+ * ## Behavior
+ * - Each field writes one param: `status=failed,building`, `owner=not:ops`,
+ *   or `created=2026-10-01..2026-10-12`. The operator prefix shows only when
+ *   the field has more than one operator.
+ * - `filterSearchFields` validates each value against the options, the
+ *   operators, and the dates of its field. An invalid value fails the search
+ *   validation, and the route shows its reset action.
+ * - `filterSearchFields`, `parseFilters`, and `serializeFilters` throw on a
+ *   definition that cannot round-trip: two fields with one param, or an
+ *   option or operator id with characters other than letters, digits, `_`,
+ *   `-`, and `.`. `parseFilters` also throws on an invalid value, and
+ *   `serializeFilters` on two filters for one field.
+ * - `serializeFilters` writes every field param, with `undefined` for an
+ *   inactive field, so spreading the result over the previous search removes
+ *   the param.
+ * - `filterOperators` returns the operators of a field, or the one default
+ *   operator of its kind. `filterParam` returns the param name of a field,
+ *   and `findFilterField` returns the field of an id or throws.
+ *
+ * ## Rules
+ * - Define the fields once in the feature, with
+ *   `as const satisfies ReadonlyArray<FilterField>`.
+ * - Build the server query from the parsed filters in the feature, as
+ *   `itemsQueryFromSearch` in `src/features/items/filters.ts` does. Do not
+ *   send the raw params to the server.
+ *
+ * ## Example
+ * ```tsx
+ * export const ItemsSearch = Schema.Struct({
+ *   q: Schema.optionalKey(Schema.String),
+ *   page: Schema.optionalKey(Schema.Number),
+ *   ...filterSearchFields(itemFilterFields),
+ * });
+ *
+ * const filters = parseFilters(itemFilterFields, search);
+ * navigate({ search: (prev) => ({ ...prev, ...serializeFilters(itemFilterFields, next), page: undefined }) });
+ * ```
+ */
 import { Schema } from "effect";
 import type { LucideIcon } from "lucide-react";
 import type { BadgeIntent } from "@/components/ui/badge";
 import type { DateRange, DateRangePreset } from "@/components/ui/date-range-picker";
 
-/**
- * Field definitions, values, and the URL codec of the Filters chip bar. The
- * functions here are pure: routes validate filter params with
- * `filterSearchFields`, read them with `parseFilters`, and write them with
- * `serializeFilters`.
- */
-
 export interface FilterOption {
   /** Stable id stored in the URL. Letters, digits, "_", "-", and "." only. */
   readonly id: string;
+  /** The visible name of the option. */
   readonly label: string;
   /** Shows a status dot before the label in the list and the chip. */
   readonly intent?: BadgeIntent;
@@ -29,7 +74,9 @@ export interface FilterOperator {
 interface FilterFieldBase {
   /** Stable id. It is also the URL param name unless `param` is set. */
   readonly id: string;
+  /** The visible name of the field, in the add list and the chip. */
   readonly label: string;
+  /** A lucide icon before the label. */
   readonly icon?: LucideIcon;
   /** URL param name, when the id would clash with another param such as `q`. */
   readonly param?: string;
@@ -42,21 +89,28 @@ interface FilterFieldBase {
 }
 
 export interface SelectFilterField extends FilterFieldBase {
+  /** People choose one option. */
   readonly kind: "select";
+  /** The options, in the order of the list. */
   readonly options: ReadonlyArray<FilterOption>;
 }
 
 export interface MultiSelectFilterField extends FilterFieldBase {
+  /** People choose one or more options. */
   readonly kind: "multiSelect";
+  /** The options, in the order of the list. */
   readonly options: ReadonlyArray<FilterOption>;
 }
 
 export interface TextFilterField extends FilterFieldBase {
+  /** People type a value. */
   readonly kind: "text";
+  /** An example value that starts with "e.g.". */
   readonly placeholder?: string;
 }
 
 export interface DateRangeFilterField extends FilterFieldBase {
+  /** People choose a start date and an end date. */
   readonly kind: "dateRange";
   /** Quick ranges. Compute them from a stable reference date, such as the loader's `now`. */
   readonly presets?: ReadonlyArray<DateRangePreset>;

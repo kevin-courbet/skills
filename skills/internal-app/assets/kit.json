@@ -103,6 +103,15 @@
     "src/server/server-fn.server.ts",
     "src/vite-env.d.ts"
   ],
+  "docs": [
+    "src/components/ui/",
+    "src/components/shell/",
+    "src/components/charts/",
+    "src/lib/filter-params.ts",
+    "src/lib/focus.ts",
+    "src/lib/form.ts",
+    "src/lib/motion.ts"
+  ],
   "forbiddenDependencies": [
     "tailwindcss",
     "clsx",

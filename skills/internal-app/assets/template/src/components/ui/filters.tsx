@@ -1,4 +1,53 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A bar of filter chips for a list, which people add and change in place, with one filter for each field.
+ *
+ * @layer pattern
+ * @keywords filters, filter bar, filter chips, add filter, list filters, faceted filters, filter builder, status filter, date range filter, clear filters
+ * @related FilterParams, DataTable, Layout, SearchField, TagGroup, MultiSelect
+ * @notes internal-app-url-filters, internal-app-composition, internal-app-states
+ *
+ * Use it to filter a list by the values of its fields. Keep the filters in
+ * the URL with `FilterParams`. Do not use it for a free-text search: put a
+ * `SearchField` before it. Do not use it for values that a form submits: use
+ * `TagGroup` or `MultiSelect`.
+ *
+ * ## Behavior
+ * - The add button goes through the field, then the operator (only when the
+ *   field has more than one), then the value. It adds only complete filters.
+ * - The field kinds are `select`, `multiSelect`, `text`, and `dateRange` with
+ *   presets. A `multiSelect` chip names every value, such as "Failed,
+ *   Building".
+ * - Each chip changes its operator and its value in place, and has a remove
+ *   button. "Clear all" removes all filters.
+ * - A field holds one filter, so a field with a filter leaves the add list.
+ * - A value list with more than 8 options gets a search box.
+ * - The keyboard reaches every step. A live region announces each added or
+ *   removed filter, and the focus stays in the bar.
+ * - The chips take the control size of the row.
+ *
+ * ## Rules
+ * - Put the `SearchField` first and `Filters` after it, in one `Toolbar`.
+ *   See the `Toolbar` part of `Layout`.
+ * - Reset the page when the filters change.
+ * - When the filters leave no rows, give the empty state a "Clear filters"
+ *   action.
+ *
+ * ## Example
+ * ```tsx
+ * <Filters
+ *   label="Item filters"
+ *   fields={itemFilterFields}
+ *   value={parseFilters(itemFilterFields, search)}
+ *   onChange={(next) =>
+ *     navigate({
+ *       search: (prev) => ({ ...prev, ...serializeFilters(itemFilterFields, next), page: undefined }),
+ *       replace: true,
+ *     })
+ *   }
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { parseDate } from "@internationalized/date";
 import { ChevronLeft, ListFilter, Search, X } from "lucide-react";
@@ -41,6 +90,7 @@ import { useOverlayDensity } from "./density";
 export interface FiltersProps {
   /** Names the filter bar for screen readers, such as "Deployment filters". */
   readonly label: string;
+  /** The fields that people can filter by, in the order of the add list. Define them once with `FilterParams`. */
   readonly fields: ReadonlyArray<FilterField>;
   /** Active filters, usually from `parseFilters` on the route search. */
   readonly value: ReadonlyArray<ActiveFilter>;

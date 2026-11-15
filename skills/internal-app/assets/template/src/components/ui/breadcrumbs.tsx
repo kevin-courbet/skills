@@ -1,3 +1,34 @@
+/**
+ * The location of the page in a hierarchy, as a row of links that ends with the current page.
+ *
+ * @layer primitive
+ * @keywords breadcrumbs, breadcrumb trail, location, hierarchy path, parent page link
+ * @related RouteBreadcrumbs, AppShell, Tabs
+ * @notes navigation
+ *
+ * The app shell renders it from route data through `RouteBreadcrumbs`. Do not
+ * add a second trail to a page. Do not use it for sections of one page: use
+ * `Tabs` or `Scrollspy`.
+ *
+ * ## Behavior
+ * - The current page has priority: the items before it shrink first.
+ * - Below the `sm` breakpoint, only the current page shows.
+ * - The current item has `aria-current`.
+ *
+ * ## Rules
+ * - Give a route a crumb with `staticData.crumb`, or return `{ crumb }` from a
+ *   loader to show a record name. See `RouteBreadcrumbs`.
+ *
+ * ## Example
+ * ```tsx
+ * <Breadcrumbs
+ *   items={[
+ *     { id: "items", label: "Items", href: "/items" },
+ *     { id: item.id, label: item.name, href: `/items/${item.id}` },
+ *   ]}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { ChevronRight } from "lucide-react";
 import { Breadcrumb, Breadcrumbs as AriaBreadcrumbs, Link } from "react-aria-components";
@@ -5,8 +36,11 @@ import { renderStyles } from "@/lib/rac";
 import { color, font, media, size, space } from "@/styles/tokens.stylex";
 
 export interface BreadcrumbItem {
+  /** A unique key in the trail. */
   readonly id: string;
+  /** The name of the page. */
   readonly label: string;
+  /** The URL of the page. */
   readonly href: string;
 }
 
@@ -15,7 +49,12 @@ export interface BreadcrumbItem {
  * page has priority: the items before it shrink first, and below the sm
  * breakpoint they do not show.
  */
-export function Breadcrumbs({ items }: { readonly items: ReadonlyArray<BreadcrumbItem> }) {
+export function Breadcrumbs({
+  items,
+}: {
+  /** The pages from the root to the current page. The last item is the current page. */
+  readonly items: ReadonlyArray<BreadcrumbItem>;
+}) {
   const currentId = items.at(-1)?.id;
   return (
     <nav aria-label="Breadcrumbs" {...stylex.props(styles.nav)}>

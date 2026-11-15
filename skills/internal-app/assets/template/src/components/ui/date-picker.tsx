@@ -1,3 +1,45 @@
+/**
+ * A calendar date field with typed parts, a calendar popover, and optional day
+ * chips.
+ *
+ * @layer primitive
+ * @keywords date picker, date field, calendar date, due date, pick a date, date input, today and tomorrow, quick picks, day chips
+ * @related DateRangePicker, TimeField, EventCalendar, Calendar, RadioGroup, FormLayout
+ * @notes form-choices, form-fields, internal-app-forms
+ *
+ * Use it for one calendar date. Do not use it for a period: use
+ * `DateRangePicker`. For a time of day, use `TimeField`. To show many dated
+ * events, use `EventCalendar`.
+ *
+ * ## Behavior
+ * - The parts of the date follow the locale. People type the digits or open the
+ *   calendar button.
+ * - The value is an ISO date string, so that schemas and server functions never
+ *   handle calendar objects.
+ * - With `quickPicks`, a row of chips comes before the date input. Arrow keys
+ *   move through the chips, and Tab moves on to the input.
+ *
+ * ## Rules
+ * - Give `quickPicks` when the date is usually in the next few days. Build them
+ *   with `dayQuickPicks({ today, count, skip })`: "Today" and "Tomorrow" with
+ *   the weekday as meta, then weekday names, at most a week ahead. `skip`
+ *   leaves out days such as weekends.
+ * - Pass `today` from the loader, so that the server and the browser show the
+ *   same chips.
+ * - Two quick picks with the same date throw an error. `dayQuickPicks` throws
+ *   when `skip` leaves fewer than `count` days in the next week.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <DatePicker
+ *   label="Visit date"
+ *   quickPicks={dayQuickPicks({ today, count: 4, skip: isWeekend })}
+ *   value={visitDate}
+ *   onChange={setVisitDate}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { type CalendarDate, parseDate } from "@internationalized/date";
@@ -35,6 +77,7 @@ import { useOverlayDensity } from "./density";
 export interface DateQuickPick {
   /** ISO calendar date, "2026-10-10". */
   readonly value: string;
+  /** Visible text of the chip, such as "Today" or "Fri". */
   readonly label: string;
   /** Quiet text after the label, such as the weekday after "Today". */
   readonly meta?: string;
@@ -51,13 +94,19 @@ export interface DatePickerProps extends Omit<
   | "minValue"
   | "maxValue"
 > {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
   /** ISO calendar date, "2026-10-10", or null when empty. */
   readonly value: string | null;
+  /** Receives the ISO date, or null when people clear the field. */
   readonly onChange: (value: string | null) => void;
+  /** Earliest allowed ISO date. Earlier dates are not available. */
   readonly minValue?: string;
+  /** Latest allowed ISO date. Later dates are not available. */
   readonly maxValue?: string;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
@@ -69,6 +118,7 @@ export interface DatePickerProps extends Omit<
    * Build day chips with `dayQuickPicks`.
    */
   readonly quickPicks?: ReadonlyArray<DateQuickPick>;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

@@ -1,20 +1,57 @@
+/**
+ * Motion that helps people follow an object when the state changes.
+ *
+ * @layer helper
+ * @keywords view transition, animate a move, animate list changes, enter animation, item arrives, value changed, reduced motion, drag and drop animation
+ * @related Kanban, SortableList, WorkQueue, ItemList, Badge
+ * @notes motion, internal-app-states
+ *
+ * Use it when an item moves, leaves, arrives, or changes in place, and people
+ * must see where it went. Do not use it for decoration, page loads, or hover
+ * effects; Motion in `references/styling.md` tells what to animate and what to
+ * leave still. `Kanban`, `SortableList`, and `WorkQueue` already use these
+ * helpers, so do not add motion around them.
+ *
+ * ## Behavior
+ * - `withViewTransition(update)` animates a move between lanes or groups and
+ *   an item that leaves a list.
+ * - `useDropTransition()` does the same for a new drag-and-drop collection:
+ *   call `commit(ids, update)` in the drop handler.
+ * - `useArrivals(keys)` with `motionStyles.enter` animates items that arrive
+ *   from the server, such as a new ticket after a refetch.
+ * - `useHasChanged(value)` with `motionStyles.changed` marks a value that
+ *   changes in place, such as a status badge.
+ * - With reduced motion, every change happens at once.
+ *
+ * ## Rules
+ * - Give each element that moves a name:
+ *   `motionStyles.named(viewTransitionName(scope, "row", item.id))`, with
+ *   `scope` from `useId()`. Two elements with the same name are a bug.
+ * - On a failed optimistic move, restore the previous value with
+ *   `withViewTransition`, so that the item goes back to its old place.
+ *
+ * ## Example
+ * ```tsx
+ * const scope = useId();
+ * const arrivals = useArrivals(requests.map((request) => request.id));
+ * const approve = (id: string) =>
+ *   withViewTransition(() => setRequests((current) => markApproved(current, id)));
+ *
+ * <Item
+ *   key={request.id}
+ *   style={[
+ *     motionStyles.named(viewTransitionName(scope, "request", request.id)),
+ *     arrivals.has(request.id) && motionStyles.enter,
+ *   ]}
+ *   title={request.person}
+ *   actions={<Button onPress={() => approve(request.id)}>Approve</Button>}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { media, motion } from "@/styles/tokens.stylex";
-
-/**
- * Motion that helps people follow an object when the state changes. See
- * Motion in the styling reference for what to animate and what to leave still.
- *
- * - `withViewTransition` animates a move between lanes or groups and an item
- *   that leaves a list. Give each moving element a `viewTransitionName`.
- * - `useDropTransition` does the same for a drag-and-drop collection.
- * - `motionStyles.enter` with `useArrivals` animates items that arrive from
- *   the server, such as a new ticket after a refetch.
- * - `motionStyles.changed` with `useHasChanged` marks a value that changes in
- *   place, such as a status badge.
- */
 
 let runningTransitions = 0;
 

@@ -1,4 +1,33 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * The family icon of a file on an icon tile, found from the file name or the MIME type.
+ *
+ * @layer primitive
+ * @keywords file icon, file type, file type icon, attachment icon, document icon, mime type icon, file extension
+ * @related IconTile, FileUpload, Item, Tree
+ * @notes icons, internal-app-icons
+ *
+ * Use it in an upload list, a file tree, or an attachment row. Do not use it
+ * for other icons: use `IconTile`.
+ *
+ * ## Behavior
+ * - The families are spreadsheet, data, code, document, image, video, audio,
+ *   archive, key or certificate, log, and file.
+ * - The extension of the name decides first, then the MIME type. Names without
+ *   an extension, such as `Dockerfile` or `.env.local`, resolve by name. An
+ *   unknown file is a neutral "File".
+ * - The icon is decorative.
+ *
+ * ## Rules
+ * - Show the file name next to the icon.
+ * - Use `fileTypeOf` to get the family name, such as "Spreadsheet", for a
+ *   tooltip or a column.
+ *
+ * ## Example
+ * ```tsx
+ * <Item media={<FileTypeIcon name="invoices-2026.csv" />} title="invoices-2026.csv" />
+ * ```
+ */
 import {
   File,
   FileArchive,
@@ -19,7 +48,9 @@ import { IconTile } from "./icon-tile";
 export interface FileType {
   /** Family name for screen readers and tooltips, such as "Spreadsheet". */
   readonly kind: string;
+  /** The lucide icon of the family. */
   readonly icon: LucideIcon;
+  /** The tone of the tile for the family. */
   readonly tone: BadgeIntent;
 }
 
@@ -139,7 +170,9 @@ export function fileTypeOf(name: string, mimeType?: string): FileType {
 export interface FileTypeIconProps {
   /** File name, path, or URL. */
   readonly name: string;
+  /** MIME type, used when the name has no known extension. */
   readonly mimeType?: string;
+  /** The size of the tile, as in IconTile. */
   readonly size?: "sm" | "md" | "lg";
 }
 

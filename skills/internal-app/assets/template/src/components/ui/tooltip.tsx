@@ -1,3 +1,34 @@
+/**
+ * A short hint that shows on hover and on keyboard focus of a control.
+ *
+ * @layer primitive
+ * @keywords tooltip, hint, hover text, icon button label, help on hover, title attribute
+ * @related HoverCard, Button, Popover
+ * @notes overlays, component-feel, accessibility
+ *
+ * Use it for a short hint on a control, such as the name of an icon-only
+ * button. Do not use it for required information: a touch screen has no hover,
+ * so put that information on the page or in a `description`. For a preview of a
+ * record, use `HoverCard`.
+ *
+ * ## Behavior
+ * - `TooltipTrigger` opens the tooltip after a delay on hover, and on keyboard
+ *   focus. Escape closes it.
+ * - The tooltip takes the density of the page and fades in.
+ *
+ * ## Rules
+ * - Wrap a focusable trigger, such as a kit `Button`, and the `Tooltip` in
+ *   `TooltipTrigger`.
+ * - An icon-only button still needs its own `aria-label`.
+ *
+ * ## Example
+ * ```tsx
+ * <TooltipTrigger>
+ *   <Button intent="ghost" iconOnly aria-label="Refresh"><RefreshCw /></Button>
+ *   <Tooltip>Refresh</Tooltip>
+ * </TooltipTrigger>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import {
@@ -11,6 +42,7 @@ import { overlay } from "./overlay";
 import { useOverlayDensity } from "./density";
 
 export interface TooltipProps extends Omit<AriaTooltipProps, "className" | "style" | "children"> {
+  /** The hint: a few words. */
   readonly children: ReactNode;
 }
 

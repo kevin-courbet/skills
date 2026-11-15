@@ -1,3 +1,41 @@
+/**
+ * A start date and an end date in one field, with a range calendar and preset
+ * ranges.
+ *
+ * @layer primitive
+ * @keywords date range, date range picker, period, report period, from and to dates, start and end date, last 30 days, presets, log window
+ * @related DatePicker, Filters, Calendar, TrendChart
+ * @notes form-choices, form-fields, internal-app-forms, internal-app-url-filters
+ *
+ * Use it for a period, such as a report period or a log window. Do not use it
+ * for one date: use `DatePicker`. To filter a list by a period, use a
+ * `dateRange` field of `Filters`, which uses the same calendar and presets.
+ *
+ * ## Behavior
+ * - People type both dates, or press the start and the end in the calendar.
+ * - The presets show beside the calendar on wide screens and above it on narrow
+ *   screens. A preset sets the value and closes the popover.
+ *
+ * ## Rules
+ * - Take the reference date of `presets` from the loader, so that the server
+ *   and the browser show the same ranges.
+ * - `DateRangePresetList` and `rangePanel` are parts of the `Filters` date
+ *   editor. Do not use them on a page.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <DateRangePicker
+ *   label="Report period"
+ *   presets={[
+ *     { label: "Last 7 days", value: { start: addDays(today, -6), end: today } },
+ *     { label: "Last 30 days", value: { start: addDays(today, -29), end: today } },
+ *   ]}
+ *   value={period}
+ *   onChange={setPeriod}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { type CalendarDate, parseDate } from "@internationalized/date";
@@ -27,13 +65,16 @@ import { useOverlayDensity } from "./density";
 
 /** Inclusive range of ISO calendar dates. */
 export interface DateRange {
+  /** First day, as an ISO date. */
   readonly start: string;
+  /** Last day, as an ISO date. The range includes it. */
   readonly end: string;
 }
 
 export interface DateRangePreset {
   /** Sentence case, such as "Last 7 days". */
   readonly label: string;
+  /** The range that the preset sets. */
   readonly value: DateRange;
 }
 
@@ -48,19 +89,27 @@ export interface DateRangePickerProps extends Omit<
   | "minValue"
   | "maxValue"
 > {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
+  /** The range, or null when the field is empty. */
   readonly value: DateRange | null;
+  /** Receives the range, or null when people clear the field. */
   readonly onChange: (value: DateRange | null) => void;
+  /** Earliest allowed ISO date. */
   readonly minValue?: string;
+  /** Latest allowed ISO date. */
   readonly maxValue?: string;
   /** Quick ranges listed next to the calendar. Compute them from a stable reference date. */
   readonly presets?: ReadonlyArray<DateRangePreset>;
+  /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
   /** Control width from the expected length of the answer. See FieldWidth. */
   readonly width?: FieldWidth;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 
@@ -152,7 +201,9 @@ export function DateRangePresetList({
   presets,
   onSelect,
 }: {
+  /** The quick ranges. An empty list renders nothing. */
   readonly presets: ReadonlyArray<DateRangePreset>;
+  /** Receives the range of the pressed preset. */
   readonly onSelect: (range: DateRange) => void;
 }) {
   if (presets.length === 0) return null;

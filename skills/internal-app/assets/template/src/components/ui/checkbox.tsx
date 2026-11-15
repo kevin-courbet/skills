@@ -1,3 +1,46 @@
+/**
+ * One on and off choice with `Checkbox`, or several choices from a short visible list with `CheckboxGroup`.
+ *
+ * @layer primitive
+ * @keywords checkbox, check box, checkbox group, multiple choice, select several, tick box, agree to terms, indeterminate, chips, choice cards
+ * @related RadioGroup, Choice, MultiSelect, Switch, ToggleGroup, FormLayout
+ * @notes form-choices, form-fields, form-errors, internal-app-forms
+ *
+ * Use `Checkbox` for one independent answer, such as "Send a copy to me".
+ * Use `CheckboxGroup` for several answers from a short fixed list, such as
+ * the kinds of work in a request. Do not use them for a long or searchable
+ * list: use `MultiSelect`. For one answer, use `RadioGroup`. For a setting
+ * that applies at once outside a form, use `Switch` or `ToggleGroup`.
+ *
+ * ## Behavior
+ * The controls do these things. Do not build them again:
+ * - Each option is its own tab stop, and Space toggles it.
+ * - `Checkbox` shows a dash with `isIndeterminate`, such as for a "select
+ *   all" box when only some rows are selected.
+ * - `CheckboxGroup` returns the values in option order, and a selected chip
+ *   shows a check mark.
+ * - Chips take the control size of their row.
+ * - The label, the description, and the error message connect to the group
+ *   for screen readers. `errorMessage` marks the group invalid.
+ *
+ * ## Rules
+ * - `appearance="cards"` (the default) fits options with a `description` or
+ *   a `meta`, such as a duration. `chips` fit short labels. `list` fits a
+ *   dense panel or a dialog.
+ * - `isOptional` together with `isRequired` throws an error.
+ *
+ * ## Example
+ * ```tsx
+ * <CheckboxGroup
+ *   label="Kinds of work"
+ *   appearance="chips"
+ *   options={workKinds}
+ *   value={kinds}
+ *   onChange={setKinds}
+ *   errorMessage={errors.kinds}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { Check, Minus } from "lucide-react";
@@ -21,7 +64,9 @@ import { useControlSize } from "./control-size";
 import { field, FieldDescription, FieldErrorMessage, FieldLabel } from "./field";
 
 export interface CheckboxProps extends Omit<AriaCheckboxProps, "className" | "style" | "children"> {
+  /** Visible label after the box. Without it, give an `aria-label`. */
   readonly children?: ReactNode;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 
@@ -55,17 +100,23 @@ export interface CheckboxGroupProps<Value extends string> extends Omit<
   AriaCheckboxGroupProps,
   "className" | "style" | "children" | "value" | "defaultValue" | "onChange"
 > {
+  /** Visible name of the group, in sentence case. */
   readonly label: string;
+  /** The options of a short fixed list. See ChoiceOption. */
   readonly options: ReadonlyArray<ChoiceOption<Value>>;
+  /** Ids of the selected options. */
   readonly value: ReadonlyArray<Value>;
+  /** Receives the ids of the selected options, in option order. */
   readonly onChange: (value: ReadonlyArray<Value>) => void;
   /** Hint between the label and the options, such as what the choice changes. */
   readonly description?: string;
+  /** Error text under the options. It also marks the group invalid. */
   readonly errorMessage?: string;
   /** See ChoiceAppearance. The default is `cards`. */
   readonly appearance?: ChoiceAppearance;
   /** Marks the label "optional" when people may choose nothing. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

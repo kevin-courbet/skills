@@ -1,3 +1,40 @@
+/**
+ * A dialog that asks people to confirm an irreversible or high-impact action before it runs.
+ *
+ * @layer primitive
+ * @keywords confirm dialog, confirm before delete, confirmation, are you sure, delete confirmation, destructive action, rollback confirmation
+ * @related Dialog, Button, Menu, RadioGroup, DataTable
+ * @notes overlays, ux-writing, internal-app-page-patterns, internal-app-writing
+ *
+ * Use it before a step that deletes data or that changes a live system. Do not
+ * use it for a small step that people can undo: do the step. For a short form,
+ * use `Dialog`.
+ *
+ * ## Behavior
+ * - The two buttons are disabled while `onConfirm` runs.
+ * - The dialog closes when `onConfirm` resolves. When it rejects, the dialog
+ *   stays open and shows the failure under the content.
+ *
+ * ## Rules
+ * - Only the confirm button is `danger`. The button or the menu item that opens
+ *   the dialog is not.
+ * - A destructive bulk action opens a `ConfirmDialog`, and the labels name the
+ *   count: "Delete 3 items".
+ *
+ * ## Example
+ * ```tsx
+ * <ConfirmDialog
+ *   isOpen={isDeleteOpen}
+ *   onOpenChange={setDeleteOpen}
+ *   title={`Delete ${item.name}?`}
+ *   description="The item and its 12 attachments are deleted. You cannot undo this."
+ *   confirmLabel="Delete item"
+ *   onConfirm={async () => {
+ *     await deleteItem.mutateAsync(item.id);
+ *   }}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { type ReactNode, useState } from "react";
 import { failureMessage } from "@/lib/server-result";
@@ -6,7 +43,9 @@ import { Button } from "./button";
 import { Dialog } from "./dialog";
 
 export interface ConfirmDialogProps {
+  /** Whether the dialog shows. The control that starts the action sets it. */
   readonly isOpen: boolean;
+  /** Receives `false` on Cancel, on Escape, and after `onConfirm` resolves. */
   readonly onOpenChange: (isOpen: boolean) => void;
   /** Names the action and the object: "Roll back production to dpl_rxt8gA84n?" */
   readonly title: string;

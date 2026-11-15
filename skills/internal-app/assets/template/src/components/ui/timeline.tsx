@@ -1,4 +1,50 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * An activity or audit feed of events, newest first, with the actor and the time of each event.
+ *
+ * @layer primitive
+ * @keywords timeline, activity feed, audit log, audit history, history, event feed, changelog, who did what
+ * @related Stepper, Trace, Avatar, Badge, LogViewer
+ * @notes ux-writing, grouped-values, internal-app-composition
+ *
+ * Use it for the history of a record: what happened, who did it, and when. Do
+ * not use it for steps that have a status, such as pipeline stages: use
+ * `Stepper` with `mode="status"`. Do not use it for the steps of one run: use
+ * `Trace`. For raw output lines, use `LogViewer`.
+ *
+ * ## Behavior
+ * - The feed is an ordered list. It shows the events in the order of `events`,
+ *   so sort them newest first before you pass them.
+ * - Each event shows its icon on a rail, the title sentence, the description,
+ *   and one line with the actor, the time, and `meta`, with gaps between them.
+ * - The actor name has the text color and the time is muted. An actor with
+ *   `isSystem` shows the name without an avatar.
+ * - `kind` is read before the title for screen readers only.
+ *
+ * ## Rules
+ * - Keep the events neutral. Give `tone` only to an event that needs
+ *   attention, such as a failure. A feed is a record, not a progress bar.
+ * - Write `title` as one sentence that names the action and the object.
+ * - Format `time.label` with `src/lib/locale.ts`, from a reference time that
+ *   the loader returns.
+ *
+ * ## Example
+ * ```tsx
+ * <Timeline
+ *   label="Activity"
+ *   events={[
+ *     {
+ *       id: "e1",
+ *       kind: "Rollback",
+ *       icon: Undo2,
+ *       title: <>Rolled back to <Code>dpl_rxt8gA84n</Code></>,
+ *       actor: { name: "Sam Lee" },
+ *       time: { label: "3h ago", dateTime: "2026-10-12T15:30:00Z" },
+ *     },
+ *   ]}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { Circle, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -8,6 +54,7 @@ import type { BadgeIntent } from "./badge";
 import { field } from "./field";
 
 export interface TimelineActor {
+  /** Name of the person or the service. */
   readonly name: string;
   /** Avatar image URL. The initials show when it is missing. */
   readonly src?: string;
@@ -25,6 +72,7 @@ export interface TimelineTime {
 }
 
 export interface TimelineEvent {
+  /** Stable id of the event. */
   readonly id: string;
   /** One sentence that names the actor's action and the object. Inline Code is allowed. */
   readonly title: ReactNode;
@@ -37,7 +85,9 @@ export interface TimelineEvent {
    * failure. The default is neutral: a feed is a record, not a progress bar.
    */
   readonly tone?: BadgeIntent;
+  /** Who did it. Leave it out for an event without an actor. */
   readonly actor?: TimelineActor;
+  /** When it happened. */
   readonly time: TimelineTime;
   /** Extra detail under the title, such as a reason or a comment. */
   readonly description?: ReactNode;
@@ -48,6 +98,7 @@ export interface TimelineEvent {
 export interface TimelineProps {
   /** Names the feed, such as "Activity" or "Audit history". */
   readonly label: string;
+  /** The events, newest first. The feed keeps this order. */
   readonly events: ReadonlyArray<TimelineEvent>;
 }
 

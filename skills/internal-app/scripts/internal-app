@@ -5,6 +5,20 @@ import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  appKitSource,
+  countWords,
+  documentedFiles,
+  kitProblems,
+  kitSource,
+  lookup as lookupDoc,
+  readKit,
+  renderCatalog,
+  renderDoc,
+  renderApi,
+  type KitDoc,
+  type KitSource,
+} from "./lib/kit-docs.ts";
 
 const skillDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const templateDir = join(skillDir, "assets", "template");
@@ -14,6 +28,8 @@ const dotfiles = ["gitignore", "oxlintrc.json", "oxfmtrc.json"] as const;
 
 interface Manifest {
   readonly files: ReadonlyArray<string>;
+  // Path prefixes of the kit files that must start with a doc comment.
+  readonly docs: ReadonlyArray<string>;
   readonly forbiddenDependencies: ReadonlyArray<string>;
   readonly forbiddenDependencyPrefixes: ReadonlyArray<string>;
   readonly appContract: Readonly<Record<string, ReadonlyArray<string>>>;
@@ -35,6 +51,17 @@ Commands:
                                       --force also replaces locally edited or conflicting files.
   doctor [dir]                        Audit an app against the stack and list fixes.
   check [dir]                         Check conventions in src/ and package.json.
+  components [dir]                    List the kit components of the app, by layer.
+  docs <id>[#part] [dir]              Print the docs of one kit component: its doc
+                                      comment and its props. <id> is a component id
+                                      from "components", or any name that a kit file
+                                      exports. #part prints one section, or #props.
+  design-entries [dir]                Print the kit components as search entries for
+                                      "design search". The design skill runs it.
+
+The commands that read docs find the app from [dir], or from the current folder:
+the nearest folder upward with ${lockName}. Outside an app, they read the newest
+kit in the skill template and say so.
 
 Options:
   --json                              Print machine-readable output.
@@ -488,12 +515,30 @@ function runCheck(appDir: string): Array<Finding> {
       }
     }
   }
+  findings.push(...kitDocFindings(appDir, manifest));
+  return findings;
+}
+
+// The kit files of an app that need a doc comment. With a lock, they are the
+// installed files. Without one, they are the documented files that the app has.
+function appDocSource(appDir: string, manifest: Manifest): KitSource {
+  if (existsSync(join(appDir, lockName))) return appKitSource(appDir, manifest);
+  return { root: appDir, isApp: true, files: documentedFiles(manifest).filter((file) => existsSync(join(appDir, file))) };
+}
+
+function kitDocFindings(appDir: string, manifest: Manifest): Array<Finding> {
+  const findings: Array<Finding> = [];
+  for (const [file, problems] of kitProblems(readKit(appDocSource(appDir, manifest)))) {
+    for (const problem of problems) findings.push({ rule: "kit-docs", file, line: 1, text: problem });
+  }
   return findings;
 }
 
 function ruleMessages(): Record<string, string> {
   const messages: Record<string, string> = {
     "forbidden-dependency": "Dependency the stack replaces. Migrate its usages, then bun remove it.",
+    "kit-docs":
+      "A kit component file has no valid doc comment. In an app, run sync --write to install the documented kit. In the skill, fix the comment in assets/template.",
   };
   for (const rule of lineRules(readManifest())) messages[rule.id] = rule.message;
   for (const rule of fileRules()) messages[rule.id] = rule.message;
@@ -758,6 +803,78 @@ function runNew(target: string, name: string) {
   writeLock(target, files);
 }
 
+// ---------------------------------------------------------------- docs
+
+const scriptPath = fileURLToPath(import.meta.url);
+
+function docsCommand(): string {
+  return `bun "${scriptPath}" docs {id}`;
+}
+
+function componentsCommand(): string {
+  return `bun "${scriptPath}" components`;
+}
+
+function noteCommand(): string {
+  return "design read {id}";
+}
+
+function loadDocs(dir: string | undefined): { source: KitSource; docs: Array<KitDoc> } {
+  const source = kitSource(resolve(dir ?? "."), templateDir, readManifest());
+  return { source, docs: readKit(source) };
+}
+
+function sourceInfo(source: KitSource) {
+  return { root: source.root, isApp: source.isApp };
+}
+
+function sourceLine(source: KitSource): string {
+  return source.isApp
+    ? `Source: the installed kit of the app at ${source.root}.`
+    : `Source: the skill template at ${source.root}, because no folder from ${process.cwd()} upward has ${lockName}. An app can have an older kit.`;
+}
+
+function catalogItem(doc: KitDoc) {
+  return { id: doc.id, layer: doc.layer, summary: doc.summary, file: doc.file };
+}
+
+// "PageHeader" gives "page header", so that search finds an export by its words.
+function nameWords(name: string): string {
+  return name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
+}
+
+function designEntries(source: KitSource, docs: ReadonlyArray<KitDoc>) {
+  const problems = [...kitProblems(docs).entries()].filter(([, items]) => items.length > 0);
+  return {
+    read: docsCommand(),
+    source: sourceLine(source),
+    problems:
+      problems.length === 0
+        ? []
+        : [`${problems.length} kit files have doc comment problems, for example ${problems[0]![0]}: ${problems[0]![1][0]}. Run internal-app check.`],
+    entries: docs
+      .filter((doc) => doc.hasComment)
+      .map((doc) => {
+        const exported = [...doc.exports.components.map((item) => item.name), ...doc.exports.hooks.map((item) => item.name)];
+        const props = doc.exports.components.flatMap((item) => item.props?.variants.flatMap((variant) => variant.members) ?? []);
+        return {
+          id: doc.id,
+          kind: "component",
+          label: doc.layer ?? "no layer",
+          title: doc.id,
+          summary: doc.summary,
+          keywords: [...new Set([...doc.keywords, ...exported.filter((name) => name !== doc.id).map(nameWords)])],
+          intro: doc.intro,
+          sections: [
+            ...doc.sections.map((section) => ({ title: section.title, text: section.text })),
+            { title: "Props", text: props.map((member) => `${member.name}: ${member.comment}`).join("\n") },
+          ],
+          links: doc.notes,
+        };
+      }),
+  };
+}
+
 // ---------------------------------------------------------------- output
 
 function print(json: boolean, value: unknown, human: () => string) {
@@ -829,6 +946,34 @@ function main(argv: ReadonlyArray<string>): number {
           .join("\n\n");
       });
       return findings.length === 0 ? 0 : 1;
+    }
+    case "components": {
+      const { source, docs } = loadDocs(positional[0]);
+      const problems = [...kitProblems(docs).values()].flat().length;
+      print(json, { source: sourceInfo(source), components: docs.map(catalogItem) }, () => {
+        const text = renderCatalog(docs, sourceLine(source), docsCommand());
+        return problems === 0 ? text : `${text}\nwarning: ${problems} doc comment problems. Run internal-app check.`;
+      });
+      return 0;
+    }
+    case "docs": {
+      const target = positional[0];
+      if (target === undefined) throw new CliError('Usage: internal-app docs <id>[#part] [dir]. List the ids with "internal-app components".');
+      const { source, docs } = loadDocs(positional[1]);
+      const found = lookupDoc(docs, target);
+      if ("error" in found) throw new CliError(`${found.error}\nList the ids with: ${componentsCommand()}`);
+      if (!found.doc.hasComment) {
+        throw new CliError(`${found.doc.file} has no doc comment: ${found.doc.problems.join("; ")}. Run internal-app sync --write to install the documented kit.`);
+      }
+      const rendered = renderDoc(found, { docsCommand: docsCommand(), noteCommand: noteCommand(), sourceLine: sourceLine(source) });
+      if (rendered.error !== undefined) throw new CliError(rendered.error);
+      print(json, { source: sourceInfo(source), doc: found.doc, part: found.part, section: found.section, text: rendered.text }, () => rendered.text);
+      return 0;
+    }
+    case "design-entries": {
+      const { source, docs } = loadDocs(positional[0]);
+      console.log(JSON.stringify(designEntries(source, docs)));
+      return 0;
     }
     case undefined:
     case "help":

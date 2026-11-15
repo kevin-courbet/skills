@@ -1,3 +1,26 @@
+/**
+ * The menu in the top bar that chooses the light theme, the dark theme, or the theme of the system.
+ *
+ * @layer shell
+ * @keywords theme switch, dark mode toggle, light and dark theme, theme menu, color scheme
+ * @related AppShell, AppDocument, Menu
+ * @notes dark-theme
+ *
+ * `AppShell` renders it at the end of the top bar. Do not add a second theme
+ * control to a page or a settings card.
+ *
+ * ## Behavior
+ * - It saves the choice in the `theme` cookie through a server function, and
+ *   then updates the theme state of `AppDocument`. The app data does not
+ *   reload.
+ * - The button is disabled while the save runs. A failed save shows an error
+ *   toast with the reason.
+ *
+ * ## Example
+ * ```tsx
+ * <ThemeSwitch />
+ * ```
+ */
 import { useMutation } from "@tanstack/react-query";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";

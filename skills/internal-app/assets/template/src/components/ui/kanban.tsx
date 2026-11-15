@@ -1,4 +1,56 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Columns of cards that people move between stages, such as repair jobs, incidents, or requests.
+ *
+ * @layer pattern
+ * @keywords kanban, board, drag cards between columns, move cards between stages, status columns, pipeline, swimlanes, card board, drag and drop, work in progress limit
+ * @related WorkQueue, SortableList, DataTable, Item, Sheet, Toaster
+ * @notes patterns, motion, internal-app-composition, internal-app-states
+ *
+ * Use it when the stage of an item is the main fact and people change the stage
+ * by hand. Do not use it to compare values across many items: use `DataTable`.
+ * Do not use it for one ordered list: use `SortableList`. For work that one
+ * person does on a tablet, use `WorkQueue`.
+ *
+ * ## Behavior
+ * The board does these things. Do not build them again:
+ * - Pointer drag, and keyboard moves: focus the grip of a card, press Enter,
+ *   Tab to a column, find the place with the arrow keys, and press Enter.
+ * - A live region announces each drag and drop.
+ * - A keyboard move glides. A pointer drop lands at once. A card that
+ *   arrives in `value` without a move, such as after a refetch, fades in.
+ * - A moved card keeps the focus. When the focused card leaves the board, the
+ *   next card of its column gets the focus, or the column when it is empty.
+ * - The count of a column turns to a warning above its `limit`.
+ * - The columns scroll sideways on narrow screens.
+ *
+ * ## Rules
+ * - Handle `onChange` and `onColumnsChange` as Optimistic moves in
+ *   `references/data.md` tells. Restore a failed move with
+ *   `withViewTransition`, so that the card glides back.
+ * - `onItemAction` opens the card, for example in a peek `Sheet`.
+ *
+ * ## Example
+ * ```tsx
+ * <Kanban
+ *   label="Repair board"
+ *   columns={[
+ *     { id: "new", title: "New" },
+ *     { id: "repair", title: "In repair", limit: 5 },
+ *     { id: "done", title: "Ready for pickup" },
+ *   ]}
+ *   value={jobsByStage}
+ *   onChange={(next, move) => {
+ *     setJobsByStage(next);
+ *     moveJob.mutate(move);
+ *   }}
+ *   getItemId={(job) => job.id}
+ *   getItemLabel={(job) => job.title}
+ *   renderItem={(job) => <JobCard job={job} />}
+ *   onItemAction={(job) => openJob(job.id)}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { GripHorizontal, GripVertical, type LucideIcon } from "lucide-react";
 import {
@@ -35,30 +87,40 @@ import { useFocusAfterRemoval } from "@/lib/focus";
 import { field } from "./field";
 
 export interface KanbanColumn {
+  /** Stable id of the stage. It is a key of the board `value`. */
   readonly id: string;
+  /** Visible name of the stage, in sentence case. */
   readonly title: string;
+  /** Lucide icon before the title. */
   readonly icon?: LucideIcon;
   /** Work-in-progress limit. The count turns to a warning above it. */
   readonly limit?: number;
 }
 
 export interface KanbanMove {
+  /** Id of the moved item, from `getItemId`. */
   readonly itemId: string;
+  /** Column id before the move. */
   readonly fromColumn: string;
+  /** Column id after the move. It can be the same column. */
   readonly toColumn: string;
   /** Position in the target column after the move. */
   readonly index: number;
 }
 
 export interface KanbanColumnMove {
+  /** Id of the moved column. */
   readonly columnId: string;
+  /** Position of the column before the move. */
   readonly fromIndex: number;
+  /** Position of the column after the move. */
   readonly toIndex: number;
 }
 
 export interface KanbanProps<Item> {
   /** Names the board, such as "Incident board". */
   readonly label: string;
+  /** The stages, in order. */
   readonly columns: ReadonlyArray<KanbanColumn>;
   /** Items per column id, in order. Every column id needs an entry. */
   readonly value: Readonly<Record<string, ReadonlyArray<Item>>>;
@@ -67,6 +129,7 @@ export interface KanbanProps<Item> {
    * move, and restore the previous value with an error toast if it fails.
    */
   readonly onChange: (value: Record<string, ReadonlyArray<Item>>, move: KanbanMove) => void;
+  /** Stable id of an item. It stays the same when the item moves. */
   readonly getItemId: (item: Item) => string;
   /** Plain-text name of the item, for typeahead and drag announcements. */
   readonly getItemLabel: (item: Item) => string;

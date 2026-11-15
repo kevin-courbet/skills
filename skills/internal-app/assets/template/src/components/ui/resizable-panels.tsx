@@ -1,4 +1,47 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * Two or more panels with handles between them that people drag to change the sizes.
+ *
+ * @layer primitive
+ * @keywords resizable panels, split view, splitter, list and detail side by side, resize handle, pane layout, master detail
+ * @related Sheet, Layout, DataTable, LogViewer
+ * @notes responsive, spacing, internal-app-cards
+ *
+ * Use it when people work with two views at the same time and need to change
+ * the space of each, such as a list beside its detail or a query above its
+ * results. Do not use it to show a detail over a list: use a `Sheet`. Do not
+ * use it for the columns of a page layout that people do not resize.
+ *
+ * ## Behavior
+ * The group does these things. Do not build them again:
+ * - Each handle is a window splitter. People drag it, or focus it and press
+ *   the arrow keys for 2 percent, Shift and an arrow key for 10 percent, and
+ *   Home and End for the limits.
+ * - A handle is named "Resize" with the labels of its two panels, and it
+ *   reports the size of the panel before it.
+ * - A resize stops at `minSize` and `maxSize` of both panels.
+ *
+ * ## Rules
+ * - The `defaultSize` values of all panels add up to 100. With `sizes`, give
+ *   one size for each panel, or the group throws an error.
+ * - A panel content can be another `ResizablePanels` with the other
+ *   orientation.
+ * - The group has no frame. On a page, frame it yourself. In a `Card`, put it
+ *   in `CardSection padding="flush"`.
+ *
+ * ## Example
+ * ```tsx
+ * <ResizablePanels
+ *   sizes={sizes}
+ *   onSizesChange={setSizes}
+ *   style={styles.height}
+ *   panels={[
+ *     { id: "jobs", label: "Job list", defaultSize: 32, minSize: 20, content: <JobList /> },
+ *     { id: "detail", label: "Job detail", defaultSize: 68, content: <JobDetail /> },
+ *   ]}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import {
@@ -13,6 +56,7 @@ import {
 import { color, motion, radius, space } from "@/styles/tokens.stylex";
 
 export interface ResizablePanel {
+  /** Stable id of the panel, unique in the group. */
   readonly id: string;
   /** Names the panel for the resize handle, such as "Job list". */
   readonly label: string;
@@ -22,15 +66,18 @@ export interface ResizablePanel {
   readonly minSize?: number;
   /** Largest size in percent. Default 90. */
   readonly maxSize?: number;
+  /** What the panel shows. */
   readonly content: ReactNode;
 }
 
 export interface ResizablePanelsProps {
   /** `horizontal` puts panels side by side; `vertical` stacks them. */
   readonly orientation?: "horizontal" | "vertical";
+  /** The panels in order: left to right, or top to bottom. */
   readonly panels: ReadonlyArray<ResizablePanel>;
   /** Sizes in percent, in panel order. Pass it with `onSizesChange` to remember the layout. */
   readonly sizes?: ReadonlyArray<number>;
+  /** Receives the sizes in percent after each resize, in panel order. */
   readonly onSizesChange?: (sizes: ReadonlyArray<number>) => void;
   /** Sets the height of a horizontal group, or a minimum height. */
   readonly style?: StyleXStyles;

@@ -1,4 +1,46 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A menu of actions that opens from a button, or at the pointer on a right click.
+ *
+ * @layer primitive
+ * @keywords menu, dropdown menu, row menu, overflow menu, more actions, context menu, right click menu, kebab menu, actions menu
+ * @related Button, Popover, Select, CommandPalette, DataTable, ConfirmDialog
+ * @notes overlays, internal-app-composition, internal-app-touch-work-view
+ *
+ * Use it for row actions and overflow actions. Do not use it for a choice that
+ * a form submits: use `Select` or `RadioGroup`. Do not use it for a panel with
+ * fields: use `Popover`. On a touch work view, do not hide actions in a menu.
+ *
+ * ## Behavior
+ * - `Menu` opens in a popover with the density of the page. The arrow keys and
+ *   typeahead move between the items.
+ * - In a `Menu` with `selectionMode`, each item shows a check mark when it is
+ *   selected.
+ *
+ * ## Rules
+ * - Wrap the trigger button and the `Menu` in `MenuTrigger`.
+ * - Give each `MenuItem` an `id`, and handle `onAction` on the menu.
+ * - Separate groups of items with `MenuSeparator`.
+ *
+ * ## ContextMenu
+ * Wraps an area, such as a table row, a card, or a tree, and keeps the layout
+ * of that area. It opens its `menu` items at the pointer on a right click, or at
+ * the focused element with Shift+F10 or the context menu key. It focuses the
+ * first item and closes after an action. Every action of a `ContextMenu` must
+ * also be reachable from a visible control, such as a row menu button.
+ *
+ * ## Example
+ * ```tsx
+ * <MenuTrigger>
+ *   <Button intent="ghost" iconOnly aria-label="Job actions"><Ellipsis /></Button>
+ *   <Menu onAction={(id) => runAction(job, id)}>
+ *     <MenuItem id="duplicate" icon={<Copy />}>Duplicate</MenuItem>
+ *     <MenuSeparator />
+ *     <MenuItem id="delete" icon={<Trash2 />} isDestructive>Delete job</MenuItem>
+ *   </Menu>
+ * </MenuTrigger>
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import { Check } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -22,6 +64,7 @@ export interface MenuProps<Item extends object> extends Omit<
   AriaMenuProps<Item>,
   "className" | "style"
 > {
+  /** Side of the trigger where the menu opens. */
   readonly placement?: "bottom start" | "bottom end" | "top start" | "top end";
 }
 
@@ -45,8 +88,11 @@ export function Menu<Item extends object>({ placement = "bottom end", ...props }
 }
 
 export interface MenuItemProps extends Omit<AriaMenuItemProps, "className" | "style" | "children"> {
+  /** The label: a verb, or a verb and an object, such as "Delete job". */
   readonly children: ReactNode;
+  /** An icon before the label, such as a Lucide icon. */
   readonly icon?: ReactNode;
+  /** Keyboard shortcut that runs the action outside the menu, such as "⌘D". Shown only as a hint. */
   readonly shortcut?: string;
   /** Visual warning for an irreversible step. Pair it with a confirmation. */
   readonly isDestructive?: boolean;

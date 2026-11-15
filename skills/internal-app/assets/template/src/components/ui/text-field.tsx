@@ -1,4 +1,43 @@
 // Derived from ReUI (https://reui.io), MIT License, Copyright (c) 2025 Keenthemes Inc. See THIRD_PARTY_NOTICES.md in the internal-app skill.
+/**
+ * A labeled text input of one line, or a text area with `multiline`.
+ *
+ * @layer primitive
+ * @keywords text field, text input, input, textarea, multiline text, single line field, prefix, suffix, url field, email field
+ * @related NumberField, SearchField, ComboBox, Select, FormLayout, SettingsCard, CopyButton
+ * @notes form-fields, form-errors, internal-app-forms
+ *
+ * Use it for free text. Do not use it for a number: use `NumberField`. Do not
+ * use it to filter a list: use `SearchField`. Do not use it for a choice from
+ * known values: use `Select`, `ComboBox`, or a `RadioGroup` of chips.
+ *
+ * ## Behavior
+ * The field does these things. Do not build them again:
+ * - The label, the description, and the error message connect to the input
+ *   for screen readers.
+ * - `errorMessage` marks the field invalid and shows the message below it.
+ * - The height follows the nearest `ControlSizeProvider`.
+ *
+ * ## Rules
+ * - Give every field a `width` from the length of its answer, not from the
+ *   space in the layout. See `design read internal-app-forms`.
+ * - `isOptional` together with `isRequired` throws an error. So do `prefix`
+ *   or `suffix` on a `multiline` field.
+ * - A `placeholder` never replaces the label or the description.
+ *
+ * ## Example
+ * ```tsx
+ * <TextField
+ *   label="Serial number"
+ *   description="On the label under the battery."
+ *   width="md"
+ *   placeholder="e.g. SN-20931"
+ *   value={serial}
+ *   onChange={setSerial}
+ *   errorMessage={errors.serial}
+ * />
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import type { ReactNode } from "react";
@@ -27,11 +66,13 @@ export interface TextFieldProps extends Omit<
   AriaTextFieldProps,
   "className" | "style" | "children"
 > {
+  /** Visible name of the field, in sentence case. */
   readonly label: string;
   /** Hide the visible label where a SettingRow or toolbar names the field. Screen readers keep it. */
   readonly hideLabel?: boolean;
   /** Hint between the label and the control, such as the format or where the answer goes. */
   readonly description?: string;
+  /** Error text under the field. It also marks the field invalid. */
   readonly errorMessage?: string;
   /** Adds a quiet "optional" to the label. Do not set it with `isRequired`. */
   readonly isOptional?: boolean;
@@ -39,6 +80,7 @@ export interface TextFieldProps extends Omit<
   readonly width?: FieldWidth;
   /** An example answer that starts with "e.g.", such as "e.g. 3.14". Never the only instruction. */
   readonly placeholder?: string;
+  /** Renders a text area that grows with its text, for answers of more than one line. */
   readonly multiline?: boolean;
   /**
    * Content inside the box before the text: a fixed part of the value such as
@@ -50,6 +92,7 @@ export interface TextFieldProps extends Omit<
    * ".example.com", a Kbd hint, a Spinner, or one small icon button.
    */
   readonly suffix?: ReactNode;
+  /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
 

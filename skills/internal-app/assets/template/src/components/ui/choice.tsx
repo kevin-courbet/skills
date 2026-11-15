@@ -1,3 +1,41 @@
+/**
+ * The option types and the shared look of the choices of `RadioGroup` and `CheckboxGroup`.
+ *
+ * @layer helper
+ * @keywords choice option, option type, choice appearance, chips, cards, none option, option meta, option avatar
+ * @related RadioGroup, Checkbox, ControlSize, Avatar
+ * @notes form-choices, internal-app-forms
+ *
+ * Pages use the types `ChoiceOption`, `ChoiceNoneOption`, and
+ * `ChoiceAppearance` to build the options of a `RadioGroup` or a
+ * `CheckboxGroup`. Do not use `ChoiceLeading`, `assertChoiceOptions`,
+ * `choice`, or `chipSizes` in a page: they are the parts of a new kit choice
+ * control.
+ *
+ * ## Behavior
+ * - `assertChoiceOptions` throws when an option has a field that the
+ *   appearance cannot show: a `description` on a chip, an `icon` or an
+ *   `avatar` in the `list` appearance, or an `icon` together with an
+ *   `avatar`. This keeps option data from being lost.
+ * - A selected option changes its surface, its border weight, and its text
+ *   color, so the selection never depends on hue alone.
+ * - Chips take the control size of their row through `chipSizes`.
+ *
+ * ## Rules
+ * - Give `meta` one fact, such as "3 open", "1 h", or a price.
+ * - Use `avatar` only when the label names a person. The initials show when
+ *   `src` is missing.
+ *
+ * ## Example
+ * ```tsx
+ * const hosts: ReadonlyArray<ChoiceOption<HostId>> = people.map((person) => ({
+ *   id: person.id,
+ *   label: person.name,
+ *   meta: `${person.openVisits} open`,
+ *   avatar: { src: person.photoUrl },
+ * }));
+ * ```
+ */
 import * as stylex from "@stylexjs/stylex";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -16,7 +54,9 @@ import { Avatar } from "./avatar";
 export type ChoiceAppearance = "list" | "cards" | "chips";
 
 export interface ChoiceOption<Value extends string> {
+  /** Stable id of the option. The group `value` uses it. */
   readonly id: Value;
+  /** Visible text of the option, in sentence case. */
   readonly label: string;
   /** A sentence under the label, in `list` and `cards`. Chips show no description. */
   readonly description?: string;
@@ -33,6 +73,7 @@ export interface ChoiceOption<Value extends string> {
    * `chips`. The initials show when `src` is missing.
    */
   readonly avatar?: { readonly src?: string };
+  /** Shows the option but people cannot choose it. */
   readonly isDisabled?: boolean;
 }
 
@@ -42,7 +83,9 @@ export interface ChoiceOption<Value extends string> {
  * clear by pressing it again, which nobody discovers.
  */
 export interface ChoiceNoneOption {
+  /** Visible text of the choice, such as "Decide later". */
   readonly label: string;
+  /** A sentence under the label, in `list` and `cards`. */
   readonly description?: string;
 }
 
@@ -72,8 +115,11 @@ export function ChoiceLeading<Value extends string>({
   isSelected,
   placement,
 }: {
+  /** The option whose icon or avatar shows. */
   readonly option: ChoiceOption<Value>;
+  /** Gives the icon the selected color. */
   readonly isSelected: boolean;
+  /** Aligns the icon for a card label, which can wrap, or for a chip. */
   readonly placement: "card" | "chip";
 }) {
   const Icon = option.icon;
