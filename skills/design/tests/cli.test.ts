@@ -9,10 +9,20 @@ import { search } from "../scripts/lib/search.ts";
 const SKILL_DIR = resolve(import.meta.dir, "..");
 const SCRIPT = join(SKILL_DIR, "scripts", "design");
 
-const golden = JSON.parse(readFileSync(join(import.meta.dir, "golden.json"), "utf8")) as Array<{
-  query: string;
-  expect: string[];
-}>;
+interface RankedQuery {
+  readonly query: string;
+  readonly expect: ReadonlyArray<string>;
+}
+
+// "queries" use the words of the notes and must give a strong match.
+// "paraphrases" ask the same questions in other words, written without the
+// notes, and check only the ranking. "weak" asks about topics that no note
+// covers, and the search must say that it has no strong match.
+const golden = JSON.parse(readFileSync(join(import.meta.dir, "golden.json"), "utf8")) as {
+  queries: ReadonlyArray<RankedQuery>;
+  paraphrases: ReadonlyArray<RankedQuery>;
+  weak: ReadonlyArray<{ readonly query: string }>;
+};
 
 const temporary: string[] = [];
 afterEach(() => {
@@ -53,10 +63,22 @@ const memberNote = (id: string, extra = "") =>
 
 describe("golden queries", () => {
   const graph = loadGraph({ skillDir: SKILL_DIR });
-  for (const entry of golden) {
-    test(`"${entry.query}" finds ${entry.expect.join(" or ")} in the top 3`, () => {
+  for (const entry of golden.queries) {
+    test(`"${entry.query}" finds ${entry.expect.join(" or ")} in the top 3 with a strong match`, () => {
+      const result = search(graph, entry.query, 3);
+      expect(entry.expect.some((id) => result.hits.some((hit) => hit.note.id === id))).toBe(true);
+      expect(result.strong).toBe(true);
+    });
+  }
+  for (const entry of golden.paraphrases) {
+    test(`paraphrase "${entry.query}" finds ${entry.expect.join(" or ")} in the top 3`, () => {
       const top = search(graph, entry.query, 3).hits.map((hit) => hit.note.id);
       expect(entry.expect.some((id) => top.includes(id))).toBe(true);
+    });
+  }
+  for (const entry of golden.weak) {
+    test(`"${entry.query}" has no strong match`, () => {
+      expect(search(graph, entry.query, 3).strong).toBe(false);
     });
   }
 });
@@ -77,12 +99,14 @@ describe("the real graph", () => {
 });
 
 describe("read", () => {
-  test("prints the note and its links with summaries", () => {
+  test("prints the note, the required notes with summaries, and the other ids on one line", () => {
     const result = cli(SKILL_DIR, "read", "form-errors");
     expect(result.code).toBe(0);
     expect(result.stdout).toStartWith("form-errors (topic forms,");
     expect(result.stdout).toContain("## Error Summary");
-    expect(result.stdout).toMatch(/Links:\n {2}requires {4}forms /);
+    expect(result.stdout).toMatch(/Read first:\n {2}requires {4}forms {2}The entry note for forms/);
+    expect(result.stdout).toMatch(/\nSee also: form-fields, form-layout, accessibility, overlays, ux-writing\n$/);
+    expect(result.stdout).not.toContain("Links:");
   });
 
   test("prints one section", () => {
@@ -99,6 +123,8 @@ describe("read", () => {
     expect(result.stdout).toContain("summary: ");
     expect(result.stdout).toContain("  #surface-hierarchy");
     expect(result.stdout).toContain("Links:");
+    expect(result.stdout).toMatch(/Links:\n {2}requires {4}graphite +Graphite is[\s\S]*\n {2}related {5}color +Build color/);
+    expect(result.stdout).not.toContain("See also:");
     expect(result.stdout).not.toContain("## Surface Hierarchy");
   });
 
@@ -124,6 +150,20 @@ describe("other commands", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toStartWith("form-errors  ");
     expect(result.stdout).toContain("#error-summary");
+  });
+
+  test("search warns before results that cover only part of the question", () => {
+    const result = cli(SKILL_DIR, "search", "kanban board columns");
+    expect(result.code).toBe(0);
+    expect(result.stdout).toStartWith(
+      '(no note contains: kanban, board)\nNo strong match for "kanban board columns". The best note contains 1 of 3 query words.',
+    );
+  });
+
+  test("search does not warn for a strong match", () => {
+    const result = cli(SKILL_DIR, "search", "popover transform origin");
+    expect(result.stdout).toStartWith("component-feel  ");
+    expect(result.stdout).not.toContain("No strong match");
   });
 
   test("search without a match fails", () => {

@@ -2,7 +2,7 @@
 id: motion
 topic: motion
 summary: The entry note for motion, which decides whether an element animates, what the animation is for, and which motion note to read next.
-keywords: [motion, animation, animate, should this animate, when to animate, transition, micro-interaction, motion design, keyboard shortcut animation, command palette animation, delight, page load animation, animation fatigue]
+keywords: [motion, animation, animate, should this animate, when to animate, transition, micro-interaction, motion design, keyboard shortcut animation, command palette animation, delight, page load animation, animation fatigue, movement, slide in, fade in, is animation worth it]
 related: [easing-and-duration, component-feel, reduced-motion, motion-performance, springs-and-gestures, method]
 ---
 

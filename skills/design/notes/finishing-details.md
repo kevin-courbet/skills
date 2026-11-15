@@ -2,7 +2,7 @@
 id: finishing-details
 topic: layout
 summary: Images at their intended size, text that stays readable over images, empty states as first use, and decoration only after hierarchy works.
-keywords: [images, screenshots, image size, text over image, overlay, user uploaded images, avatar, empty state, blank state, first use, zero state, decoration, ornament, polish, finishing]
+keywords: [images, screenshots, image size, text over image, overlay, user uploaded images, avatar, empty state, blank state, first use, zero state, no items, no data, nothing to show, decoration, ornament, polish, finishing]
 requires: [hierarchy]
 related: [signature-elements, depth, contrast]
 ---

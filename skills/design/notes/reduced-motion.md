@@ -2,7 +2,7 @@
 id: reduced-motion
 topic: motion
 summary: Under prefers-reduced-motion, replace movement with short fades, keep the functional motion, and gate hover animation to devices with a fine pointer.
-keywords: [reduced motion, prefers-reduced-motion, motion sickness, vestibular, useReducedMotion, accessible animation, disable animation, animation accessibility, hover on touch, hover media query]
+keywords: [reduced motion, prefers-reduced-motion, motion sickness, vestibular, useReducedMotion, accessible animation, disable animation, animations turned off, system setting, operating system setting, os setting, animation accessibility, hover on touch, hover media query]
 requires: [motion]
 related: [accessibility, responsive, motion-performance]
 ---
