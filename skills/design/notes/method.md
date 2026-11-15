@@ -4,7 +4,7 @@ topic: process
 summary: The design method from user priorities to structure, build, finishing passes, and review.
 keywords: [design process, workflow, method, steps, where to start, user priorities, low fidelity, wireframe, iterate, existing design system, motion, animation]
 requires: [hierarchy, review]
-related: [patterns, spacing, responsive]
+related: [patterns, spacing, responsive, project-context, visual-direction, motion]
 ---
 
 # Design Method
@@ -15,10 +15,11 @@ Use this method to design or refactor content pages, application screens, dashbo
 
 Establish user priorities before you style components.
 
-1. Start with one real feature, not the application shell.
-2. Identify the users of the feature and the task that they must complete.
-3. List the content, actions, and decisions that the feature requires.
-4. Rank what users must notice first, compare next, and inspect only when needed.
+1. Read `DESIGN.md` when it exists. [[project-context]] gives the rules to find and collect the context.
+2. Start with one real feature, not the application shell.
+3. Identify the users of the feature and the task that they must complete.
+4. List the content, actions, and decisions that the feature requires.
+5. Rank what users must notice first, compare next, and inspect only when needed.
 
 For a form, also establish the field relationships, the validation model, and the action priority. [[forms]] gives the form process.
 
@@ -50,10 +51,11 @@ Add color, depth, imagery, and detail as controlled finishing passes, after the 
 ## Respect The Product System
 
 - Respect the existing product design system unless the user requests a new direction.
-- If another skill provides project design context, use that context. The method stays the same.
+- If another skill or `DESIGN.md` provides project design context, use that context. The method stays the same.
+- For a new product, a marketing page, or a content page, choose a visual direction before the finishing passes. [[visual-direction]] gives the rules.
 - A product skill can join this graph and set narrower values. In that product, its rule wins. [[graph-membership]] gives the contract.
 - Treat bundled palettes and external icon libraries as starting resources, not automatic design decisions. [[palettes]] and [[icons]] give the rules.
 
 ## Keep Motion Separate
 
-Keep motion and interaction-polish work separate unless the request includes it.
+Keep motion and interaction-polish work separate unless the request includes it. When the request includes motion, read [[motion]] before you write animation code.

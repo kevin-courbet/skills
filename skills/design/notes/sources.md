@@ -1,8 +1,8 @@
 ---
 id: sources
 topic: process
-summary: The sources that the design notes condense, with the links for the dark theme, the palettes, and the icons.
-keywords: [sources, source basis, references, bibliography, refactoring ui, citations, where do these rules come from, license]
+summary: The sources that the design notes condense, with their licenses and credits, and the links for the dark theme, the palettes, and the icons.
+keywords: [sources, source basis, references, bibliography, refactoring ui, frontend-design, impeccable, emil kowalski, attribution, credits, citations, where do these rules come from, license]
 related: [method, dark-theme, palettes, icons, graphite]
 ---
 
@@ -15,6 +15,20 @@ The notes keep durable principles from these sources. They qualify example-speci
 The method condenses the user-provided Refactoring UI package: `Designing Content`, `Designing a Dashboard`, `Designing a Complex Form`, and the companion Refactoring UI book and references. The pattern inventory in [[patterns]] comes from its component gallery.
 
 The bundled palettes come from the same package, Color Palettes JSON version 1.1.0. `assets/palettes/NOTICE.md` records the source. [[palettes]] gives their use.
+
+## Frontend Design
+
+Apache 2.0. Based on Anthropic's frontend-design skill, enhanced by Impeccable (pbakaus). See https://impeccable.style/ for attribution.
+
+These notes condense and modify rules from that skill and its references: [[visual-direction]], [[ai-slop-test]], [[ux-writing]], [[loading-states]], [[reduced-motion]], [[project-context]], [[typography]], [[font-selection]], [[color]], [[contrast]], [[dark-theme]], [[semantic-tokens]], [[spacing]], [[hierarchy]], [[depth]], [[density]], [[responsive]], [[accessibility]], [[overlays]], [[form-errors]], [[patterns]], [[springs-and-gestures#discoverable-gestures]], [[easing-and-duration]], and [[charts]]. Where the house rules disagree with the source, the notes follow the house rules.
+
+## Design Engineering
+
+The motion notes condense the design engineering skill of Emil Kowalski ([emilkowal.ski](https://emilkowal.ski/)): [[motion]], [[easing-and-duration]], [[component-feel]], [[springs-and-gestures]], [[clip-path-animation]], [[motion-performance]], [[reduced-motion]], and the findings format in [[review#findings-format]]. The Sonner principles in [[component-feel#components-that-people-like]] come from his work on Sonner.
+
+## Motion Performance
+
+[[motion-performance]] also condenses the `fixing-motion-performance` skill.
 
 ## Dark Theme Sources
 
@@ -47,3 +61,5 @@ The skill owner set these rules as design preferences. They do not come from the
 - A preview of the end result: [[form-preview]].
 - Signature elements from the domain: [[signature-elements]].
 - One control height in a row, and an app frame that page density does not change: [[density]].
+- The collection of design context into `DESIGN.md`: [[project-context]].
+- Proposals as running previews of the real components: [[proposal-previews]] and [[preview-server]].

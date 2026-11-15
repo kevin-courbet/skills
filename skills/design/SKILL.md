@@ -1,6 +1,6 @@
 ---
 name: design
-description: Design, review, or refactor any user interface. Covers hierarchy, layout, spacing, density, typography, fonts, color, palettes, dark themes, forms, tables, dashboards, navigation, overlays, icons, and responsive behavior, through a graph of small linked notes and a search CLI. Use for application screens, settings, forms, content pages, dashboards, and status displays.
+description: Design, review, or refactor any user interface. Covers project context in DESIGN.md, visual direction, hierarchy, layout, spacing, density, typography, fonts, color, palettes, dark themes, forms, tables, dashboards, navigation, overlays, icons, responsive behavior, motion and animation, loading states, UX writing, and proposal previews, through a graph of small linked notes and a search CLI. Use for application screens, settings, forms, marketing and content pages, dashboards, status displays, animations, and interface copy.
 ---
 
 # Design
@@ -47,13 +47,18 @@ These rules apply to every interface. A note gives the details of each rule.
 - Changing the density of one page must not change the app frame on desktop. [[density]]
 - Adapt the information and the arrangement for small screens. Do not only shrink or stack the desktop design. [[responsive]]
 - Respect the existing product design system unless the user requests a new direction. Treat bundled palettes and icon libraries as starting resources, not automatic decisions. [[method]]
+- Give each animation a purpose. Do not animate an action that people do 100 or more times each day. [[motion]]
+- Write labels that say what happens, with one term for each concept. [[ux-writing]]
 
 ## Process
 
-1. **Users and priorities.** Before you choose a layout, run `design read method#establish-users-and-priorities`. Identify the users, the task, and what they must notice first.
-2. **Structure.** Before you choose components, run `design read hierarchy` and `design read patterns --outline`. For a form, run `design read forms` first. For data, run `design read dashboards` or `design read tables`.
-3. **Build.** Before each part, read its note. Examples: `design read color` before you set colors, `design read dark-theme` before a dark theme, `design read font-selection` before you pick a font, and `design read icons` before you add icons. When the part has no obvious note, run `design search`.
-4. **Review.** Before you finish, run `design read review` and answer each question. Follow the link of each question that fails.
+1. **Context, users, and priorities.** Before you choose a layout, run `design read project-context` and read `DESIGN.md` when it exists. Then run `design read method#establish-users-and-priorities`. Identify the users, the task, and what they must notice first.
+2. **Direction.** For a new product, or for a marketing or content page, run `design read visual-direction` and choose a direction inside the house rules. For a functional app, keep the product system and use [[signature-elements]].
+3. **Structure.** Before you choose components, run `design read hierarchy` and `design read patterns --outline`. For a form, run `design read forms` first. For data, run `design read dashboards` or `design read tables`.
+4. **Build.** Before each part, read its note. Examples: `design read color` before you set colors, `design read dark-theme` before a dark theme, `design read font-selection` before you pick a font, `design read icons` before you add icons, `design read motion` before you animate, and `design read ux-writing` before you write labels, errors, or empty states. When the part has no obvious note, run `design search`.
+5. **Review.** Before you finish, run `design read review` and answer each question. Follow the link of each question that fails.
+
+To propose a design or a UX change before implementation, run `design read proposal-previews`. Show the proposal as a running preview of the real components.
 
 ## Specializations
 
