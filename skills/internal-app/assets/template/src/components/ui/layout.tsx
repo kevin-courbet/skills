@@ -83,10 +83,10 @@ export function Page({
 /**
  * A titled part of a page. `stacked` puts the title over the content.
  * `split` puts the title and the description in a column on the left and the
- * content on the right, and stacks them when the section is narrow. Use
- * `split` for the parts of a long form or a settings page: the description
- * then says what the answers change. Consecutive split sections show a
- * divider between them.
+ * content on the right, and stacks them when the section is narrower than the
+ * sm breakpoint. Use `split` for the parts of a long form or a settings page:
+ * the description then says what the answers change. Consecutive split
+ * sections show a divider between them.
  */
 export function Section({
   title,
@@ -635,9 +635,14 @@ const styles = stylex.create({
   },
   split: {
     display: "grid",
+    // Next to a form preview, a section on a wide screen is just under the md width.
+    // A narrower title column there keeps the fields beside their title.
     gridTemplateColumns: {
       default: "minmax(10rem, 15rem) minmax(0, 1fr)",
-      [container.belowMd]: "minmax(0, 1fr)",
+      [container.belowMd]: {
+        default: "10rem minmax(0, 1fr)",
+        [container.belowSm]: "minmax(0, 1fr)",
+      },
     },
     columnGap: space.xxxl,
     rowGap: space.lg,
