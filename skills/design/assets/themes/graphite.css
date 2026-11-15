@@ -1,15 +1,13 @@
-/* Graphite: the default dark palette of the ui-design skill.
+/* Graphite: the default dark palette of the design skill.
    Source: the Graphite tokens that the skill owner approved on 2026-11-10.
-   references/dark-theme.md gives the role of each token and the measured contrast.
+   The note "graphite" gives the role of each token and the measured contrast:
+   run `design read graphite`.
 
    Use: copy both blocks into a product stylesheet when the product has no dark theme.
    The first block follows the system preference unless the page sets data-theme="light".
    The second block applies when the page sets data-theme="dark".
    Keep the light values from the product. If the product uses other token names,
-   map these values to those names.
-
-   Canonical file: skills/ui-design/assets/themes/graphite.css.
-   scripts/sync-form-design copies it to skills/form-design. Do not edit the copy. */
+   map these values to those names. */
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
