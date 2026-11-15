@@ -1099,35 +1099,34 @@ function nameWords(name: string): string {
 function designEntries(source: KitSource, docs: ReadonlyArray<KitDoc>) {
   const problems = [...kitProblems(docs).entries()].filter(([, items]) => items.length > 0);
   const moved = movedKitMessage(source);
+  const components = docs
+    .filter((doc) => doc.hasComment)
+    .map((doc) => {
+      const exported = [...doc.exports.components.map((item) => item.name), ...doc.exports.hooks.map((item) => item.name)];
+      const props = doc.exports.components.flatMap((item) => item.props?.variants.flatMap((variant) => variant.members) ?? []);
+      return {
+        id: doc.id,
+        kind: "component",
+        label: doc.layer ?? "no layer",
+        title: doc.id,
+        summary: doc.summary,
+        keywords: [...new Set([...doc.keywords, ...exported.filter((name) => name !== doc.id).map(nameWords)])],
+        intro: doc.intro,
+        sections: [
+          ...doc.sections.map((section) => ({ title: section.title, text: section.text })),
+          { title: "Props", text: props.map((member) => `${member.name}: ${member.comment}`).join("\n") },
+        ],
+        links: doc.notes,
+      };
+    });
   return {
-    read: docsCommand(),
-    source: sourcePhrase(source),
     problems: [
       ...(moved === null ? [] : [moved]),
       ...(problems.length === 0
         ? []
         : [`${problems.length} kit files have doc comment problems, for example ${problems[0]![0]}: ${problems[0]![1][0]}. Run internal-app check.`]),
     ],
-    entries: docs
-      .filter((doc) => doc.hasComment)
-      .map((doc) => {
-        const exported = [...doc.exports.components.map((item) => item.name), ...doc.exports.hooks.map((item) => item.name)];
-        const props = doc.exports.components.flatMap((item) => item.props?.variants.flatMap((variant) => variant.members) ?? []);
-        return {
-          id: doc.id,
-          kind: "component",
-          label: doc.layer ?? "no layer",
-          title: doc.id,
-          summary: doc.summary,
-          keywords: [...new Set([...doc.keywords, ...exported.filter((name) => name !== doc.id).map(nameWords)])],
-          intro: doc.intro,
-          sections: [
-            ...doc.sections.map((section) => ({ title: section.title, text: section.text })),
-            { title: "Props", text: props.map((member) => `${member.name}: ${member.comment}`).join("\n") },
-          ],
-          links: doc.notes,
-        };
-      }),
+    groups: [{ name: "components", read: docsCommand(), source: sourcePhrase(source), entries: components }],
   };
 }
 

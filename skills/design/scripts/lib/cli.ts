@@ -146,9 +146,9 @@ function readLinkLines(context: Context, note: Note, s: Style): string[] {
   if (specializations.length > 0) lines.push(idLine("Specialized by", specializations.map((from) => from.id)));
   const entries = entriesFor(context.entries(), note.id);
   for (const source of context.entries().sources) {
-    const ids = entries.filter((entry) => entry.skill === source.skill).map((entry) => entry.id);
+    const ids = entries.filter((entry) => inSource(entry, source)).map((entry) => entry.id);
     if (ids.length === 0) continue;
-    lines.push(idLine(`Implemented by (${source.skill.name})`, ids), `  Read one with: ${readCommand(source)}`);
+    lines.push(idLine(`Implemented by (${sourceName(source)})`, ids), `  Read one with: ${readCommand(source)}`);
   }
   return lines;
 }
@@ -163,6 +163,15 @@ function readCommand(source: EntrySource): string {
   return source.read.replaceAll("{id}", "<id>");
 }
 
+function inSource(entry: Entry, source: EntrySource): boolean {
+  return entry.skill === source.skill && entry.group === source.group;
+}
+
+// The member skill and the group, such as "internal-app components".
+function sourceName(source: EntrySource): string {
+  return `${source.skill.name} ${source.group}`;
+}
+
 // The member entries that apply the note, such as the kit components that
 // implement a form rule.
 function implementationLines(context: Context, note: Note, s: Style): string[] {
@@ -174,8 +183,8 @@ function implementationLines(context: Context, note: Note, s: Style): string[] {
     const name = entry.id + entryOwner(entry);
     lines.push(`  ${s.id(entry.id)}${entryOwner(entry)}${" ".repeat(width - name.length)}  ${entry.summary}`);
   }
-  for (const source of context.entries().sources.filter((candidate) => entries.some((entry) => entry.skill === candidate.skill))) {
-    lines.push(`  Read one ${source.skill.name} entry with: ${readCommand(source)}`);
+  for (const source of context.entries().sources.filter((candidate) => entries.some((entry) => inSource(entry, candidate)))) {
+    lines.push(`  Read one of the ${sourceName(source)} with: ${readCommand(source)}`);
   }
   return lines;
 }
@@ -287,10 +296,10 @@ function commandSearch(context: Context, args: string[], s: Style): { text: stri
     lines.push(`${s.id(doc.id)}${owner(doc)}  ${doc.summary}`);
     if (hit.sections.length > 0) lines.push(`  sections: ${hit.sections.map((section) => `#${section.slug}`).join(" ")}`);
   }
-  const skills = new Set(result.hits.map((hit) => hit.doc).filter(isEntry).map((entry) => entry.skill));
-  const sources = entries.sources.filter((source) => skills.has(source.skill));
+  const hitEntries = result.hits.map((hit) => hit.doc).filter(isEntry);
+  const sources = entries.sources.filter((source) => hitEntries.some((entry) => inSource(entry, source)));
   lines.push("");
-  for (const source of sources) lines.push(`${source.skill.name} entries: ${source.source}`);
+  for (const source of sources) lines.push(`${sourceName(source)}: ${source.source}`);
   lines.push("Next: design read <id> for a note, design read <id>#<section> for one section, or the read command of an entry.");
   return { text: lines.join("\n"), found: true };
 }
@@ -311,7 +320,7 @@ function commandList(context: Context, s: Style): string {
   const sources = context.entries().sources;
   if (sources.length > 0) {
     lines.push("", s.heading("member entries"), "  Search finds them with the notes:");
-    for (const source of sources) lines.push(`  ${source.skill.name}: ${source.count} entries from ${source.source}`);
+    for (const source of sources) lines.push(`  ${sourceName(source)}: ${source.count} entries from ${source.source}`);
   }
   return lines.join("\n");
 }

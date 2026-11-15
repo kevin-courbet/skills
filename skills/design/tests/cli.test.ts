@@ -379,10 +379,8 @@ const { existsSync, readFileSync } = require("node:fs");
 const project = existsSync("project.txt") ? readFileSync("project.txt", "utf8").trim() : "no project";
 ${extra}
 console.log(JSON.stringify({
-  read: "demo-cli docs {id}",
-  source: project + ".",
   problems: [],
-  entries: ${entries},
+  groups: [{ name: "components", read: "demo-cli docs {id}", source: project + ".", entries: ${entries} }],
 }));
 `;
 
@@ -416,22 +414,44 @@ describe("member entries", () => {
     expect(found.code).toBe(0);
     expect(found.stdout).toStartWith("Board [demo-skill component, pattern]");
     expect(found.stdout).toContain("  read: demo-cli docs Board");
-    expect(found.stdout).toContain("demo-skill entries: the demo app.");
+    expect(found.stdout).toContain("demo-skill components: the demo app.");
 
     const read = run(["read", "Board"], { skillDir: hub, cwd: project });
     expect(read.code).toBe(1);
     expect(read.stderr).toContain('"Board" is not a note. It is a component of the demo-skill skill. Read it with:\n  demo-cli docs Board');
 
     const forms = run(["read", "forms"], { skillDir: hub, cwd: project });
-    expect(forms.stdout).toMatch(/\nImplemented by \(demo-skill\): Board\n {2}Read one with: demo-cli docs <id>\n$/);
+    expect(forms.stdout).toMatch(/\nImplemented by \(demo-skill components\): Board\n {2}Read one with: demo-cli docs <id>\n$/);
     expect(forms.stdout).not.toContain("Board [demo-skill component, pattern]");
     const outline = run(["read", "forms", "--outline"], { skillDir: hub, cwd: project });
     expect(outline.stdout).toContain("Implemented by:\n  Board [demo-skill component, pattern]  ");
-    expect(outline.stdout).toContain("  Read one demo-skill entry with: demo-cli docs <id>");
+    expect(outline.stdout).toContain("  Read one of the demo-skill components with: demo-cli docs <id>");
 
     const check = run(["graph", "--check"], { skillDir: hub, cwd: project });
     expect(check.code).toBe(0);
     expect(check.stdout).toContain("1 entries");
+  });
+
+  test("each group of entries has its own read command and source", () => {
+    const { root, hub } = copyHub();
+    const recipe = `[{ id: "BoardPage", kind: "recipe", label: "board", summary: "A page with a board of work.",
+      keywords: ["board page"], links: ["forms"] }]`;
+    addEntriesMember(
+      root,
+      `console.log(JSON.stringify({ problems: [], groups: [
+        { name: "components", read: "demo-cli docs {id}", source: "the demo app.", entries: ${boardEntry()} },
+        { name: "recipes", read: "demo-cli recipe {id}", source: "the demo skill.", entries: ${recipe} },
+      ] }));`,
+    );
+    const found = cli(hub, "search", "board");
+    expect(found.stdout).toContain("  read: demo-cli docs Board");
+    expect(found.stdout).toContain("  read: demo-cli recipe BoardPage");
+    expect(found.stdout).toContain("demo-skill components: the demo app.\ndemo-skill recipes: the demo skill.");
+    const forms = cli(hub, "read", "forms");
+    expect(forms.stdout).toContain(
+      "Implemented by (demo-skill components): Board\n  Read one with: demo-cli docs <id>\nImplemented by (demo-skill recipes): BoardPage\n  Read one with: demo-cli recipe <id>",
+    );
+    expect(cli(hub, "graph", "--check").code).toBe(0);
   });
 
   test("an entry link to an unknown note fails the check", () => {
@@ -459,7 +479,7 @@ describe("member entries", () => {
     addEntriesMember(root, 'console.log("[]");');
     const result = cli(hub, "graph", "--check");
     expect(result.code).toBe(1);
-    expect(result.stdout).toContain('must print { "read": "<command with {id}>"');
+    expect(result.stdout).toContain('must print { "problems": [...], "groups": [');
   });
 
   test("an entry id that is not PascalCase fails the check", () => {
@@ -467,7 +487,7 @@ describe("member entries", () => {
     addEntriesMember(root, entriesScript(boardEntry().replace('id: "Board"', 'id: "board"')));
     const result = cli(hub, "graph", "--check");
     expect(result.code).toBe(1);
-    expect(result.stdout).toContain('entry 1 needs an "id" in PascalCase');
+    expect(result.stdout).toContain('entry 1 of the group "components" needs an "id" in PascalCase');
   });
 
   test("an entries script outside the skill folder fails the check", () => {

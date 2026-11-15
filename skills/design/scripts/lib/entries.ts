@@ -21,11 +21,18 @@ export interface Entry {
   readonly links: ReadonlyArray<string>;
   // The command that prints the full entry.
   readonly read: string;
+  // The name of the group of the entry, such as "components".
+  readonly group: string;
   readonly skill: SkillSource;
 }
 
+// A member prints its entries in groups. Each group has its own read command
+// and its own source, because the entries of one member can come from
+// different places, such as the kit of an app and the folder of the skill.
 export interface EntrySource {
   readonly skill: SkillSource;
+  // A plural noun, such as "components" or "recipes".
+  readonly group: string;
   // One line that tells where the entries come from, such as an app folder.
   readonly source: string;
   readonly count: number;
@@ -55,65 +62,85 @@ function strings(value: unknown): string[] | null {
   return Array.isArray(value) && value.every((item) => typeof item === "string") ? (value as string[]) : null;
 }
 
-function parseOutput(skill: SkillSource, file: string, stdout: string, problems: Problem[]): { entries: Entry[]; source: string; read: string } {
+const GROUP_NAME = /^[a-z][a-z-]*$/;
+
+const OUTPUT_SHAPE =
+  '{ "problems": [...], "groups": [{ "name": "<plural noun>", "read": "<command with {id}>", "source": "<line>", "entries": [...] }] }';
+
+function parseEntry(skill: SkillSource, file: string, group: { name: string; read: string }, raw: unknown, index: number, problems: Problem[]): Entry | null {
+  const item = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+  const id = text(item["id"]);
+  const kind = text(item["kind"]);
+  const summary = text(item["summary"]);
+  const keywords = strings(item["keywords"]);
+  const links = strings(item["links"]) ?? [];
+  const rawSections = Array.isArray(item["sections"]) ? item["sections"] : [];
+  if (id === null || !ENTRY_ID.test(id) || kind === null || summary === null || keywords === null) {
+    problems.push({ file, message: `${skill.name}: entry ${index + 1} of the group "${group.name}" needs an "id" in PascalCase, a "kind", a "summary", and "keywords"` });
+    return null;
+  }
+  const sections: Section[] = [];
+  for (const section of rawSections) {
+    const title = text((section as Record<string, unknown>)?.["title"]);
+    const body = text((section as Record<string, unknown>)?.["text"]);
+    if (title === null || body === null) {
+      problems.push({ file, message: `${skill.name}: a section of the entry ${id} needs a "title" and a "text"` });
+      continue;
+    }
+    sections.push({ title, slug: slugify(title), text: body, words: countWords(body), line: 0 });
+  }
+  return {
+    id,
+    kind,
+    label: text(item["label"]) ?? "",
+    title: text(item["title"]) ?? id,
+    summary,
+    keywords,
+    intro: text(item["intro"]) ?? "",
+    sections,
+    links,
+    read: group.read.replaceAll("{id}", id),
+    group: group.name,
+    skill,
+  };
+}
+
+function parseOutput(skill: SkillSource, file: string, stdout: string, problems: Problem[]): { entries: Entry[]; sources: EntrySource[] } {
   let data: unknown;
   try {
     data = JSON.parse(stdout);
   } catch (error) {
     problems.push({ file, message: `the entries command of "${skill.name}" did not print JSON: ${(error as Error).message}` });
-    return { entries: [], source: "", read: "" };
+    return { entries: [], sources: [] };
   }
   const record = typeof data === "object" && data !== null && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
-  const read = text(record?.["read"]);
-  const source = text(record?.["source"]);
-  const items = record?.["entries"];
-  if (!record || read === null || !read.includes("{id}") || source === null || !Array.isArray(items)) {
-    problems.push({
-      file,
-      message: `the entries command of "${skill.name}" must print { "read": "<command with {id}>", "source": "<line>", "entries": [...], "problems": [...] }`,
-    });
-    return { entries: [], source: "", read: "" };
+  const groups = record?.["groups"];
+  if (!record || !Array.isArray(groups)) {
+    problems.push({ file, message: `the entries command of "${skill.name}" must print ${OUTPUT_SHAPE}` });
+    return { entries: [], sources: [] };
   }
   for (const item of strings(record["problems"]) ?? []) problems.push({ file, message: `${skill.name}: ${item}` });
 
   const entries: Entry[] = [];
-  items.forEach((raw, index) => {
-    const item = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
-    const id = text(item["id"]);
-    const kind = text(item["kind"]);
-    const summary = text(item["summary"]);
-    const keywords = strings(item["keywords"]);
-    const links = strings(item["links"]) ?? [];
-    const rawSections = Array.isArray(item["sections"]) ? item["sections"] : [];
-    if (id === null || !ENTRY_ID.test(id) || kind === null || summary === null || keywords === null) {
-      problems.push({ file, message: `${skill.name}: entry ${index + 1} needs an "id" in PascalCase, a "kind", a "summary", and "keywords"` });
+  const sources: EntrySource[] = [];
+  const names = new Set<string>();
+  groups.forEach((rawGroup, groupIndex) => {
+    const group = typeof rawGroup === "object" && rawGroup !== null ? (rawGroup as Record<string, unknown>) : {};
+    const name = text(group["name"]);
+    const read = text(group["read"]);
+    const source = text(group["source"]);
+    const items = group["entries"];
+    if (name === null || !GROUP_NAME.test(name) || read === null || !read.includes("{id}") || source === null || !Array.isArray(items)) {
+      problems.push({ file, message: `${skill.name}: group ${groupIndex + 1} needs a lowercase "name", a "read" command with {id}, a "source", and "entries"; the output is ${OUTPUT_SHAPE}` });
       return;
     }
-    const sections: Section[] = [];
-    for (const section of rawSections) {
-      const title = text((section as Record<string, unknown>)?.["title"]);
-      const body = text((section as Record<string, unknown>)?.["text"]);
-      if (title === null || body === null) {
-        problems.push({ file, message: `${skill.name}: a section of the entry ${id} needs a "title" and a "text"` });
-        continue;
-      }
-      sections.push({ title, slug: slugify(title), text: body, words: countWords(body), line: 0 });
-    }
-    entries.push({
-      id,
-      kind,
-      label: text(item["label"]) ?? "",
-      title: text(item["title"]) ?? id,
-      summary,
-      keywords,
-      intro: text(item["intro"]) ?? "",
-      sections,
-      links,
-      read: read.replaceAll("{id}", id),
-      skill,
-    });
+    if (names.has(name)) problems.push({ file, message: `${skill.name}: the group name "${name}" appears twice` });
+    names.add(name);
+    const parsed = items.flatMap((raw, index) => parseEntry(skill, file, { name, read }, raw, index, problems) ?? []);
+    entries.push(...parsed);
+    sources.push({ skill, group: name, source, count: parsed.length, read });
   });
-  return { entries, source, read };
+  return { entries, sources };
 }
 
 function runCommand(skill: SkillSource, command: ReadonlyArray<string>, cwd: string, problems: Problem[]) {
@@ -151,7 +178,7 @@ export function loadEntries(graph: Graph, cwd: string): EntrySet {
     const output = runCommand(skill, skill.entries, cwd, problems);
     if (!output) continue;
     const parsed = parseOutput(skill, output.file, output.stdout, problems);
-    sources.push({ skill, source: parsed.source, count: parsed.entries.length, read: parsed.read });
+    sources.push(...parsed.sources);
     entries.push(...parsed.entries);
   }
 
