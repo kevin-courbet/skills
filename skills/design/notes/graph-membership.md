@@ -30,7 +30,7 @@ A member can add documents that are not notes to `design search`, such as the co
 3. The script prints one JSON object and exits with status 0:
 
    ```json
-   { "read": "<command that prints one entry, with {id}>", "source": "<one line: where the entries come from>",
+   { "read": "<command that prints one entry, with {id}>", "source": "<phrase: where the entries come from>",
      "problems": ["<one line for each problem>"],
      "entries": [{ "id": "PriceTag", "kind": "component", "label": "pattern", "title": "PriceTag",
        "summary": "<one sentence>", "keywords": ["..."], "intro": "<text>",

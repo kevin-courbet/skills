@@ -828,10 +828,16 @@ function sourceInfo(source: KitSource) {
   return { root: source.root, isApp: source.isApp };
 }
 
-function sourceLine(source: KitSource): string {
+// Where the docs come from, as a phrase that follows "Source:" in the docs
+// and follows the skill name in the search output of the design skill.
+function sourcePhrase(source: KitSource): string {
   return source.isApp
-    ? `Source: the installed kit of the app at ${source.root}.`
-    : `Source: the skill template at ${source.root}, because no folder from ${process.cwd()} upward has ${lockName}. An app can have an older kit.`;
+    ? `the installed kit of the app at ${source.root}.`
+    : `the skill template at ${source.root}, because no folder from ${process.cwd()} upward has ${lockName}. An app can have an older kit.`;
+}
+
+function sourceLine(source: KitSource): string {
+  return `Source: ${sourcePhrase(source)}`;
 }
 
 function catalogItem(doc: KitDoc) {
@@ -847,7 +853,7 @@ function designEntries(source: KitSource, docs: ReadonlyArray<KitDoc>) {
   const problems = [...kitProblems(docs).entries()].filter(([, items]) => items.length > 0);
   return {
     read: docsCommand(),
-    source: sourceLine(source),
+    source: sourcePhrase(source),
     problems:
       problems.length === 0
         ? []

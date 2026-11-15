@@ -364,7 +364,7 @@ const project = existsSync("project.txt") ? readFileSync("project.txt", "utf8").
 ${extra}
 console.log(JSON.stringify({
   read: "demo-cli docs {id}",
-  source: "Source: " + project + ".",
+  source: project + ".",
   problems: [],
   entries: ${entries},
 }));
@@ -400,7 +400,7 @@ describe("member entries", () => {
     expect(found.code).toBe(0);
     expect(found.stdout).toStartWith("Board [demo-skill component, pattern]");
     expect(found.stdout).toContain("  read: demo-cli docs Board");
-    expect(found.stdout).toContain("Source: the demo app.");
+    expect(found.stdout).toContain("demo-skill entries: the demo app.");
 
     const read = run(["read", "Board"], { skillDir: hub, cwd: project });
     expect(read.code).toBe(1);

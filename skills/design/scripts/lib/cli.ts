@@ -293,7 +293,7 @@ function commandList(context: Context, s: Style): string {
   const sources = context.entries().sources;
   if (sources.length > 0) {
     lines.push("", s.heading("member entries"), "  Search finds them with the notes:");
-    for (const source of sources) lines.push(`  ${source.skill.name}: ${source.count} entries. ${source.source}`);
+    for (const source of sources) lines.push(`  ${source.skill.name}: ${source.count} entries from ${source.source}`);
   }
   return lines.join("\n");
 }
