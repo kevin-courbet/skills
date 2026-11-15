@@ -1,13 +1,20 @@
 # ReUI Coverage
 
-This file records how the kit covers the free, MIT-licensed ReUI components
-(https://reui.io, commit 067aa0dc7f8bbfec1cd76fc5ad31f842be5f569a). Only free
-components and examples were used. No ReUI Pro block or template was used.
+This file records how the kit of the `internal-app` skill covers the free,
+MIT-licensed ReUI components (https://reui.io, commit
+067aa0dc7f8bbfec1cd76fc5ad31f842be5f569a). Only free components and examples
+were used. No ReUI Pro block or template was used.
+
+This file is for the maintainers of the kit. It does not ship with the skill.
+The kit files that it names are in
+`skills/internal-app/assets/template/src/components/`. The rules for app
+builders about the skipped controls are in the "Controls The Kit Leaves Out"
+section of `skills/internal-app/notes/internal-app-adding-a-primitive.md`.
 
 The test for each item: does an internal tool (an operations console, an
 admin, a back office, or a data app) plausibly use it? Ported items are
 re-implemented with StyleX, react-aria-components, and lucide.
-`THIRD_PARTY_NOTICES.md` lists every kit file that uses ReUI behavior or
+`skills/internal-app/THIRD_PARTY_NOTICES.md` lists every kit file that uses ReUI behavior or
 design.
 
 Decisions:

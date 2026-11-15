@@ -16,13 +16,16 @@ bun "$design_cli" graph --check
 
 # Other skills point to design notes by id. Each pointer must resolve, so a
 # renamed note or section fails here and not in an agent session.
+design_pointer='design read [a-z0-9]+(-[a-z0-9]+)*(#[a-z0-9]+(-[a-z0-9]+)*)?'
 design_references=$(
-  grep -ohE 'design read [a-z0-9]+(-[a-z0-9]+)*(#[a-z0-9]+(-[a-z0-9]+)*)?' \
-    "$repo_root/skills/internal-app/SKILL.md" \
-    "$repo_root"/skills/internal-app/references/*.md \
-    "$repo_root"/skills/internal-app/notes/*.md \
-    "$repo_root/skills/internal-app/scripts/internal-app" |
-    sed 's/^design read //' | sort -u
+  {
+    grep -ohE "$design_pointer" \
+      "$repo_root/skills/internal-app/SKILL.md" \
+      "$repo_root"/skills/internal-app/notes/*.md \
+      "$repo_root/skills/internal-app/scripts/internal-app"
+    grep -rohE "$design_pointer" --include='*.ts' --include='*.tsx' \
+      "$repo_root/skills/internal-app/assets/template/src"
+  } | sed 's/^design read //' | sort -u
 )
 test -n "$design_references"
 while IFS= read -r design_reference; do

@@ -1,8 +1,8 @@
 ---
 id: internal-app-adding-a-primitive
 topic: internal-app
-summary: Add a missing control to the kit in this skill, with its doc comment, its showcase, the template checks, kit.json, and a sync into each app.
-keywords: [add a primitive, new component, missing control, extend the kit, kit component, one-off control, port reui, doc comment, kit.json, showcase]
+summary: Add a missing control to the kit in this skill, with its doc comment, its showcase, the template checks, kit.json, and a sync into each app, and the controls that the kit leaves out on purpose.
+keywords: [add a primitive, new component, missing control, extend the kit, kit component, one-off control, port reui, doc comment, kit.json, showcase, color picker, phone input, rating, emoji picker, signature pad, otp input, carousel, chat, scroll area, menubar, navigation menu]
 related: [internal-app-page-patterns, internal-app-composition, method]
 ---
 
@@ -21,4 +21,23 @@ Kit components live in this skill, not in an app. Do not build a one-off control
 
 ## Ports Of ReUI
 
-Several kit components use the behavior and the design of free ReUI components. `THIRD_PARTY_NOTICES.md` in this skill lists them with the ReUI license. `references/reui-coverage.md` records which ReUI components the kit covers, and why it leaves out the others. Keep the license line first in a ported file.
+Several kit components use the behavior and the design of free ReUI components. `THIRD_PARTY_NOTICES.md` in this skill lists them with the ReUI license. Keep the license line first in a ported file. The skills repository records which ReUI components the kit covers in `docs/reui-coverage.md`.
+
+## Controls The Kit Leaves Out
+
+The kit does not have these controls on purpose. Do not add them. Use the replacement.
+
+| Control | Use instead | Reason |
+|---|---|---|
+| Color picker | A `Select` of an `intent` | The colors come from tokens. A free color in app data breaks the token rule. |
+| Phone input | `TextField` with `type="tel"` | Correct formatting needs a library for phone numbers. |
+| Star rating | `RadioGroup` or `Select` for a score | Star ratings are a pattern for consumers. |
+| Emoji picker, signature pad | Nothing | Internal tools do not need them. |
+| One-time code input | Nothing | Internal apps sign in through single sign-on. |
+| Carousel | A list or a grid | Internal pages show all the items. |
+| Chat bubbles and message lists | `Timeline` for comments and history, and `FileUpload` with `FileTypeIcon` for files | Internal tools are not chat apps. |
+| Questionnaire | The field primitives in a form | Survey flows are not a pattern of internal tools. |
+| Scroll area | Native scrolling | It keeps the behavior of the platform. |
+| Menubar, navigation menu | `AppShell` for the navigation, and toolbars and menus in pages | The sidebar of the app shell is the navigation. |
+| Aspect ratio | The CSS `aspectRatio` property | No primitive is necessary. |
+| Isometric icon stack | `IconTile` | It is a decoration. |

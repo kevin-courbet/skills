@@ -9,5 +9,6 @@ Use ASD-STE100 Simplified Technical English for user-facing text and docs.
 - The notes in `skills/design/notes/` are the only source of design rules. Do not copy a rule into another skill. Link to its note with `design read <id>` or `[[id]]`. The `note-format` note gives the format.
 - Do not generate or sync copies of design notes or design assets. Other skills point to a note by id. A skill that narrows the design rules joins the graph with `design-graph.json`, as the `graph-membership` note describes.
 - After a change to the design notes, run `bun skills/design/scripts/design graph --check` and `bun test skills/design/tests`.
+- `docs/` holds the decisions and the records for the maintainers of this repository, such as `docs/reui-coverage.md`. It does not ship with a skill. Do not point a skill to it.
 - Do not edit `skills/create-data-visualizations/` here. The catalog workflow publishes it from Aperture.
 - Run `bash scripts/validate-skills` before completion.
