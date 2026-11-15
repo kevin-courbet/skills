@@ -25,9 +25,9 @@
  * - The columns scroll sideways on narrow screens.
  *
  * ## Rules
- * - Handle `onChange` and `onColumnsChange` as Optimistic moves in
- *   `references/data.md` tells. Restore a failed move with
- *   `withViewTransition`, so that the card glides back.
+ * - Handle `onChange` and `onColumnsChange` as optimistic moves: run
+ *   `design read internal-app-mutations#optimistic-moves`. Restore a failed
+ *   move with `withViewTransition`, so that the card glides back.
  * - `onItemAction` opens the card, for example in a peek `Sheet`.
  *
  * ## Example

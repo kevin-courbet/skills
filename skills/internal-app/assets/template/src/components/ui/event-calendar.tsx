@@ -54,8 +54,9 @@
  *   and Left or Right change the end of an all-day event.
  *
  * ## Rules
- * - Handle `onEventChange` as Optimistic moves in `references/data.md` tells.
- *   On a failure, restore the event and show an error toast.
+ * - Handle `onEventChange` as an optimistic move: run
+ *   `design read internal-app-mutations#optimistic-moves`. On a failure,
+ *   restore the event and show an error toast.
  * - Open an event with `onEventAction`, for example in a peek `Sheet`.
  *
  * ## Example

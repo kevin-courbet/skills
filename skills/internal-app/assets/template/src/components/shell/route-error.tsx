@@ -24,6 +24,11 @@
  * ## Rules
  * - A loader throws `notFound()` for a missing record, so that people see the
  *   not-found page and not a failed load.
+ * - When the app needs diagnostic correlation, wrap `RouteError` in an error
+ *   component of the app. Give `onError` to report the error and
+ *   `describeError` to write the final message. The reporter must remove
+ *   duplicates of errors that also reach the query cache or the mutation
+ *   cache.
  *
  * ## Example
  * ```tsx

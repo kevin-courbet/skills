@@ -17,6 +17,11 @@
  *   attempt. See `fieldError`.
  *
  * ## Rules
+ * - Spread `formBehavior` first in `useForm`. Do not add `onSubmit` or
+ *   `onBlur` validators: a submit then reports old errors without a new
+ *   check.
+ * - Read `hasSubmitAttempt` in the form component and give it to each
+ *   field, because a field renders again only when its own state changes.
  * - Do not disable the submit button while the form is invalid.
  * - Give `fieldError` to the `errorMessage` of each field. Do not write a
  *   different rule for when a message shows.

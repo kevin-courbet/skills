@@ -56,7 +56,7 @@ A desktop page on a tablet shows these signs. If a page for work away from a des
 
 ## Moves
 
-- Change the query cache inside `withViewTransition`, then send the request. See Optimistic moves in `references/data.md`.
+- Change the query cache inside `withViewTransition`, then send the request. See [[internal-app-mutations#optimistic-moves]].
 - If the request fails, restore the item inside `withViewTransition` and show a toast that names the item: "WO-1042 did not change. Try again." The card moves back, so the toast is the only place for the message.
 - Do not show a toast when the move succeeds. The card in its new section shows the result.
 

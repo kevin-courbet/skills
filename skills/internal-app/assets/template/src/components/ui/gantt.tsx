@@ -46,9 +46,9 @@
  * - A task without children needs a `start`. A task that ends before it
  *   starts throws.
  * - With no tasks, the chart shows nothing. Show an `EmptyState` instead.
- * - Handle `onTaskChange` and `onReorder` as Optimistic moves in
- *   `references/data.md` tells. On a failure, restore the tasks and show an
- *   error toast.
+ * - Handle `onTaskChange` and `onReorder` as optimistic moves: run
+ *   `design read internal-app-mutations#optimistic-moves`. On a failure,
+ *   restore the tasks and show an error toast.
  *
  * ## Example
  * ```tsx

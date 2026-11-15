@@ -78,8 +78,8 @@ The general rules for pages are notes:
 1. Read `references/stack.md`.
 2. Run `new <dir> --name "<App name>"`, then `bun install`, `bun run build`, `bun run tsc`.
 3. Replace the example `items` feature with the real features. Keep its file
-   shapes. Follow `references/data.md`, the notes in Components, and the
-   component docs.
+   shapes. Follow the data notes in References, the notes in Components, and
+   the component docs.
 4. Finish with `references/review.md`.
 
 ### Upgrade an existing app
@@ -93,8 +93,8 @@ The general rules for pages are notes:
 
 ### Add or change pages
 
-1. Run `design read internal-app-page-patterns` and read `references/data.md`
-   before writing a route. For a page or a dialog with a form, run
+1. Run `design read internal-app-page-patterns`, `design read internal-app-routes`,
+   and `design read internal-app-server-functions` before writing a route. For a page or a dialog with a form, run
    `design read forms` first.
 2. Find each component with `design search` and read it with `docs <Id>`.
    If no component fits, stop and add one to this skill
@@ -109,8 +109,12 @@ The general rules for pages are notes:
 | `references/stack.md` | Installing anything, or creating files. Packages, forbidden libraries, layout, scripts. |
 | `references/styling.md` | Writing any style, token, or theme code. |
 | `references/reui-coverage.md` | Porting a ReUI component. It lists what the kit covers and what it leaves out. |
-| `references/data.md` | Writing a route, server function, Effect service, query, mutation, or form. |
-| `references/rpc.md` | Connecting a separate backend with Effect v4 RPC, typed errors, SSR, or cancellation. |
+| `design read internal-app-routes` | Writing a route, its loader, or its search params. |
+| `design read internal-app-server-functions` | Writing a server function, a query, or a feature module. |
+| `design read internal-app-effect-services` | Writing an Effect service, a layer, config, or a schema. |
+| `design read internal-app-mutations` | Writing a mutation, an optimistic move, or a delete. |
+| `design read internal-app-error-reporting` | Connecting an error tracker or server observability. |
+| `design read internal-app-rpc` | Connecting a separate backend with Effect 4 RPC, typed errors, SSR, or cancellation. |
 | `references/charts.md` | Adding a chart or widget. Also load the `create-data-visualizations` skill. |
 | `references/upgrade.md` | Migrating an existing app. |
 | `references/review.md` | Handing off any change. |
@@ -122,8 +126,8 @@ implementation; the `design` skill fixes the design method. In this skill,
 
 For any form, including a dialog with one field, run `design read forms`
 before you design it. Then run `design read internal-app-forms` for the kit
-component of each answer, and read Forms in `references/data.md` for the
-validation.
+component of each answer, and `design read internal-app-form-submit` for the
+form state and the server call.
 
 ## Non-Negotiables
 

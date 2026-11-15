@@ -22,8 +22,13 @@
  *   match the formatters of `src/lib/locale.ts`.
  *
  * ## Rules
+ * - Render it in the `shellComponent` of the root route, so that the
+ *   document and the app scripts stay available when `beforeLoad` fails.
  * - Read the theme in `beforeLoad` of the root route with `getThemeChoice()`,
  *   which reads the cookie without a request on client navigations.
+ * - When the first theme lookup fails, give the system theme until a lookup
+ *   succeeds. `AppDocument` then uses the recovered document snapshot until
+ *   people choose a theme.
  *
  * ## Example
  * ```tsx

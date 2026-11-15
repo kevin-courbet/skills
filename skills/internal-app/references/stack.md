@@ -61,7 +61,7 @@ is in `assets/kit.json`.
 Prefer Effect RPC for a separately deployed backend or a contract shared by multiple clients.
 Use server functions with `runServerFn` for features owned by a single Start process.
 RPC is not universally faster or simpler. It adds contract, transport, and runtime ownership.
-Read `rpc.md` for the verified Effect v4 pattern and its tradeoffs.
+Run `design read internal-app-rpc` for the verified Effect v4 pattern and its tradeoffs.
 
 TypeScript 7 is the CLI typechecker, not a JavaScript compiler-API dependency.
 If a tool imports the TypeScript JavaScript API, declare `typescript-js` as an npm alias to TypeScript 5 and configure that tool explicitly.

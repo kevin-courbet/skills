@@ -29,7 +29,7 @@ Controls in one row share one height. The kit controls read the control size of 
 
 ## Moves
 
-Moves in `Kanban`, `SortableList`, `Tree`, `Gantt`, and `EventCalendar` are optimistic. Apply the new value at once, persist it with a mutation, and on failure restore the previous value and show an error toast. See Optimistic moves in `references/data.md`. Every drag has a keyboard path. Never add a control that only a drag can use.
+Moves in `Kanban`, `SortableList`, `Tree`, `Gantt`, and `EventCalendar` are optimistic. Apply the new value at once, persist it with a mutation, and on failure restore the previous value and show an error toast. See [[internal-app-mutations#optimistic-moves]]. Every drag has a keyboard path. Never add a control that only a drag can use.
 
 ## Focus After A Change
 
