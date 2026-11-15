@@ -2,7 +2,7 @@
 id: sources
 topic: process
 summary: The sources that the design notes condense, with their licenses and credits, and the links for the dark theme, the palettes, and the icons.
-keywords: [sources, source basis, references, bibliography, refactoring ui, frontend-design, impeccable, emil kowalski, attribution, credits, citations, where do these rules come from, license]
+keywords: [sources, source basis, references, bibliography, refactoring ui, frontend-design, impeccable, emil kowalski, ibelick, attribution, credits, citations, where do these rules come from, license]
 related: [method, dark-theme, palettes, icons, graphite]
 ---
 
@@ -28,7 +28,7 @@ The motion notes condense the design engineering skill of Emil Kowalski ([emilko
 
 ## Motion Performance
 
-[[motion-performance]] also condenses the `fixing-motion-performance` skill.
+[[motion-performance]] also condenses the `fixing-motion-performance` skill from ibelick ([ui-skills](https://github.com/ibelick/ui-skills)).
 
 ## Dark Theme Sources
 
