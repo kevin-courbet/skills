@@ -435,19 +435,17 @@ export function EventCalendar({
             <Button
               intent="ghost"
               iconOnly
+              icon={ChevronLeft}
               aria-label={previousLabel[currentView]}
               onPress={() => step(-1)}
-            >
-              <ChevronLeft aria-hidden {...stylex.props(styles.icon)} />
-            </Button>
+            />
             <Button
               intent="ghost"
               iconOnly
+              icon={ChevronRight}
               aria-label={nextLabel[currentView]}
               onPress={() => step(1)}
-            >
-              <ChevronRight aria-hidden {...stylex.props(styles.icon)} />
-            </Button>
+            />
             <h3 aria-live="polite" {...stylex.props(styles.heading)}>
               {periodHeading(currentView, anchor)}
             </h3>
@@ -832,7 +830,7 @@ function timeRange(item: Placed): string {
 
 const frequencyUnit = { daily: "day", weekly: "week", monthly: "month" } as const;
 
-/** "Repeats every 2 weeks on Mon, Wed until 30 Nov", in words for labels and the agenda. */
+/** "Repeats every 2 weeks on Mon, Wed until 30 Nov 2026", in words for labels and the agenda. */
 export function recurrenceLabel(rule: CalendarRecurrence): string {
   const interval = rule.interval ?? 1;
   const unit = frequencyUnit[rule.frequency];
@@ -846,7 +844,7 @@ export function recurrenceLabel(rule: CalendarRecurrence): string {
 
 function seriesEnd(rule: CalendarRecurrence): string {
   if (rule.until !== undefined)
-    return ` until ${formatDay(parseDate(rule.until), { day: "numeric", month: "short" })}`;
+    return ` until ${formatDay(parseDate(rule.until), { day: "numeric", month: "short", year: "numeric" })}`;
   if (rule.count !== undefined) return `, ${rule.count} times`;
   return "";
 }
@@ -1404,7 +1402,8 @@ function TimeGrid({
 
   useEffect(() => {
     const body = bodyRef.current;
-    if (body !== null) body.scrollTop = (body.scrollHeight / 24) * scrollToHour;
+    // The hour label sits across its hour line. A quarter hour above the line keeps the label in view.
+    if (body !== null) body.scrollTop = (body.scrollHeight / 24) * (scrollToHour - 0.25);
   }, [scrollToHour]);
 
   const columnLabel = (column: GridColumn) =>
@@ -1544,7 +1543,7 @@ function TimedEvent({
   const intent = item.event.intent ?? "accent";
   const canChange = interaction.canChange(item);
   // Short events put the title and the time on one line so the title stays visible.
-  const isCompact = segment.endMin - segment.startMin < 45;
+  const isCompact = segment.endMin - segment.startMin < twoLineMinutes;
   const position = styles.block(
     segment.startMin / dayMinutes,
     Math.max(segment.endMin - segment.startMin, 20) / dayMinutes,
@@ -1553,8 +1552,8 @@ function TimedEvent({
   );
   const content = (
     <>
-      <span {...stylex.props(styles.blockTitle)}>
-        {item.event.title}
+      <span {...stylex.props(styles.blockTitle, isCompact && styles.blockTitleCompact)}>
+        <span {...stylex.props(styles.blockTitleText)}>{item.event.title}</span>
         {item.event.recurrence === undefined ? null : (
           <Repeat aria-hidden {...stylex.props(styles.repeatIcon)} />
         )}
@@ -1801,7 +1800,15 @@ function AgendaRow({
   );
 }
 
-const hourHeight = "3rem";
+const hourRem = 3;
+const hourHeight = `${hourRem}rem`;
+/**
+ * The shortest event, in minutes, whose block holds the title and the time on two lines.
+ * The block loses 2px to the gap between blocks, 4px to its padding, and 1px to the gap
+ * between the lines. Each line is `font.leadingTight` (1.25) times the largest `font.xs`,
+ * which is 0.8125rem in the touch theme.
+ */
+const twoLineMinutes = Math.ceil(((2 * 1.25 * 0.8125 + 7 / 16) / hourRem) * 60);
 
 const styles = stylex.create({
   root: { display: "flex", flexDirection: "column", gap: space.md, minWidth: 0 },
@@ -1822,7 +1829,6 @@ const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
-  icon: { width: size.icon, height: size.icon },
   iconSm: { width: size.iconSm, height: size.iconSm },
   hint: { margin: 0, fontSize: font.sm, color: color.textMuted },
   focusRing: {
@@ -2094,7 +2100,16 @@ const styles = stylex.create({
   dayColumnToday: { backgroundColor: color.subtle },
   timedWrap: { position: "absolute", display: "flex" },
   timedFill: { width: "100%", height: "100%" },
-  timedCompact: { flexDirection: "row", alignItems: "center", gap: space.xs, paddingBlock: 0 },
+  // The time wraps to a second line, which the block hides, when the title leaves no room
+  // for all of it. A time cut to a few characters tells people nothing.
+  timedCompact: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    alignContent: "flex-start",
+    gap: space.xs,
+    paddingBlock: 0,
+  },
   timed: {
     display: "flex",
     flexDirection: "column",
@@ -2109,6 +2124,7 @@ const styles = stylex.create({
     borderInlineStartStyle: "solid",
     borderRadius: radius.sm,
     fontSize: font.xs,
+    lineHeight: font.leadingTight,
     textAlign: "start",
   },
   blockHandle: {
@@ -2134,18 +2150,27 @@ const styles = stylex.create({
     minWidth: "2.5rem",
     fontWeight: font.medium,
     overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
     maxWidth: "100%",
   },
-  blockTime: {
+  // The first line fills the block, so the title and the time stay in the middle of it.
+  blockTitleCompact: { height: "100%" },
+  // A flex container does not truncate its text with an ellipsis, so the text has its own box.
+  blockTitleText: {
     minWidth: 0,
     overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  // A column item aligned to the start takes the width of its text, so only `maxWidth`
+  // makes the time end with an ellipsis in a narrow block.
+  blockTime: {
+    minWidth: 0,
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
     color: color.textMuted,
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
-    // In a one-line block the time gives way before the title.
-    flexShrink: 10,
   },
   nowLine: {
     position: "absolute",

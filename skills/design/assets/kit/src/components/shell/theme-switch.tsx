@@ -41,18 +41,16 @@ export function ThemeSwitch() {
     onError: (error) =>
       toast.error("The theme could not be saved", { description: failureMessage(error) }),
   });
-  const Icon = icons[value];
   return (
     <MenuTrigger>
       <Button
         intent="ghost"
         size="sm"
         iconOnly
+        icon={icons[value]}
         aria-label={`Theme: ${labels[value]}`}
         isDisabled={mutation.isPending}
-      >
-        <Icon width={16} height={16} />
-      </Button>
+      />
       <Menu
         aria-label="Theme"
         selectionMode="single"

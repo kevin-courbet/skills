@@ -18,10 +18,14 @@
  * - It applies `chartHost` to the widget root and to the chart, and it renders
  *   SVG.
  * - The footer reads "Source: " and then `source`.
+ * - The time axis shows days or longer periods, never hours. A series of less
+ *   than a week has a tick on each day.
+ * - A date that is not a day in the form `YYYY-MM-DD`, or a series that is not
+ *   in date order, throws an error.
  *
  * ## Rules
- * - The page owns the data access and the aggregation. Give the chart the
- *   points that it shows.
+ * - The page owns the data access and the aggregation. Give the chart one
+ *   point for each day that it shows.
  * - Put it in a `Section` whose title says what the chart answers.
  *
  * ## Example
@@ -42,6 +46,7 @@ import {
   ChartToolbar,
   ChartWidget,
   LineChart,
+  type TimeAxisOptions,
   type TimeSeriesDatum,
   chartData,
 } from "@kevin-courbet/aperture";
@@ -56,16 +61,37 @@ export interface TrendChartProps {
   readonly unit: string;
   /** Where the data comes from, such as "Items service, UTC days". */
   readonly source: string;
-  /** The points in date order: an ISO date and a number for each point. */
+  /** One point for each day, in date order: a day such as "2026-11-14" and a number. */
   readonly series: ReadonlyArray<{ readonly date: string; readonly value: number }>;
 }
 
+const dayMs = 86_400_000;
+
+const elapsedTime: TimeAxisOptions = { position: "elapsed" };
+const eachDay: TimeAxisOptions = {
+  position: "elapsed",
+  ticks: { kind: "calendar", interval: { unit: "day", step: 1 } },
+};
+
 export function TrendChart({ title, description, unit, source, series }: TrendChartProps) {
-  const data: ReadonlyArray<TimeSeriesDatum> = series.map((point) => ({
-    id: point.date,
-    date: new Date(point.date),
-    value: { kind: "value", value: point.value },
-  }));
+  const data: ReadonlyArray<TimeSeriesDatum> = series.map((point, index) => {
+    const date = new Date(point.date);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(point.date) || Number.isNaN(date.getTime()))
+      throw new Error(`TrendChart: ${point.date} is not a day in the form YYYY-MM-DD.`);
+    const previous = series[index - 1];
+    if (previous !== undefined && previous.date >= point.date)
+      throw new Error(`TrendChart: ${point.date} comes after ${previous.date}. Sort the series.`);
+    return { id: point.date, date, value: { kind: "value", value: point.value } };
+  });
+  const first = data[0];
+  const last = data.at(-1);
+  const spanDays =
+    first === undefined || last === undefined
+      ? 0
+      : (last.date.getTime() - first.date.getTime()) / dayMs;
+  // Aperture shows at most 12 time labels. Thus its automatic ticks go below a day only when the
+  // series is shorter than a week, and then a tick on each day fits.
+  const timeAxis = spanDays > 0 && spanDays < 7 ? eachDay : elapsedTime;
   // The widget and the chart are separate Aperture roots. Each re-declares the variables, so each needs the bridge.
   const host = stylex.props(chartHost.root);
   return (
@@ -86,6 +112,7 @@ export function TrendChart({ title, description, unit, source, series }: TrendCh
           ariaDescription={description}
           state={chartData(data)}
           yLabel={unit}
+          timeAxis={timeAxis}
           rendering={{ kind: "svg" }}
           className={host.className}
           style={host.style}

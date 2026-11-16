@@ -65,6 +65,8 @@ export interface TagGroupProps<Value extends string> {
   readonly emptyLabel?: string;
   /** Hint between the label and the tags. */
   readonly description?: string;
+  /** Dims the tags and disables them, such as under a disabled field. */
+  readonly isDisabled?: boolean;
   /** StyleX styles for the root, such as a margin from the parent layout. */
   readonly style?: StyleXStyles;
 }
@@ -76,6 +78,7 @@ export function TagGroup<Value extends string>({
   onRemove,
   emptyLabel,
   description,
+  isDisabled = false,
   style,
 }: TagGroupProps<Value>) {
   return (
@@ -98,6 +101,7 @@ export function TagGroup<Value extends string>({
           <AriaTag
             id={item.id}
             textValue={item.label}
+            isDisabled={isDisabled}
             {...renderStyles<{ isFocusVisible: boolean; isDisabled: boolean }>((state) => [
               styles.tag,
               onRemove === undefined && styles.tagStatic,

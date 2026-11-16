@@ -46,7 +46,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { ScrollShadow } from "./scroll-shadow";
-import { color, font, media, motion, radius, space } from "@/styles/tokens.stylex";
+import { color, font, motion, radius, space } from "@/styles/tokens.stylex";
 
 export interface ScrollspyItem {
   /** Id of the section element on the page. */
@@ -176,10 +176,7 @@ const styles = stylex.create({
     padding: 0,
     listStyleType: "none",
   },
-  listHorizontal: {
-    flexDirection: "row",
-    flexWrap: { default: "nowrap", [media.md]: "wrap" },
-  },
+  listHorizontal: { flexDirection: "row", flexWrap: "nowrap" },
   link: {
     display: "flex",
     alignItems: "center",

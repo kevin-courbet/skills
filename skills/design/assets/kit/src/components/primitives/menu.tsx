@@ -36,7 +36,7 @@
  * ## Example
  * ```tsx
  * <MenuTrigger>
- *   <Button intent="ghost" iconOnly aria-label="Job actions"><Ellipsis /></Button>
+ *   <Button intent="ghost" iconOnly icon={Ellipsis} aria-label="Job actions" />
  *   <Menu onAction={(id) => runAction(job, id)}>
  *     <MenuItem id="duplicate" icon={Copy}>Duplicate</MenuItem>
  *     <MenuSeparator />

@@ -125,7 +125,7 @@ function seedItems(): ReadonlyArray<Item> {
 
 function seedSeries(): ReadonlyArray<{ date: string; value: number }> {
   return Array.from({ length: 30 }, (_, index) => ({
-    date: new Date(Date.UTC(2026, 8, 1 + index)).toISOString(),
+    date: new Date(Date.UTC(2026, 8, 1 + index)).toISOString().slice(0, 10),
     value: 40 + Math.round(20 * Math.sin(index / 4)) + (index % 5),
   }));
 }

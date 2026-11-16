@@ -81,8 +81,7 @@ function ItemPage() {
           />
         }
         actions={
-          <Button onPress={() => setConfirmOpen(true)}>
-            <Trash2 aria-hidden width={16} height={16} />
+          <Button icon={Trash2} onPress={() => setConfirmOpen(true)}>
             Delete
           </Button>
         }

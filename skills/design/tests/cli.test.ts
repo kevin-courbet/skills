@@ -449,6 +449,24 @@ describe("kit commands", () => {
     expect(docs.stdout).toContain(`Source: the hub kit at ${join(HUB_ALONE, "assets", "kit")}`);
   });
 
+  test("docs name a props type from another module once", () => {
+    const docs = cli(HUB_ALONE, "docs", "Tooltip");
+    expect(docs.code).toBe(0);
+    expect(docs.stdout).toContain("### TooltipTrigger\nTakes `TooltipTriggerComponentProps`.\n");
+    expect(docs.stdout).not.toContain("Also takes: `TooltipTriggerComponentProps`");
+  });
+
+  test("the full doc prints props that an export shares with an earlier export once", () => {
+    const docs = cli(HUB_ALONE, "docs", "Button");
+    expect(docs.code).toBe(0);
+    expect(docs.stdout).toContain("### LinkButton\n`LinkButtonProps`\nTakes the own props of `Button` above.\n");
+    expect(docs.stdout.match(/- `iconOnly\?`/g)).toHaveLength(1);
+    const alone = cli(HUB_ALONE, "docs", "LinkButton");
+    expect(alone.code).toBe(0);
+    expect(alone.stdout).toContain("- `iconOnly?`");
+    expect(alone.stdout).not.toContain("Takes the own props of");
+  });
+
   test("an unknown doc id fails with the nearest ids", () => {
     const result = cli(HUB_ALONE, "docs", "Kanbna");
     expect(result.code).toBe(1);

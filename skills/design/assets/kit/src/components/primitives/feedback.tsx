@@ -27,8 +27,9 @@
  * client starts and that takes more than about 300 ms. `style` gives its size.
  *
  * ## Spinner
- * An `output` element whose accessible name is `label`. Use `sm` in a button or
- * in the `suffix` of a field. For work with a measure, use `ProgressCircle`.
+ * An `output` element whose accessible name is `label`. Use `sm` in the
+ * `suffix` of a field. A button shows its own spinner with `isPending`. For
+ * work with a measure, use `ProgressCircle`.
  *
  * ## EmptyState
  * Show it only after the data resolved to zero items. A result that filters
@@ -82,7 +83,7 @@ export function Spinner({
 }: {
   /** Accessible name. Name what loads, such as "Loading jobs". */
   readonly label?: string;
-  /** `sm` 12px inside a button, `md` 16px inline, `lg` 24px for a panel. */
+  /** `sm` 12px in a field suffix, `md` 16px inline, `lg` 24px for a panel. */
   readonly size?: "sm" | "md" | "lg";
 }) {
   return <output aria-label={label} {...stylex.props(styles.spinner, spinnerSizes[size])} />;
@@ -148,7 +149,7 @@ export function ErrorState({ title = "Something failed", message, action }: Erro
     <div role="alert" {...stylex.props(styles.error)}>
       <h2 {...stylex.props(styles.errorTitle)}>{title}</h2>
       <p {...stylex.props(styles.errorMessage)}>{message}</p>
-      {action ? <div {...stylex.props(styles.emptyAction)}>{action}</div> : null}
+      {action ? <div {...stylex.props(styles.errorAction)}>{action}</div> : null}
     </div>
   );
 }
@@ -157,7 +158,8 @@ const styles = stylex.create({
   skeleton: {
     height: "1rem",
     borderRadius: radius.sm,
-    backgroundColor: color.inset,
+    // The pulse halves the opacity, and the surface tokens sit too near the page to stay visible. In the dark theme, inset is also darker than the page and reads as a hole.
+    backgroundColor: color.borderSubtle,
     animationName: pulse,
     animationDuration: "1.6s",
     animationIterationCount: "infinite",
@@ -216,6 +218,7 @@ const styles = stylex.create({
   },
   errorTitle: { fontSize: font.md, fontWeight: font.semibold, color: color.danger },
   errorMessage: { fontSize: font.md, color: color.text },
+  errorAction: { display: "flex", flexWrap: "wrap", gap: space.sm, marginTop: space.xs },
 });
 
 const spinnerSizes = stylex.create({

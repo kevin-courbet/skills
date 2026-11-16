@@ -11,18 +11,19 @@
  * in steps. Use `mode="status"` for a short fixed list of stages that run on
  * their own, such as a pipeline on a detail page. Do not use it for an
  * activity or audit history: use `Timeline`. For a long or nested run, such
- * as agent turns, use `Trace`. In cards and table rows, use
- * `SegmentedProgress`.
+ * as agent turns, use `Trace`.
  *
  * ## Behavior
  * - Wizard: the steps before `currentStep` show as complete. With
  *   `onStepPress`, the complete steps are buttons that go back to them. An
  *   unknown `currentStep` throws an error.
- * - Status: each step shows its status icon and word in the status color, its
- *   `duration`, and its `note`.
- * - With `onSelectionChange`, the status steps are a radio group: the arrow
- *   keys move, Space or Enter selects, and a press on the selected step clears
- *   the selection.
+ * - Status: each step shows its status icon and word in the status color, and
+ *   its `duration`. The word comes from the status, so `duration` gives only
+ *   the time, such as "14s". A `note` replaces the word.
+ * - A `success` step shows no word, because the check icon and the color show
+ *   it. Screen readers still read "Succeeded". A `note` still shows.
+ * - With `onSelectionChange`, the status steps are a radio group. A press on
+ *   the selected step clears the selection.
  * - `orientation="responsive"`, the default, is vertical below the `md`
  *   breakpoint.
  *
@@ -45,7 +46,7 @@
  *   label="Pipeline stages"
  *   steps={[
  *     { id: "build", label: "Build", status: "success", duration: "38s" },
- *     { id: "test", label: "Test", status: "running", duration: "Running 14s" },
+ *     { id: "test", label: "Test", status: "running", duration: "14s" },
  *     { id: "deploy", label: "Deploy", status: "pending" },
  *   ]}
  *   selectedStep={stage}
@@ -96,7 +97,7 @@ export interface StepperStep<Id extends string> {
 export interface StatusStep<Id extends string> extends StepperStep<Id> {
   /** The state of the step. It sets the icon, the word, and the color. */
   readonly status: StepStatus;
-  /** Formatted duration, such as "38s" or "Running 14s". */
+  /** Formatted duration, such as "38s". The status word shows next to it, so do not repeat it. */
   readonly duration?: string;
   /** Replaces the status word, such as "Staged: rollback holds production". */
   readonly note?: string;
@@ -127,11 +128,7 @@ export interface StatusStepperProps<Id extends string> {
   readonly label: string;
   /** The steps, in order. */
   readonly steps: ReadonlyArray<StatusStep<Id>>;
-  /**
-   * The step whose detail shows below, such as its logs. With
-   * `onSelectionChange`, steps become a radio group: arrow keys move between
-   * steps, and pressing the selected step again clears the selection.
-   */
+  /** The step whose detail shows below, such as its logs. */
   readonly selectedStep?: Id | null;
   /** Makes the steps selectable. Receives the selected id, or `null` when people clear it. */
   readonly onSelectionChange?: (id: Id | null) => void;
@@ -351,7 +348,7 @@ export interface SegmentedProgressProps<Id extends string> {
   readonly label: string;
   /** The steps, in order. */
   readonly steps: ReadonlyArray<StatusStep<Id>>;
-  /** Lists the step names under the bar on wide screens. */
+  /** Shows each step name under its segment on wide screens. */
   readonly showStepLabels?: boolean;
 }
 
@@ -384,19 +381,19 @@ export function SegmentedProgress<Id extends string>({
           />
         ))}
       </span>
+      {showStepLabels ? (
+        <span aria-hidden {...stylex.props(styles.stepNames)}>
+          {steps.map((step) => (
+            <span
+              key={step.id}
+              {...stylex.props(styles.stepName, step.id === focus?.id && styles.stepNameCurrent)}
+            >
+              {step.label}
+            </span>
+          ))}
+        </span>
+      ) : null}
       <span aria-hidden {...stylex.props(styles.captionRow)}>
-        {showStepLabels ? (
-          <span {...stylex.props(styles.stepNames)}>
-            {steps.map((step) => (
-              <span
-                key={step.id}
-                {...stylex.props(step.id === focus?.id && styles.stepNameCurrent)}
-              >
-                {step.label}
-              </span>
-            ))}
-          </span>
-        ) : null}
         {focus === undefined ? null : (
           <span {...stylex.props(styles.caption)}>
             <span {...stylex.props(styles.stepNameCurrent)}>{focus.label}</span>
@@ -522,10 +519,19 @@ const styles = stylex.create({
     fontSize: font.sm,
     color: color.textMuted,
   },
+  // The names use the gap of the segments, so each name sits under its own segment.
   stepNames: {
     display: { default: "none", [media.sm]: "flex" },
-    flexWrap: "wrap",
-    columnGap: space.sm,
+    gap: space.xs,
+    fontSize: font.sm,
+    color: color.textMuted,
+  },
+  stepName: {
+    flex: "1",
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   stepNameCurrent: { fontWeight: font.medium, color: color.text },
   caption: {
@@ -666,10 +672,11 @@ const statusWords = stylex.create({
 });
 
 const segments = stylex.create({
-  pending: { backgroundColor: color.inset },
+  // The inset fill is almost the color of a card in both themes, so an empty segment uses the border color.
+  pending: { backgroundColor: color.border },
   running: { backgroundColor: color.info },
   success: { backgroundColor: color.success },
   failed: { backgroundColor: color.danger },
-  skipped: { backgroundColor: color.inset },
+  skipped: { backgroundColor: color.border },
   cancelled: { backgroundColor: color.borderStrong },
 });

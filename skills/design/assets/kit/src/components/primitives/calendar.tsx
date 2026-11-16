@@ -21,12 +21,16 @@
  *   grid of months, and a month goes back to the days with the focus on the
  *   grid. Arrow keys, Home, End, and Page Up and Page Down move in each grid.
  *   Enter or Space picks. Escape goes back to the month that was open.
- * - Dates before `minValue` or after `maxValue` cannot get the focus. Months
- *   outside the limits are disabled in the month grid. With both limits, the
- *   year grid shows each year between them.
- * - `unavailableReason` marks dates that people cannot pick, and a line under
- *   the grid shows the reason for the date under the pointer or the focus.
- *   Screen readers announce it.
+ * - Dates before `minValue` or after `maxValue` cannot get the focus, and they
+ *   are faint. Months outside the limits are faint and disabled in the month
+ *   grid. With both limits, the year grid shows each year between them.
+ * - `unavailableReason` marks dates that people cannot pick. These dates are
+ *   struck, and a line under the grid shows the reason for the date under the
+ *   pointer or the focus. Screen readers announce it. A date outside the
+ *   limits shows no strike and no reason.
+ * - `isDisabled` makes the whole calendar faint, and the picked date keeps its
+ *   fill. `isReadOnly` keeps the normal look, but the days do not react to the
+ *   pointer.
  * - In `RangeCalendar`, the first press starts the range and the second press
  *   ends it. The jump keeps the start, so a range can cross months and years.
  * - Days and grids use the size tokens, so `Page density="touch"` makes them

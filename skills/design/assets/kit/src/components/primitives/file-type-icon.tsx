@@ -114,7 +114,7 @@ const families: ReadonlyArray<{
   },
   {
     type: { kind: "Image", icon: FileImage, tone: "accent" },
-    extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg", "avif"],
+    extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg", "avif", "heic", "heif"],
     mimePrefixes: ["image/"],
   },
   {

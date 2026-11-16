@@ -29,7 +29,7 @@
  * ## Example
  * ```tsx
  * <TooltipTrigger>
- *   <Button intent="ghost" iconOnly aria-label="Refresh"><RefreshCw /></Button>
+ *   <Button intent="ghost" iconOnly icon={RefreshCw} aria-label="Refresh" />
  *   <Tooltip>Refresh</Tooltip>
  * </TooltipTrigger>
  * ```

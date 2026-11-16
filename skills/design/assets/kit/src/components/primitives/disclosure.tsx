@@ -79,8 +79,9 @@ export function Disclosure({ title, hint, children, style, ...props }: Disclosur
               {hint ? <span {...stylex.props(styles.hint)}>{hint}</span> : null}
             </Button>
           </Heading>
-          <DisclosurePanel {...stylex.props(styles.panel, inAccordion && styles.itemPanel)}>
-            {children}
+          {/* A closed panel has hidden="until-found", which keeps its padding in the layout. The padding sits on an inner box, so a closed row has no empty space. */}
+          <DisclosurePanel>
+            <div {...stylex.props(styles.panel, inAccordion && styles.itemPanel)}>{children}</div>
           </DisclosurePanel>
         </>
       )}
@@ -122,11 +123,12 @@ const styles = stylex.create({
     marginInline: `calc(-1 * ${space.xs})`,
     borderStyle: "none",
     borderRadius: radius.md,
-    backgroundColor: { default: "transparent", ":hover": color.subtle },
+    backgroundColor: { default: "transparent", ":hover": color.subtle, ":disabled": "transparent" },
     color: color.text,
     fontSize: font.md,
     textAlign: "start",
-    cursor: "pointer",
+    cursor: { default: "pointer", ":disabled": "not-allowed" },
+    opacity: { default: null, ":disabled": "0.5" },
     outlineStyle: { default: "none", ":focus-visible": "solid" },
     outlineWidth: "2px",
     outlineColor: color.focus,

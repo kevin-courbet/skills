@@ -458,6 +458,11 @@ function componentApi(source: string, name: string, paramsStart: number, decls: 
   annotation = splitTop(annotation, ",")[0]!.trim();
   if (annotation === "") return { name, propsType: null, props: null };
   const shape = resolveShape(annotation, decls, new Set());
+  // A props type from another module has no members here. "Takes" names it once.
+  const only = shape.variants.length === 1 ? shape.variants[0]! : null;
+  if (only && only.members.length === 0 && only.external.length === 1 && only.external[0] === squash(annotation)) {
+    return { name, propsType: squash(annotation), props: null };
+  }
   const withDefaults: PropsShape = {
     variants: shape.variants.map((variant) => ({
       external: variant.external,
@@ -756,8 +761,31 @@ function memberLine(member: Member): string {
   return parts.join(" ");
 }
 
-export function renderProps(api: ComponentApi): string {
+// A component often takes the own props of an earlier export of its file, such
+// as LinkButton with the props of Button. In the full doc, print those props
+// once and name the earlier export.
+function sharedBase(api: ComponentApi, earlier: ReadonlyArray<ComponentApi>): { name: string; members: ReadonlyArray<Member> } | null {
+  const own = api.props?.variants.length === 1 ? api.props.variants[0]!.members : null;
+  if (own === null) return null;
+  for (const base of earlier) {
+    const members = base.props?.variants.length === 1 ? base.props.variants[0]!.members : null;
+    if (members === null || members.length < 2) continue;
+    if (members.every((member) => own.some((other) => memberLine(member) === memberLine(other)))) return { name: base.name, members };
+  }
+  return null;
+}
+
+export function renderProps(api: ComponentApi, earlier: ReadonlyArray<ComponentApi> = []): string {
   const lines = [`### ${api.name}`];
+  const base = sharedBase(api, earlier);
+  if (base !== null) {
+    const variant = api.props!.variants[0]!;
+    if (api.propsType && !api.propsType.startsWith("{")) lines.push(`\`${api.propsType}\``);
+    const rest = variant.members.filter((member) => !base.members.some((other) => memberLine(member) === memberLine(other)));
+    lines.push(rest.length === 0 ? `Takes the own props of \`${base.name}\` above.` : `Takes the own props of \`${base.name}\` above, and:`, ...rest.map(memberLine));
+    if (variant.external.length > 0) lines.push(`Also takes: ${variant.external.map((item) => `\`${item}\``).join(", ")}.`);
+    return lines.join("\n");
+  }
   if (!api.props) {
     lines.push(api.propsType === null ? "No props of its own. See the doc comment." : `Takes \`${api.propsType}\`.`);
     return lines.join("\n");
@@ -788,7 +816,7 @@ export function renderApi(doc: KitDoc, only: string | null = null): string {
   const components = doc.exports.components.filter((item) => only === null || item.name === only);
   const hooks = doc.exports.hooks.filter((item) => only === null || item.name === only);
   const functions = doc.exports.functions.filter((item) => only === null || item.name === only);
-  for (const component of components) lines.push(renderProps(component), "");
+  components.forEach((component, index) => lines.push(renderProps(component, components.slice(0, index)), ""));
   const callableLines = (item: Callable) => [
     `- \`${item.signature}\``,
     ...item.inputs.flatMap((input) => [`  \`${input.name}\`:`, ...input.members.map((member) => `  ${memberLine(member)}`)]),

@@ -17,6 +17,8 @@
  *   for screen readers.
  * - `errorMessage` marks the field invalid and shows the message below it.
  * - The height follows the nearest `ControlSizeProvider`.
+ * - A `multiline` field grows with its text, from about three lines to about
+ *   ten lines. Above that, it scrolls.
  *
  * ## Rules
  * - Give every field a `width` from the length of its answer, not from the
@@ -187,7 +189,10 @@ const styles = stylex.create({
   },
   textarea: {
     height: "auto",
+    fieldSizing: "content",
     minHeight: "5rem",
+    // Above about ten lines, the field scrolls, so that a long note does not push the form off the screen.
+    maxHeight: "calc(10lh + 1rem)",
     paddingBlock: "0.5rem",
     resize: "vertical",
     lineHeight: "1.45",

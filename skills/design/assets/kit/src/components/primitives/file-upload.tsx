@@ -16,8 +16,9 @@
  *   zone refuses a drop of a type that is not in `acceptedFileTypes`, and the
  *   dialog shows only those types.
  * - Without `allowsMultiple`, a drop keeps only the first file.
- * - Each row shows the name, the size, and the status: "Queued", the percent
- *   and a `ProgressBar` while it uploads, "Uploaded", or the `error` text.
+ * - Each row shows a `FileTypeIcon` from the name, the name, the size, and the
+ *   status: "Queued", the percent and a `ProgressBar` while it uploads,
+ *   "Uploaded", or the `error` text.
  * - With `onRemove`, each row gets a remove button.
  *
  * ## Rules
@@ -41,13 +42,14 @@
  */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
-import { CircleAlert, CircleCheck, FileText, Upload, X } from "lucide-react";
+import { CircleAlert, CircleCheck, Upload, X } from "lucide-react";
 import { useId } from "react";
 import { DropZone, FileTrigger, isFileDropItem, Text } from "react-aria-components";
 import { appLocale } from "@/lib/locale";
 import { renderStyles } from "@/lib/rac";
 import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
+import { FileTypeIcon } from "./file-type-icon";
 import { field, FieldDescription, FieldErrorIcon, FieldLabel } from "@/components/helpers/field";
 import { ProgressBar } from "./progress-bar";
 
@@ -173,7 +175,7 @@ export function FileUpload({
       {files.length > 0 ? (
         <ul aria-label={`${label} files`} {...stylex.props(styles.list)}>
           {files.map((file) => (
-            <FileRow key={file.id} file={file} onRemove={onRemove} />
+            <FileRow key={file.id} file={file} onRemove={onRemove} isDisabled={isDisabled} />
           ))}
         </ul>
       ) : null}
@@ -184,17 +186,19 @@ export function FileUpload({
 function FileRow({
   file,
   onRemove,
+  isDisabled,
 }: {
   readonly file: UploadFile;
   readonly onRemove?: (id: string) => void;
+  readonly isDisabled: boolean;
 }) {
   return (
     <li {...stylex.props(styles.row)}>
-      <FileText aria-hidden {...stylex.props(styles.fileIcon)} />
+      <FileTypeIcon name={file.name} />
       <span {...stylex.props(styles.fileText)}>
         <span {...stylex.props(styles.fileName)}>{file.name}</span>
         <span {...stylex.props(styles.fileMeta)}>
-          {formatBytes(file.size)}
+          <span {...stylex.props(styles.fileSize)}>{formatBytes(file.size)}</span>
           <FileStatus file={file} />
         </span>
         {file.status === "uploading" ? (
@@ -211,11 +215,11 @@ function FileRow({
           intent="ghost"
           size="sm"
           iconOnly
+          icon={X}
           aria-label={`Remove ${file.name}`}
+          isDisabled={isDisabled}
           onPress={() => onRemove(file.id)}
-        >
-          <X aria-hidden {...stylex.props(styles.removeIcon)} />
-        </Button>
+        />
       )}
     </li>
   );
@@ -247,11 +251,12 @@ function FileStatus({ file }: { readonly file: UploadFile }) {
 
 const byteUnits = ["B", "KB", "MB", "GB"] as const;
 
+/** Decimal units, so a file shows the same size as a limit such as "up to 10 MB". */
 function formatBytes(bytes: number): string {
   let value = bytes;
   let unit = 0;
-  while (value >= 1024 && unit < byteUnits.length - 1) {
-    value /= 1024;
+  while (value >= 1000 && unit < byteUnits.length - 1) {
+    value /= 1000;
     unit += 1;
   }
   return `${value.toLocaleString(appLocale, { maximumFractionDigits: unit === 0 ? 0 : 1 })} ${byteUnits[unit]}`;
@@ -316,7 +321,6 @@ const styles = stylex.create({
     borderTopStyle: "solid",
     borderTopColor: color.borderSubtle,
   },
-  fileIcon: { width: size.icon, height: size.icon, flexShrink: 0, color: color.textMuted },
   fileText: { display: "flex", flexDirection: "column", gap: "2px", flex: "1", minWidth: 0 },
   fileName: {
     fontSize: font.md,
@@ -327,16 +331,16 @@ const styles = stylex.create({
   },
   fileMeta: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "baseline",
     gap: space.sm,
     fontSize: font.sm,
     color: color.textMuted,
     fontVariantNumeric: "tabular-nums",
   },
+  fileSize: { flexShrink: 0, whiteSpace: "nowrap" },
   status: { display: "inline-flex", alignItems: "center", gap: space.xs },
   statusIcon: { width: size.iconSm, height: size.iconSm, flexShrink: 0 },
   failed: { color: color.danger },
   done: { color: color.success },
   progress: { marginTop: space.xs },
-  removeIcon: { width: size.iconSm, height: size.iconSm },
 });

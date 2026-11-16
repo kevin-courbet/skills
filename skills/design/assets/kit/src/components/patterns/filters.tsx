@@ -798,10 +798,10 @@ const styles = stylex.create({
   fieldSegment: { fontWeight: font.medium },
   operatorSegment: { color: color.textMuted },
   valueSegment: { minWidth: 0, fontWeight: font.medium },
+  // A block container, not a flex box: only a block container cuts its text with an ellipsis.
   valueText: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "0.3em",
+    display: "inline-block",
+    minWidth: 0,
     maxWidth: "16rem",
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -811,7 +811,8 @@ const styles = stylex.create({
     display: "inline-block",
     width: "0.5rem",
     height: "0.5rem",
-    flexShrink: 0,
+    marginInlineEnd: "0.3em",
+    verticalAlign: "middle",
     borderRadius: radius.full,
   },
   remove: { paddingInline: space.xs, color: { default: color.textMuted, ":hover": color.text } },

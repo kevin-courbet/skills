@@ -21,6 +21,7 @@
  * - The copy button copies all of `code`, also when `maxLines` collapses it.
  * - One line can have only one mark. The order is added, removed, a diff hunk
  *   (`@@`), then highlighted. An error tint replaces a warning tint.
+ * - The `---` and `+++` file lines of a diff are muted.
  * - Screen readers hear "Added" or "Removed" before a marked line. The line
  *   numbers are visual only.
  * - The code region takes the focus, so people can scroll it with the keyboard.
@@ -143,6 +144,7 @@ export function CodeBlock({
   const withNumbers = showLineNumbers ?? lines.length > 1;
   const isCollapsible = maxLines !== undefined && lines.length > maxLines;
   const visible = isCollapsible && !isExpanded ? lines.slice(0, maxLines) : lines;
+  const marks = language === "diff" ? diffMarks(lines.map(lineText)) : [];
   const highlighted = expandSpec(highlightedLines);
   const added = expandSpec(diff?.added);
   const removed = expandSpec(diff?.removed);
@@ -182,8 +184,7 @@ export function CodeBlock({
         <code {...stylex.props(styles.code, !wrap && styles.codeNoWrap)}>
           {visible.map((tokens, index) => {
             const number = startLine + index;
-            const prefix = language === "diff" ? lineText(tokens).charAt(0) : "";
-            const kind = lineKind(number, prefix, added, removed, highlighted);
+            const kind = lineKind(number, marks[index] ?? null, added, removed, highlighted);
             const lineDiagnostics = diagnostics.filter((item) => item.line === number);
             const level = lineDiagnostics.some((item) => item.level === "error")
               ? "error"
@@ -276,18 +277,43 @@ const languageLabel: Record<Exclude<CodeLanguage, "text" | "diff">, string> = {
   markdown: "Markdown",
 };
 
-type LineKind = "added" | "removed" | "highlight" | "hunk";
+type LineKind = "added" | "removed" | "highlight" | "hunk" | "file";
+
+type DiffMark = "added" | "removed" | "hunk" | "file";
+
+/**
+ * Marks each line of a unified diff. The "---" and "+++" lines before a hunk
+ * name the files. A removed line that starts with "--" also starts with "---",
+ * so only a "---" and "+++" pair right before a hunk is a file line.
+ */
+function diffMarks(texts: ReadonlyArray<string>): ReadonlyArray<DiffMark | null> {
+  return texts.map((text, index) => {
+    const before = texts[index - 1] ?? "";
+    const after = texts[index + 1] ?? "";
+    const isFileLine =
+      (text.startsWith("--- ") &&
+        after.startsWith("+++ ") &&
+        (texts[index + 2] ?? "").startsWith("@@")) ||
+      (text.startsWith("+++ ") && before.startsWith("--- ") && after.startsWith("@@"));
+    if (isFileLine) return "file";
+    if (text.startsWith("+")) return "added";
+    if (text.startsWith("-")) return "removed";
+    if (text.startsWith("@@")) return "hunk";
+    return null;
+  });
+}
 
 function lineKind(
   number: number,
-  prefix: string,
+  mark: DiffMark | null,
   added: ReadonlySet<number>,
   removed: ReadonlySet<number>,
   highlighted: ReadonlySet<number>,
 ): LineKind | undefined {
-  if (prefix === "+" || added.has(number)) return "added";
-  if (prefix === "-" || removed.has(number)) return "removed";
-  if (prefix === "@") return "hunk";
+  if (mark === "file") return "file";
+  if (mark === "added" || added.has(number)) return "added";
+  if (mark === "removed" || removed.has(number)) return "removed";
+  if (mark === "hunk") return "hunk";
   if (highlighted.has(number)) return "highlight";
   return undefined;
 }
@@ -724,6 +750,7 @@ const lineKinds = stylex.create({
   removed: { backgroundColor: color.dangerMuted, borderInlineStartColor: color.danger },
   highlight: { backgroundColor: color.selected, borderInlineStartColor: color.accent },
   hunk: { color: color.info },
+  file: { color: color.textMuted },
   error: { backgroundColor: color.dangerMuted, borderInlineStartColor: color.danger },
   warning: { backgroundColor: color.warningMuted, borderInlineStartColor: color.warning },
 });

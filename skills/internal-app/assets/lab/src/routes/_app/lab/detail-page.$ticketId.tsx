@@ -113,20 +113,15 @@ function TicketDetail({ ticket }: { readonly ticket: Ticket }) {
         }
         actions={
           <>
-            <Button onPress={() => setConfirmOpen(true)}>
-              <Trash2 aria-hidden width={16} height={16} />
+            <Button icon={Trash2} onPress={() => setConfirmOpen(true)}>
               Delete
             </Button>
             <Button
               intent="primary"
+              icon={isSolved ? RotateCcw : CircleCheck}
               isPending={changeStatus.isPending}
               onPress={() => changeStatus.mutate()}
             >
-              {isSolved ? (
-                <RotateCcw aria-hidden width={16} height={16} />
-              ) : (
-                <CircleCheck aria-hidden width={16} height={16} />
-              )}
               {isSolved ? "Reopen ticket" : "Mark as solved"}
             </Button>
           </>

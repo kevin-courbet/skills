@@ -22,6 +22,7 @@
  * - A column `footer` adds a footer row, such as "Estimate total". The footer
  *   shows only when there are rows.
  * - `emptyState` shows under the header when `rows` is empty.
+ * - The text of a cell does not wrap, so each row is one line high.
  * - When the table is wider than its frame, it scrolls sideways. The edges
  *   fade, and the scroll area takes focus so the keyboard can scroll it.
  *
@@ -110,7 +111,15 @@ export function Table<Row>({
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.id} scope="col" {...stylex.props(...cellStyles(column), styles.th)}>
+                <th
+                  key={column.id}
+                  scope="col"
+                  {...stylex.props(
+                    ...cellStyles(column),
+                    styles.th,
+                    rows.length === 0 && column.id === headerId && styles.emptyFill,
+                  )}
+                >
                   {column.header}
                 </th>
               ))}
@@ -182,21 +191,22 @@ const styles = stylex.create({
     borderRadius: radius.lg,
   },
   table: { width: "100%", borderCollapse: "collapse", fontSize: font.md },
+  // Cells do not wrap, so each row keeps one line and a table wider than its frame scrolls.
   cell: {
     paddingBlock: space.sm,
     paddingInline: space.md,
     textAlign: "start",
     verticalAlign: "middle",
+    whiteSpace: "nowrap",
     fontWeight: font.regular,
     color: color.text,
   },
-  numeric: { textAlign: "end", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" },
+  numeric: { textAlign: "end", fontVariantNumeric: "tabular-nums" },
   th: {
     height: "2.5rem",
     paddingBlock: 0,
     fontWeight: font.medium,
     color: color.textMuted,
-    whiteSpace: "nowrap",
     backgroundColor: color.subtle,
     borderBottomWidth: "1px",
     borderBottomStyle: "solid",
@@ -216,4 +226,7 @@ const styles = stylex.create({
     borderTopColor: color.border,
   },
   empty: { padding: space.lg },
+  // Without rows, the headers alone set the widths, so the extra width moves the other headers to
+  // the middle. The column that names the rows takes it, as it does when the rows are long.
+  emptyFill: { width: "100%" },
 });

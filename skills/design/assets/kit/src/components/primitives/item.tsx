@@ -14,6 +14,8 @@
  *
  * ## Behavior
  * - `ItemList` divides the rows with lines and is a list for screen readers.
+ *   An `Item` in an `ItemList` is a list item. An `Item` in a row of another
+ *   widget, such as `SortableList`, has no role of its own.
  * - With `onAction`, the title is a button, a click anywhere else on the row
  *   does the same, and a chevron shows at the end. A click on a control in
  *   the row, or a text selection, does not open the item.
@@ -39,9 +41,12 @@
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronRight } from "lucide-react";
-import { type ReactNode, useEffect, useRef } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useRef } from "react";
 import { Button } from "react-aria-components";
 import { color, font, motion, radius, size, space } from "@/styles/tokens.stylex";
+
+// A row of another widget, such as a SortableList row, already has its own role.
+const ItemListContext = createContext(false);
 
 export interface ItemListProps {
   /** Names the list, such as "Integrations" or "Team members". */
@@ -64,7 +69,7 @@ export function ItemList({ label, children, framed = true, style }: ItemListProp
       aria-label={label}
       {...stylex.props(styles.list, framed && styles.framed, style)}
     >
-      {children}
+      <ItemListContext.Provider value>{children}</ItemListContext.Provider>
     </div>
   );
 }
@@ -102,6 +107,7 @@ export function Item({
   style,
 }: ItemProps) {
   const rowRef = useRef<HTMLDivElement>(null);
+  const inItemList = useContext(ItemListContext);
 
   // A click on the row outside its controls opens it, like a DataTable row action.
   useEffect(() => {
@@ -121,7 +127,7 @@ export function Item({
   return (
     <div
       ref={rowRef}
-      role="listitem"
+      role={inItemList ? "listitem" : undefined}
       {...stylex.props(
         styles.item,
         sizes[sizeKey],

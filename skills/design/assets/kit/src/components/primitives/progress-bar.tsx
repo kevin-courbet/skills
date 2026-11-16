@@ -102,7 +102,13 @@ const styles = stylex.create({
     justifyContent: "space-between",
     gap: space.sm,
   },
-  value: { fontSize: font.sm, color: color.textMuted, fontVariantNumeric: "tabular-nums" },
+  value: {
+    flexShrink: 0,
+    whiteSpace: "nowrap",
+    fontSize: font.sm,
+    color: color.textMuted,
+    fontVariantNumeric: "tabular-nums",
+  },
   track: {
     display: "block",
     height: "0.375rem",

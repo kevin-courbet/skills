@@ -352,21 +352,19 @@ export function QueueCard({
       )}
       {panel !== undefined || actions.length === 0 ? null : (
         <div ref={actionsRef} {...stylex.props(styles.actions)}>
-          {actions.map(({ label, icon: Icon, intent = "secondary", onPress, isDisabled }) => (
+          {actions.map(({ label, icon, intent = "secondary", onPress, isDisabled }) => (
             <Button
               key={label}
               data-queue-action={label}
               intent={intent}
               size="lg"
+              icon={icon}
               onPress={() => {
                 openedBy.current = label;
                 onPress();
               }}
               isDisabled={isDisabled}
             >
-              {Icon === undefined ? null : (
-                <Icon aria-hidden {...stylex.props(styles.actionIcon)} />
-              )}
               {label}
             </Button>
           ))}
@@ -526,5 +524,4 @@ const styles = stylex.create({
     gridTemplateColumns: "repeat(auto-fit, minmax(min(14rem, 100%), 1fr))",
     gap: space.md,
   },
-  actionIcon: { width: size.iconLg, height: size.iconLg, flexShrink: 0 },
 });

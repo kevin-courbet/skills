@@ -19,6 +19,7 @@
  *   on a minute closes the popover and returns the focus to the button.
  * - The value is an ISO time string, so that schemas and server functions never
  *   handle time objects.
+ * - The field shows the hour with two digits, such as "08:30", as in the value.
  *
  * ## Rules
  * - `granularity="second"` adds seconds. The value is then "HH:mm:ss".
@@ -77,6 +78,7 @@ export interface TimeFieldProps extends Omit<
   | "onChange"
   | "minValue"
   | "maxValue"
+  | "shouldForceLeadingZeros"
 > {
   /** Visible name of the field, in sentence case. */
   readonly label: string;
@@ -141,6 +143,7 @@ export function TimeField({
   return (
     <AriaTimeField
       {...props}
+      shouldForceLeadingZeros
       isInvalid={isInvalid}
       value={time}
       onChange={(next) => onChange(next === null ? null : toIsoTime(next, props.granularity))}
@@ -378,7 +381,7 @@ function toIsoTime(time: Time, granularity: AriaTimeFieldProps<Time>["granularit
 }
 
 const styles = stylex.create({
-  box: { gap: space.sm, width: "auto", minWidth: "8rem", paddingInlineEnd: "2px" },
+  box: { gap: space.sm, minWidth: "8rem", paddingInlineEnd: "2px" },
   icon: { width: size.icon, height: size.icon, flexShrink: 0 },
   zone: { marginInlineStart: "auto", paddingInlineStart: space.sm, color: color.textMuted },
   trigger: {

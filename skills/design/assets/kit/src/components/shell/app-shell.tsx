@@ -311,11 +311,10 @@ export function AppShell({
             intent="ghost"
             size="sm"
             iconOnly
+            icon={PanelLeftClose}
             aria-label="Hide sidebar"
             onPress={() => setSidebarHidden(true)}
-          >
-            <PanelLeftClose aria-hidden {...stylex.props(styles.icon)} />
-          </Button>
+          />
         </div>
         <Navigation nav={nav} />
         {footer}
@@ -329,23 +328,21 @@ export function AppShell({
                   intent="ghost"
                   size="sm"
                   iconOnly
+                  icon={Menu}
                   aria-label="Open navigation"
                   onPress={() => setNavOpen(true)}
                   style={styles.navButton}
-                >
-                  <Menu aria-hidden {...stylex.props(styles.icon)} />
-                </Button>
+                />
                 {isSidebarHidden ? (
                   <Button
                     intent="ghost"
                     size="sm"
                     iconOnly
+                    icon={PanelLeftOpen}
                     aria-label="Show sidebar"
                     onPress={() => setSidebarHidden(false)}
                     style={styles.showSidebarButton}
-                  >
-                    <PanelLeftOpen aria-hidden {...stylex.props(styles.icon)} />
-                  </Button>
+                  />
                 ) : null}
                 <RouteBreadcrumbs />
               </div>

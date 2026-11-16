@@ -11,7 +11,8 @@
  * `Tabs` or `Scrollspy`.
  *
  * ## Behavior
- * - The current page has priority: the items before it shrink first.
+ * - The current page has priority: the items before it shrink first. A
+ *   shrunk item keeps one letter and the ellipsis.
  * - Below the `sm` breakpoint, only the current page shows.
  * - The current item has `aria-current`.
  *
@@ -60,6 +61,8 @@ export function Breadcrumbs({
             {...stylex.props(
               styles.item,
               item.id === currentId ? styles.currentItem : styles.ancestorItem,
+              item.id !== currentId &&
+                (item.label.length > SHORT_LABEL ? styles.ancestorFloor : styles.ancestorShort),
             )}
           >
             {({ isCurrent }) => (
@@ -86,6 +89,10 @@ export function Breadcrumbs({
   );
 }
 
+// A label of this many characters or fewer does not shrink, because one letter and an ellipsis
+// are almost as wide as the label.
+const SHORT_LABEL = 4;
+
 const styles = stylex.create({
   nav: { minWidth: 0 },
   list: {
@@ -99,6 +106,9 @@ const styles = stylex.create({
   },
   item: { display: "flex", alignItems: "center", gap: space.xs, minWidth: 0 },
   ancestorItem: { display: { default: "none", [media.sm]: "flex" } },
+  // A crumb that shrinks keeps room for one letter and the full ellipsis, so it reads as truncated.
+  ancestorFloor: { minWidth: `calc(2.25 * ${font.lg} + ${space.xs} + ${size.iconSm})` },
+  ancestorShort: { flexShrink: 0 },
   currentItem: { flexShrink: 0, maxWidth: "100%" },
   link: {
     fontSize: font.lg,

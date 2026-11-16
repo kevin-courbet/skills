@@ -44,7 +44,7 @@ The hub notes give the method: [[motion]], [[easing-and-duration]], [[component-
 | `CommandPalette` | No motion. People open it from the keyboard many times each day. |
 | `Switch` | The thumb slides with `easeInOut`. The track color uses `ease`. |
 | Chevrons, such as in `Disclosure`, `Tree`, and `DataTable` | Turn with `easeOut`. |
-| `Spinner`, `Skeleton`, `ProgressBar`, `ProgressCircle` | The only motion that repeats. It shows that work runs. |
+| `Spinner`, `Skeleton`, `ProgressBar`, `ProgressCircle`, the `isPending` spinner of `Button` | The only motion that repeats. It shows that work runs. |
 
 A new overlay without the popover surface puts `overlay.transition` before `overlay.entering` and `overlay.exiting`. Do not start an entry from `scale(0)`.
 

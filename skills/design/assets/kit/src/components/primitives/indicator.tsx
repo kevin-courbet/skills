@@ -33,7 +33,7 @@
  * ```tsx
  * <Indicator label="Notifications" meaning="unread" count={unread} intent="danger">
  *   {(name) => (
- *     <Button intent="ghost" iconOnly aria-label={name}><Bell /></Button>
+ *     <Button intent="ghost" iconOnly icon={Bell} aria-label={name} />
  *   )}
  * </Indicator>
  * <Indicator label="Sam Lee" meaning="online" intent="success" placement="bottom-end" anchor="circle">

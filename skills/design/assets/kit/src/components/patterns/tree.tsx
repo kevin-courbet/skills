@@ -21,8 +21,10 @@
  * - With `selection.mode="single"`, the selected row has a fill. With
  *   `"checkbox"`, each row shows a checkbox and the fill does not show. A
  *   branch checkbox selects or clears every leaf under it.
- * - With `onMove`, people drag rows before, after, or into another row. The
- *   tree cancels a drop into the dragged node or into a node under it.
+ * - With `onMove`, each row starts with a grip. People drag a row before, after,
+ *   or into another row. With the keyboard, they focus the grip, press Enter,
+ *   choose the drop place with the arrow keys, and press Enter. The tree
+ *   cancels a drop into the dragged node or into a node under it.
  * - `moveTreeNodes` throws an error when a node moves into itself.
  *
  * ## Rules
@@ -45,7 +47,7 @@
  */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, GripVertical, type LucideIcon } from "lucide-react";
 import { type ReactNode, useRef } from "react";
 import {
   Tree as AriaTree,
@@ -279,13 +281,25 @@ export function Tree({
                 const state = checkbox === undefined ? undefined : branchState(node, checked);
                 return (
                   <div {...stylex.props(styles.rowContent)}>
+                    {onMove === undefined ? null : (
+                      <Button
+                        slot="drag"
+                        aria-label={`Move ${node.label}`}
+                        {...stylex.props(styles.grip, isDisabled && styles.dimmed)}
+                      >
+                        <GripVertical aria-hidden {...stylex.props(styles.gripIcon)} />
+                      </Button>
+                    )}
                     {Array.from({ length: level - 1 }, (_, index) => (
                       <span key={index} aria-hidden {...stylex.props(styles.indent)}>
                         {guides ? <span {...stylex.props(styles.guide)} /> : null}
                       </span>
                     ))}
                     {hasChildItems ? (
-                      <Button slot="chevron" {...stylex.props(styles.chevronButton)}>
+                      <Button
+                        slot="chevron"
+                        {...stylex.props(styles.chevronButton, isDisabled && styles.dimmed)}
+                      >
                         <ChevronRight
                           aria-hidden
                           {...stylex.props(styles.chevron, isExpanded && styles.chevronOpen)}
@@ -302,14 +316,23 @@ export function Tree({
                       />
                     )}
                     {Icon === undefined ? null : (
-                      <Icon aria-hidden {...stylex.props(styles.icon)} />
+                      <Icon
+                        aria-hidden
+                        {...stylex.props(styles.icon, isDisabled && styles.dimmed)}
+                      />
                     )}
-                    <span {...stylex.props(styles.label)}>{node.label}</span>
+                    <span {...stylex.props(styles.label, isDisabled && styles.dimmed)}>
+                      {node.label}
+                    </span>
                     {node.description === undefined ? null : (
-                      <span {...stylex.props(styles.description)}>{node.description}</span>
+                      <span {...stylex.props(styles.description, isDisabled && styles.dimmed)}>
+                        {node.description}
+                      </span>
                     )}
                     {node.meta === undefined ? null : (
-                      <span {...stylex.props(styles.meta)}>{node.meta}</span>
+                      <span {...stylex.props(styles.meta, isDisabled && styles.dimmed)}>
+                        {node.meta}
+                      </span>
                     )}
                   </div>
                 );
@@ -427,7 +450,10 @@ const styles = stylex.create({
     outlineColor: color.focus,
     outlineOffset: "-2px",
   },
-  rowDisabled: { opacity: "0.5", cursor: "not-allowed" },
+  rowDisabled: { cursor: "not-allowed" },
+  // A disabled row dims each part but the checkbox. The checkbox dims itself, so
+  // a second opacity on the row would make it almost invisible.
+  dimmed: { opacity: "0.5" },
   rowDragging: { opacity: "0.45" },
   rowDropTarget: {
     backgroundColor: color.accentMuted,
@@ -479,6 +505,24 @@ const styles = stylex.create({
   },
   chevronOpen: { transform: "rotate(90deg)" },
   chevronSpacer: { width: "1.25rem", flexShrink: 0 },
+  grip: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "1.25rem",
+    height: "1.25rem",
+    flexShrink: 0,
+    padding: 0,
+    borderStyle: "none",
+    borderRadius: radius.sm,
+    backgroundColor: { default: "transparent", ":hover": color.inset },
+    color: { default: color.textFaint, ":hover": color.textMuted },
+    cursor: "grab",
+    outlineStyle: { default: "none", ":focus-visible": "solid" },
+    outlineWidth: "2px",
+    outlineColor: color.focus,
+  },
+  gripIcon: { width: size.iconSm, height: size.iconSm },
   icon: { width: size.icon, height: size.icon, flexShrink: 0, color: color.textMuted },
   label: {
     minWidth: 0,

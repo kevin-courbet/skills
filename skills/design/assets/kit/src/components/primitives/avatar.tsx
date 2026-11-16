@@ -38,7 +38,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 import { color, font, radius, space } from "@/styles/tokens.stylex";
 
-/**  sits inline in a metadata line, next to 12px text. */
+/** The size of an avatar. `xs` sits inline in a metadata line, next to 12px text. */
 export type AvatarSize = "xs" | "sm" | "md" | "lg";
 
 export interface AvatarProps {
@@ -85,8 +85,11 @@ export function AvatarGroup({ label, people, max = 4, size = "sm" }: AvatarGroup
   const rest = people.slice(max);
   return (
     <span role="group" aria-label={label} {...stylex.props(styles.group)}>
-      {shown.map((person) => (
-        <span key={person.name} {...stylex.props(styles.groupItem)}>
+      {shown.map((person, index) => (
+        <span
+          key={person.name}
+          {...stylex.props(styles.groupItem, rings[size], index > 0 && overlaps[size])}
+        >
           <Avatar name={person.name} src={person.src} size={size} />
         </span>
       ))}
@@ -95,7 +98,14 @@ export function AvatarGroup({ label, people, max = 4, size = "sm" }: AvatarGroup
           role="img"
           aria-label={`and ${rest.length} more: ${rest.map((person) => person.name).join(", ")}`}
           title={rest.map((person) => person.name).join(", ")}
-          {...stylex.props(styles.avatar, styles.overflow, sizes[size], styles.groupItem)}
+          {...stylex.props(
+            styles.avatar,
+            styles.overflow,
+            sizes[size],
+            styles.groupItem,
+            rings[size],
+            overlaps[size],
+          )}
         >
           <span aria-hidden>+{rest.length}</span>
         </span>
@@ -126,18 +136,31 @@ const styles = stylex.create({
     color: color.textMuted,
     fontWeight: font.medium,
     lineHeight: "1",
+    // An image has no baseline, so the default alignment puts the circle above the middle of the text.
+    verticalAlign: "middle",
     userSelect: "none",
     boxShadow: `inset 0 0 0 1px ${color.borderSubtle}`,
   },
   image: { width: "100%", height: "100%", objectFit: "cover" },
   overflow: { backgroundColor: color.inset, fontVariantNumeric: "tabular-nums" },
-  group: { display: "inline-flex", alignItems: "center", paddingInlineStart: space.xs },
-  groupItem: {
-    display: "inline-flex",
-    marginInlineStart: `calc(-1 * ${space.xs})`,
-    borderRadius: radius.full,
-    boxShadow: `0 0 0 2px ${color.raised}`,
-  },
+  group: { display: "inline-flex", alignItems: "center" },
+  groupItem: { display: "inline-flex", borderRadius: radius.full },
+});
+
+// The ring and the overlap cover the edge of the avatar before. A small avatar has little room
+// around its initials, so it overlaps less and keeps them readable.
+const rings = stylex.create({
+  xs: { boxShadow: `0 0 0 1px ${color.raised}` },
+  sm: { boxShadow: `0 0 0 2px ${color.raised}` },
+  md: { boxShadow: `0 0 0 2px ${color.raised}` },
+  lg: { boxShadow: `0 0 0 2px ${color.raised}` },
+});
+
+const overlaps = stylex.create({
+  xs: { marginInlineStart: "-2px" },
+  sm: { marginInlineStart: "-2px" },
+  md: { marginInlineStart: `calc(-1 * ${space.xs})` },
+  lg: { marginInlineStart: `calc(-1 * ${space.xs})` },
 });
 
 const sizes = stylex.create({

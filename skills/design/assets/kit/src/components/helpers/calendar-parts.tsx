@@ -149,7 +149,11 @@ export function CalendarView({
     <AriaCalendar
       {...props}
       {...unavailableProps(unavailableReason)}
-      {...stylex.props(calendar.calendar, style)}
+      {...renderStyles<{ isDisabled: boolean }>((state) => [
+        calendar.calendar,
+        state.isDisabled && calendar.disabled,
+        style,
+      ])}
     >
       <MonthBody unavailableReason={unavailableReason} isRange={false} />
     </AriaCalendar>
@@ -166,7 +170,11 @@ export function RangeCalendarView({
     <AriaRangeCalendar
       {...props}
       {...unavailableProps(unavailableReason)}
-      {...stylex.props(calendar.calendar, style)}
+      {...renderStyles<{ isDisabled: boolean }>((state) => [
+        calendar.calendar,
+        state.isDisabled && calendar.disabled,
+        style,
+      ])}
     >
       <MonthBody unavailableReason={unavailableReason} isRange />
     </AriaRangeCalendar>
@@ -272,9 +280,13 @@ function MonthBody({ unavailableReason, isRange }: MonthViewProps & { readonly i
     return () => panel.removeEventListener("keydown", onKeyDown);
   }, [isOpen]);
 
+  const highlight = "highlightedRange" in state ? state.highlightedRange : null;
   const reasonDate = hovered ?? (state.isFocused ? state.focusedDate : null);
   const reason =
-    unavailableReason !== undefined && reasonDate !== null && state.isCellUnavailable(reasonDate)
+    unavailableReason !== undefined &&
+    reasonDate !== null &&
+    !state.isInvalid(reasonDate) &&
+    state.isCellUnavailable(reasonDate)
       ? unavailableReason(reasonDate.toString())
       : null;
 
@@ -291,6 +303,7 @@ function MonthBody({ unavailableReason, isRange }: MonthViewProps & { readonly i
             ref={headingRef}
             aria-expanded={step !== null}
             aria-label={`${title}, choose a month and a year`}
+            isDisabled={state.isDisabled}
             onPress={() => (step === null ? open() : close())}
             {...stylex.props(calendar.heading)}
           >
@@ -321,23 +334,41 @@ function MonthBody({ unavailableReason, isRange }: MonthViewProps & { readonly i
                   isOutsideMonth: boolean;
                   isDisabled: boolean;
                   isUnavailable: boolean;
-                }>((cell) => [
-                  calendar.cell,
-                  cell.isOutsideMonth && calendar.outside,
-                  isRange && cell.isSelected && calendar.inRange,
-                  (isRange ? cell.isSelectionStart || cell.isSelectionEnd : cell.isSelected) &&
-                    calendar.selected,
-                  isRange && cell.isSelectionStart && calendar.rangeStart,
-                  isRange && cell.isSelectionEnd && calendar.rangeEnd,
-                  cell.isFocusVisible && calendar.cellFocused,
-                  // react-aria also disables the days of the next and the previous month, which only look faint.
-                  !cell.isOutsideMonth &&
-                    (cell.isDisabled || cell.isUnavailable) &&
-                    calendar.unavailable,
-                ])}
+                }>((cell) => {
+                  const isPickable = !cell.isDisabled && !cell.isUnavailable && !state.isReadOnly;
+                  const isEndpoint = isRange
+                    ? cell.isSelectionStart || cell.isSelectionEnd
+                    : cell.isSelected;
+                  const isOutOfRange = state.isInvalid(date);
+                  // react-aria never selects a day of the next or the previous month, so the band
+                  // of a range that crosses months would break on those days.
+                  const isInBand =
+                    cell.isSelected ||
+                    (cell.isOutsideMonth &&
+                      highlight !== null &&
+                      date.compare(highlight.start) >= 0 &&
+                      date.compare(highlight.end) <= 0);
+                  return [
+                    calendar.cell,
+                    isPickable && calendar.cellPickable,
+                    cell.isOutsideMonth && calendar.outside,
+                    // A date outside the limits needs no reason, so it is only faint. The strike is for the unavailable dates, which have a reason.
+                    !cell.isOutsideMonth && isOutOfRange && calendar.outOfRange,
+                    isRange && isInBand && calendar.inRange,
+                    isEndpoint && calendar.selected,
+                    isEndpoint && isPickable && calendar.selectedPickable,
+                    isRange && cell.isSelectionStart && calendar.rangeStart,
+                    isRange && cell.isSelectionEnd && calendar.rangeEnd,
+                    cell.isFocusVisible && calendar.cellFocused,
+                    !cell.isOutsideMonth &&
+                      !isOutOfRange &&
+                      cell.isUnavailable &&
+                      calendar.unavailable,
+                  ];
+                })}
               >
                 {({ formattedDate, isUnavailable }) =>
-                  isUnavailable && unavailableReason !== undefined ? (
+                  isUnavailable && unavailableReason !== undefined && !state.isInvalid(date) ? (
                     // react-aria turns off hover on an unavailable cell, so this span reports the pointer.
                     <span
                       onPointerEnter={() => setHovered(date)}
@@ -520,9 +551,10 @@ function JumpGrid({
           {...renderStyles<{ isSelected: boolean; isFocusVisible: boolean; isDisabled: boolean }>(
             (option) => [
               calendar.jumpItem,
+              option.isDisabled && calendar.outOfRange,
               option.isSelected && calendar.selected,
+              option.isSelected && !option.isDisabled && calendar.selectedPickable,
               option.isFocusVisible && calendar.cellFocused,
-              option.isDisabled && calendar.unavailable,
             ],
           )}
         >
@@ -573,6 +605,7 @@ export const calendar = stylex.create({
   icon: { width: size.icon, height: size.icon },
   dialog: { padding: space.md, outlineStyle: "none" },
   calendar: { display: "flex", flexDirection: "column", gap: space.sm, width: "max-content" },
+  disabled: { opacity: "0.5", cursor: "not-allowed" },
   header: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: space.sm },
   heading: {
     display: "inline-flex",
@@ -582,12 +615,12 @@ export const calendar = stylex.create({
     paddingInline: space.sm,
     borderStyle: "none",
     borderRadius: radius.md,
-    backgroundColor: { default: "transparent", ":hover": color.subtle },
+    backgroundColor: { default: "transparent", ":hover": color.subtle, ":disabled": "transparent" },
     color: color.text,
     fontFamily: "inherit",
     fontSize: font.md,
     fontWeight: font.semibold,
-    cursor: "pointer",
+    cursor: { default: "pointer", ":disabled": "inherit" },
     outlineStyle: { default: "none", ":focus-visible": "solid" },
     outlineWidth: "2px",
     outlineColor: color.focus,
@@ -633,8 +666,11 @@ export const calendar = stylex.create({
     fontSize: font.md,
     color: color.text,
     fontVariantNumeric: "tabular-nums",
-    cursor: "pointer",
     outlineStyle: "none",
+  },
+  /** A day that people can pick. Other days inherit the cursor of the calendar. */
+  cellPickable: {
+    cursor: "pointer",
     backgroundColor: { default: "transparent", ":hover": color.subtle },
   },
   cellHit: {
@@ -645,9 +681,11 @@ export const calendar = stylex.create({
     height: "100%",
   },
   outside: { color: color.textFaint },
-  selected: {
+  /** A date or a month outside `minValue` and `maxValue`. */
+  outOfRange: { color: color.textFaint, cursor: "not-allowed", backgroundColor: "transparent" },
+  selected: { backgroundColor: color.accent, color: color.onAccent },
+  selectedPickable: {
     backgroundColor: { default: color.accent, ":hover": color.accentHover },
-    color: color.onAccent,
   },
   /** Days between the start and the end of a range. */
   inRange: {

@@ -56,17 +56,7 @@ import {
   type ModalOverlayProps,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
-import {
-  color,
-  font,
-  layer,
-  media,
-  motion,
-  radius,
-  shadow,
-  size,
-  space,
-} from "@/styles/tokens.stylex";
+import { color, font, layer, media, motion, radius, shadow, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { ScrollShadow } from "./scroll-shadow";
 import { ControlSizeProvider } from "@/components/helpers/control-size";
@@ -134,9 +124,14 @@ export function Dialog({
                       <p {...stylex.props(styles.description)}>{description}</p>
                     ) : null}
                   </div>
-                  <Button intent="ghost" size="sm" iconOnly aria-label="Close" onPress={close}>
-                    <X {...stylex.props(styles.closeIcon)} />
-                  </Button>
+                  <Button
+                    intent="ghost"
+                    size="sm"
+                    iconOnly
+                    icon={X}
+                    aria-label="Close"
+                    onPress={close}
+                  />
                 </header>
                 <ScrollShadow>
                   <div {...stylex.props(styles.body)}>
@@ -228,7 +223,6 @@ const styles = stylex.create({
   headingGroup: { display: "flex", flexDirection: "column", gap: space.xs, minWidth: 0 },
   title: { fontSize: font.lg, fontWeight: font.semibold, lineHeight: font.leadingTight, margin: 0 },
   description: { fontSize: font.md, color: color.textMuted },
-  closeIcon: { width: size.icon, height: size.icon },
   body: { padding: space.lg, paddingTop: space.sm },
   footer: {
     display: "flex",

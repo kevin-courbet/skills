@@ -52,6 +52,7 @@ export function Switch({ children, style, ...props }: SwitchProps) {
             aria-hidden
             {...stylex.props(
               styles.track,
+              Boolean(children) && styles.trackLabeled,
               isSelected && styles.trackSelected,
               isFocusVisible && styles.trackFocused,
               isDisabled && styles.disabled,
@@ -71,7 +72,7 @@ export function Switch({ children, style, ...props }: SwitchProps) {
 const styles = stylex.create({
   root: {
     display: "inline-flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: space.sm,
     paddingBlock: size.togglePadding,
     fontSize: font.md,
@@ -89,6 +90,8 @@ const styles = stylex.create({
     transitionDuration: motion.fast,
     transitionTimingFunction: motion.ease,
   },
+  // Centers the track on the first line of the label in every density.
+  trackLabeled: { marginTop: `calc((1lh - ${size.switchHeight}) / 2)` },
   trackSelected: { backgroundColor: color.accent },
   trackFocused: {
     outlineStyle: "solid",

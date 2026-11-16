@@ -18,7 +18,8 @@
  *   the arrow keys for 2 percent, Shift and an arrow key for 10 percent, and
  *   Home and End for the limits.
  * - A handle is named "Resize" with the labels of its two panels, and it
- *   reports the size of the panel before it.
+ *   reports the size of the panel before it. Its minimum and maximum are the
+ *   limits that both panels allow.
  * - A resize stops at `minSize` and `maxSize` of both panels.
  *
  * ## Rules
@@ -109,8 +110,11 @@ export function ResizablePanels({
     onSizesChange?.(next);
   };
 
-  /** Moves the boundary after panel `index` so that panel gets `target` percent. */
-  const resize = (index: number, target: number) => {
+  /**
+   * The size range of panel `index` that its handle allows. The panel after the
+   * handle takes the rest of the pair, so its limits also limit this panel.
+   */
+  const limits = (index: number) => {
     const before = panels[index];
     const after = panels[index + 1];
     const beforeSize = current[index];
@@ -121,10 +125,21 @@ export function ResizablePanels({
       beforeSize === undefined ||
       afterSize === undefined
     )
-      return;
+      return null;
     const pair = beforeSize + afterSize;
-    const lowest = Math.max(before.minSize ?? 10, pair - (after.maxSize ?? 90));
-    const highest = Math.min(before.maxSize ?? 90, pair - (after.minSize ?? 10));
+    return {
+      pair,
+      lowest: Math.max(before.minSize ?? 10, pair - (after.maxSize ?? 90)),
+      highest: Math.min(before.maxSize ?? 90, pair - (after.minSize ?? 10)),
+    };
+  };
+
+  /** Moves the boundary after panel `index` so that panel gets `target` percent. */
+  const resize = (index: number, target: number) => {
+    const range = limits(index);
+    const beforeSize = current[index];
+    if (range === null || beforeSize === undefined) return;
+    const { pair, lowest, highest } = range;
     const size = Math.min(highest, Math.max(lowest, target));
     if (size === beforeSize) return;
     setSizes(
@@ -183,19 +198,20 @@ export function ResizablePanels({
         const panelId = `${baseId}-${panel.id}`;
         const size = current[index] ?? panel.defaultSize;
         const next = panels[index + 1];
+        const range = limits(index);
         return (
           <Fragment key={panel.id}>
             <div id={panelId} {...stylex.props(styles.panel, styles.basis(size))}>
               {panel.content}
             </div>
-            {next === undefined ? null : (
+            {next === undefined || range === null ? null : (
               <Handle
                 label={`Resize ${panel.label} and ${next.label}`}
                 controls={panelId}
                 isHorizontal={isHorizontal}
                 value={Math.round(size)}
-                min={panel.minSize ?? 10}
-                max={panel.maxSize ?? 90}
+                min={Math.round(range.lowest)}
+                max={Math.round(range.highest)}
                 onKeyDown={(event) => onKeyDown(event, index)}
                 onPointerDown={(event) => onPointerDown(event, index)}
               />

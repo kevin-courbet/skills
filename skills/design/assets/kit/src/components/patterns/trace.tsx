@@ -29,6 +29,8 @@
  * between the spans and open or close them. The selected span shows its
  * duration, self time, start, status, and `attributes` below. The span with
  * the most self time shows its share of the trace, and it is selected first.
+ * When a closed span hides it, the highest closed span above it is selected
+ * first. The chevron of a span says "Expand" or "Collapse", and the span name.
  *
  * ## Example
  * ```tsx
@@ -231,7 +233,10 @@ export interface SpanWaterfallProps {
   readonly label: string;
   /** The root span. Its start and duration set the time axis. */
   readonly span: TraceSpan;
-  /** The span shown in the detail panel. It defaults to the span with the most self time. */
+  /**
+   * The span shown in the detail panel. It defaults to the span with the most
+   * self time, or to the closed span that hides it.
+   */
   readonly selectedId?: string | null;
   /** Receives the selected span id, or `null` when people clear the selection. */
   readonly onSelectionChange?: (id: string | null) => void;
@@ -248,7 +253,9 @@ export function SpanWaterfall({
 }: SpanWaterfallProps) {
   const total = span.startMs + span.durationMs;
   const hot = slowestSpan(span);
-  const [localSelected, setLocalSelected] = useState<string | null>(hot.span.id);
+  const [localSelected, setLocalSelected] = useState<string | null>(() =>
+    shownSpanId(span, hot.span.id, new Set(defaultExpandedIds ?? branchIds(span))),
+  );
   const selected = selectedId === undefined ? localSelected : selectedId;
   const selectedSpan = selected === null ? undefined : findSpan(span, selected);
   const ticks = [0, 0.25, 0.5, 0.75, 1];
@@ -350,11 +357,7 @@ function SpanRow({ span, total, level, hasChildItems, isExpanded, hotShare }: Sp
     <div {...stylex.props(styles.rowGrid)}>
       <div {...stylex.props(styles.nameCell, styles.indent(level))}>
         {hasChildItems ? (
-          <Button
-            slot="chevron"
-            aria-label="Show child spans"
-            {...stylex.props(styles.chevronButton)}
-          >
+          <Button slot="chevron" {...stylex.props(styles.chevronButton)}>
             <ChevronRight
               aria-hidden
               {...stylex.props(styles.chevron, isExpanded && styles.chevronOpen)}
@@ -466,6 +469,22 @@ function findSpan(span: TraceSpan, id: string): TraceSpan | undefined {
   for (const child of span.children ?? []) {
     const match = findSpan(child, id);
     if (match !== undefined) return match;
+  }
+  return undefined;
+}
+
+/** The span itself when all the spans above it are open, else the highest closed span above it. */
+function shownSpanId(root: TraceSpan, id: string, expanded: ReadonlySet<string>): string {
+  const path = spanPath(root, id);
+  if (path === undefined) throw new Error(`SpanWaterfall: span ${id} is not in the trace.`);
+  return path.find((span) => span.id !== id && !expanded.has(span.id))?.id ?? id;
+}
+
+function spanPath(span: TraceSpan, id: string): ReadonlyArray<TraceSpan> | undefined {
+  if (span.id === id) return [span];
+  for (const child of span.children ?? []) {
+    const path = spanPath(child, id);
+    if (path !== undefined) return [span, ...path];
   }
   return undefined;
 }

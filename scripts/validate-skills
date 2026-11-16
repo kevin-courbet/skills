@@ -138,6 +138,9 @@ bun "$design_cli" recipe ListPage | grep -q "^ListPage  (recipe)"
 bun "$design_cli" search "list page with filters" | grep -q "^  read: design recipe ListPage$"
 rm -rf "$scaffold_root"
 
+# The kit catalog must have a section or an exclusion for each kit component.
+"$repo_root/scripts/kit-catalog" check
+
 test -f "$repo_root/skills/create-data-visualizations/SKILL.md"
 test -f "$repo_root/skills/create-data-visualizations/scripts/chart"
 test -f "$repo_root/sources/aperture.json"

@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Builds the kit catalog: one static page that shows every kit component in its
+# states, in the light and the dark theme, for a review by people.
+#
+# Usage:
+#   scripts/kit-catalog build [--app <dir>] [--out <dir>]
+#   scripts/kit-catalog check [--app <dir>]
+#   scripts/kit-catalog dev   [--app <dir>]
+#
+# build  Checks the catalog and writes the static files to --out
+#        (default: kit-catalog/dist).
+# check  Checks that each kit component has a section or an exclusion, and
+#        type-checks the catalog in the app.
+# dev    Starts a dev server on port 4600. Components without a section are
+#        reported, not rejected.
+#
+# The catalog runs inside an app that "design new --app internal-app" creates,
+# so it uses the same kit files, dependencies, and compiler settings as an app.
+# --app keeps that app in <dir> between runs and applies the hub kit to it with
+# "design sync --write". Without --app, the app is in a temporary folder.
+set -euo pipefail
+
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+design=(bun "$repo/skills/design/scripts/design")
+catalog="$repo/kit-catalog"
+
+command="${1:-}"
+case "$command" in
+  build | check | dev) shift ;;
+  *)
+    sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    exit 2
+    ;;
+esac
+
+app=""
+out="$catalog/dist"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app)
+      app="${2:?--app needs a folder}"
+      shift 2
+      ;;
+    --out)
+      out="${2:?--out needs a folder}"
+      shift 2
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [ -z "$app" ]; then
+  app="$(mktemp -d)/kit-catalog-app"
+  trap 'rm -rf "$(dirname "$app")"' EXIT
+fi
+app="$(mkdir -p "$(dirname "$app")" && cd "$(dirname "$app")" && pwd)/$(basename "$app")"
+
+if [ -f "$app/internal-app.kit.json" ]; then
+  "${design[@]}" sync "$app" --write
+elif [ -e "$app" ]; then
+  echo "$app exists and is not an internal-app app. Give a new folder to --app." >&2
+  exit 2
+else
+  "${design[@]}" new "$app" --app internal-app --name "Kit Catalog"
+fi
+
+ln -sfn "$catalog/src" "$app/src/kit-catalog"
+cp "$catalog/vite.config.ts" "$app/vite.kit-catalog.config.ts"
+cp "$catalog/index.html" "$app/index.html"
+(cd "$app" && bun install --frozen-lockfile)
+
+case "$command" in
+  dev)
+    bun "$catalog/prepare.ts" "$app" --partial
+    cd "$app"
+    exec bun --bun vite dev --config vite.kit-catalog.config.ts
+    ;;
+  check | build)
+    bun "$catalog/prepare.ts" "$app"
+    (cd "$app" && bun run tsc)
+    ;;
+esac
+
+if [ "$command" = build ]; then
+  (cd "$app" && bun --bun vite build --config vite.kit-catalog.config.ts)
+  rm -rf "$out"
+  mkdir -p "$(dirname "$out")"
+  cp -R "$app/dist-kit-catalog" "$out"
+  echo "Kit catalog: $out/index.html"
+fi

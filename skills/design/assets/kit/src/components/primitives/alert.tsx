@@ -106,12 +106,11 @@ export function Alert({
           intent="ghost"
           size="sm"
           iconOnly
+          icon={X}
           aria-label="Dismiss"
           onPress={onDismiss}
           style={styles.dismiss}
-        >
-          <X aria-hidden {...stylex.props(styles.dismissIcon)} />
-        </Button>
+        />
       ) : null}
     </div>
   );
@@ -163,7 +162,6 @@ const styles = stylex.create({
   },
   actions: { display: "flex", alignItems: "center", gap: space.sm, flexShrink: 0 },
   dismiss: { marginBlock: "-0.25rem", marginInlineEnd: "-0.25rem" },
-  dismissIcon: { width: size.iconSm, height: size.iconSm },
 });
 
 const intents = stylex.create({

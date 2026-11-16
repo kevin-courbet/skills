@@ -240,7 +240,9 @@ export const control = stylex.create({
     color: color.textFaint,
   },
   /** For an <input> or <textarea> that is itself the control box. */
+  // An input clips a long value or placeholder mid-letter. The ellipsis shows that the text goes on.
   textInput: {
+    textOverflow: "ellipsis",
     "::placeholder": { color: color.textFaint },
   },
 });
@@ -257,6 +259,7 @@ export const inputText = stylex.create({
     padding: 0,
     color: "inherit",
     fontSize: "inherit",
+    textOverflow: "ellipsis",
     "::placeholder": { color: color.textFaint },
   },
 });

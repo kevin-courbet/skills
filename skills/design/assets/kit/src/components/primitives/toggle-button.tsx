@@ -98,9 +98,11 @@ export function ToggleButton({
       {({ isSelected }) => (
         <>
           {Icon === undefined && isSelected ? (
-            <Check aria-hidden {...stylex.props(styles.icon)} />
+            <Check aria-hidden {...stylex.props(styles.icon, iconSizes[controlSize])} />
           ) : null}
-          {Icon === undefined ? null : <Icon aria-hidden {...stylex.props(styles.icon)} />}
+          {Icon === undefined ? null : (
+            <Icon aria-hidden {...stylex.props(styles.icon, iconSizes[controlSize])} />
+          )}
           {iconOnly ? null : label}
         </>
       )}
@@ -138,7 +140,7 @@ const styles = stylex.create({
     },
   },
   disabled: { opacity: "0.5", cursor: "not-allowed", transform: "none" },
-  icon: { flexShrink: 0, width: size.iconSm, height: size.iconSm },
+  icon: { flexShrink: 0 },
 });
 
 const intents = stylex.create({
@@ -169,6 +171,12 @@ const selectedIntents = stylex.create({
 const sizes = stylex.create({
   sm: { height: size.controlSm, paddingInline: space.sm, fontSize: font.sm },
   md: { height: size.controlMd, paddingInline: space.md, fontSize: font.md },
+});
+
+/** The same icon size as a `Button` of the same size. */
+const iconSizes = stylex.create({
+  sm: { width: size.iconSm, height: size.iconSm },
+  md: { width: size.icon, height: size.icon },
 });
 
 const squares = stylex.create({

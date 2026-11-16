@@ -13,12 +13,17 @@
  * that turn on and off, use `ToggleGroup`.
  *
  * ## Behavior
- * - `Button` uses react-aria press handling, so mouse, touch, and keyboard
- *   presses work the same way.
- * - A press scales the button down a little, except under reduced motion and
- *   in a `ButtonGroup`.
+ * - Mouse, touch, and keyboard presses work the same way. A press scales the
+ *   button down a little, except under reduced motion and in a `ButtonGroup`.
+ * - The `icon` size follows the button size: `size.iconSm`, `size.icon`, or
+ *   `size.iconLg`.
+ * - `isPending` shows a spinner in place of the content and keeps the width.
+ *   The button keeps the focus, ignores presses, and screen readers hear that
+ *   it is pending. Do not put a `Spinner` in a button.
  *
  * ## Rules
+ * - Pass an icon with `icon`, never in the children.
+ * - Give an `iconOnly` button an `aria-label` that names the action.
  * - Give one `primary` button to each view.
  * - Keep `danger` for the confirm button of a destructive step, such as in a
  *   `ConfirmDialog`. The button that opens the confirmation is not `danger`.
@@ -26,8 +31,7 @@
  *
  * ## LinkButton
  * A router `Link` with the look of a button, for navigation that reads as an
- * action, such as "Create item" that opens a route. It takes the `Link` props,
- * such as `to` and `params`.
+ * action, such as "Create item". It takes the `Link` props.
  *
  * ## ButtonGroup
  * Joins buttons into one control with a `label`: a split button (an action and
@@ -37,11 +41,12 @@
  * ## Example
  * ```tsx
  * <Button intent="primary" onPress={save}>Save changes</Button>
- * <LinkButton to="/items/new">Create item</LinkButton>
+ * <Button icon={Download} onPress={exportRows}>Export</Button>
+ * <LinkButton to="/items/new" icon={Plus}>Create item</LinkButton>
  * <ButtonGroup label="Deploy actions">
  *   <Button intent="primary" onPress={deploy}>Deploy</Button>
  *   <MenuTrigger>
- *     <Button intent="primary" iconOnly aria-label="Deploy targets"><ChevronDown /></Button>
+ *     <Button intent="primary" iconOnly icon={ChevronDown} aria-label="Deploy targets" />
  *     <Menu onAction={deployTo}>{targetItems}</Menu>
  *   </MenuTrigger>
  * </ButtonGroup>
@@ -50,8 +55,13 @@
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { createContext, type ReactNode, useContext } from "react";
+import type { LucideIcon } from "lucide-react";
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
-import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components";
+import {
+  Button as AriaButton,
+  type ButtonProps as AriaButtonProps,
+  ProgressBar,
+} from "react-aria-components";
 import { color, font, media, motion, radius, size, space } from "@/styles/tokens.stylex";
 import { useControlSize } from "@/components/helpers/control-size";
 
@@ -79,15 +89,14 @@ export type ButtonSize = "sm" | "md" | "lg";
 interface ButtonOwnProps {
   /** Visual weight. `ghost` is for a quiet action. */
   readonly intent?: ButtonIntent;
-  /**
-   * Defaults to the size of the surrounding row, set by Toolbar or
-   * ControlSizeProvider, and `md` elsewhere. Do not set it inside a Toolbar.
-   */
+  /** Defaults to the row size from Toolbar or ControlSizeProvider, else `md`. Not in a Toolbar. */
   readonly size?: ButtonSize;
-  /** Square control for a single icon. Pass aria-label. */
+  /** Lucide icon before the label. Screen readers do not hear it. */
+  readonly icon?: LucideIcon;
+  /** Square control that shows only `icon`. Needs `icon` and `aria-label`, and throws without them. */
   readonly iconOnly?: boolean;
-  /** A verb and an object, such as "Create item", or one icon. */
-  readonly children: ReactNode;
+  /** The label: a verb and an object, such as "Create item". Leave it out with `iconOnly`. */
+  readonly children?: ReactNode;
   /** Layout overrides, applied last. */
   readonly style?: StyleXStyles;
 }
@@ -98,6 +107,7 @@ export type ButtonProps = ButtonOwnProps &
 export function Button({
   intent = "secondary",
   size: explicitSize,
+  icon,
   iconOnly = false,
   style,
   children,
@@ -106,6 +116,13 @@ export function Button({
   const rowSize = useControlSize();
   const sizeKey = explicitSize ?? rowSize;
   const isGrouped = useContext(ButtonGroupContext);
+  const content = buttonContent("Button", {
+    icon,
+    iconOnly,
+    sizeKey,
+    name: props["aria-label"] ?? props["aria-labelledby"],
+    children,
+  });
   return (
     <AriaButton
       {...props}
@@ -120,8 +137,69 @@ export function Button({
         style,
       )}
     >
-      {children}
+      {props.isPending === true ? (
+        <>
+          <span {...stylex.props(styles.pendingContent)}>{content}</span>
+          <ProgressBar
+            aria-label="Pending"
+            isIndeterminate
+            {...stylex.props(styles.pendingIndicator)}
+          >
+            <span {...stylex.props(styles.pendingSpinner)} />
+          </ProgressBar>
+        </>
+      ) : (
+        content
+      )}
     </AriaButton>
+  );
+}
+
+/**
+ * The icon and the label of a Button or a LinkButton. It throws on an `iconOnly` button that has
+ * no icon, no accessible name, or children, and on a text button that has no label.
+ */
+function buttonContent(
+  component: "Button" | "LinkButton",
+  {
+    icon: Icon,
+    iconOnly,
+    sizeKey,
+    name,
+    children,
+  }: {
+    readonly icon: LucideIcon | undefined;
+    readonly iconOnly: boolean;
+    readonly sizeKey: ButtonSize;
+    readonly name: string | undefined;
+    readonly children: ReactNode;
+  },
+): ReactNode {
+  if (iconOnly) {
+    if (name === undefined)
+      throw new Error(
+        `${component} has iconOnly but no aria-label. Give an aria-label that names the action.`,
+      );
+    if (Icon === undefined)
+      throw new Error(
+        `${component} "${name}" has iconOnly but no icon. Give an icon or remove iconOnly.`,
+      );
+    if (children !== undefined)
+      throw new Error(
+        `${component} "${name}" has iconOnly and children. Remove the children: the aria-label names an icon-only button.`,
+      );
+  } else if (children === undefined) {
+    throw new Error(
+      `${component} has no children. Give a label, or set iconOnly with an icon and an aria-label.`,
+    );
+  }
+  return (
+    <>
+      {Icon === undefined ? null : (
+        <Icon aria-hidden {...stylex.props(styles.icon, iconSizes[sizeKey])} />
+      )}
+      {children}
+    </>
   );
 }
 
@@ -134,6 +212,7 @@ export type LinkButtonProps = ButtonOwnProps &
 export function LinkButton({
   intent = "secondary",
   size: explicitSize,
+  icon,
   iconOnly = false,
   style,
   children,
@@ -141,6 +220,13 @@ export function LinkButton({
 }: LinkButtonProps) {
   const rowSize = useControlSize();
   const sizeKey = explicitSize ?? rowSize;
+  const content = buttonContent("LinkButton", {
+    icon,
+    iconOnly,
+    sizeKey,
+    name: props["aria-label"] ?? props["aria-labelledby"],
+    children,
+  });
   const resolved = stylex.props(
     styles.base,
     intents[intent],
@@ -152,13 +238,19 @@ export function LinkButton({
   );
   return (
     <Link {...props} className={resolved.className} style={resolved.style}>
-      {children}
+      {content}
     </Link>
   );
 }
 
+const spin = stylex.keyframes({
+  from: { transform: "rotate(0deg)" },
+  to: { transform: "rotate(360deg)" },
+});
+
 const styles = stylex.create({
   base: {
+    position: "relative",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -190,6 +282,35 @@ const styles = stylex.create({
     },
   },
   disabledLink: { opacity: "0.5", pointerEvents: "none" },
+  icon: { flexShrink: 0 },
+  // The content keeps the width, so the row does not move when the work starts and ends. It
+  // stays in the accessibility tree, so the button keeps its name.
+  pendingContent: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space.xs,
+    opacity: 0,
+  },
+  pendingIndicator: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pendingSpinner: {
+    width: "0.875rem",
+    height: "0.875rem",
+    borderWidth: "1.5px",
+    borderStyle: "solid",
+    borderColor: "currentColor",
+    borderTopColor: "transparent",
+    borderRadius: radius.full,
+    animationName: spin,
+    animationDuration: { default: "0.8s", [media.reducedMotion]: "1.6s" },
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+  },
   group: {
     display: "inline-flex",
     flexShrink: 0,
@@ -246,6 +367,13 @@ const sizes = stylex.create({
   sm: { height: size.controlSm, paddingInline: space.sm, fontSize: font.sm },
   md: { height: size.controlMd, paddingInline: space.md, fontSize: font.md },
   lg: { height: size.controlLg, paddingInline: space.lg, fontSize: font.lg },
+});
+
+// The icon steps with the control, as in IconTile, so it keeps its weight next to the label.
+const iconSizes = stylex.create({
+  sm: { width: size.iconSm, height: size.iconSm },
+  md: { width: size.icon, height: size.icon },
+  lg: { width: size.iconLg, height: size.iconLg },
 });
 
 const squareSizes = stylex.create({

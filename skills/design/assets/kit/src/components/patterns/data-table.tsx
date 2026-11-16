@@ -106,7 +106,7 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { measureElement as measureVirtualElement, useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
 import {
   type ReactNode,
@@ -198,7 +198,7 @@ export type DataTableRowAction<TData extends RowData> =
 
 export type DataTableRowLink = Omit<
   LinkComponentProps<"a">,
-  "children" | "className" | "style" | "activeProps" | "inactiveProps"
+  "children" | "className" | "style" | "activeProps" | "inactiveProps" | "href"
 >;
 
 export interface DataTableExpansion<TData extends RowData> {
@@ -295,8 +295,25 @@ export interface DataTableProps<TData extends RowData> {
 const selectColumnId = "__select";
 const expandColumnId = "__expand";
 const utilityColumns = [selectColumnId, expandColumnId];
-/** Matches the 36px row from the density table: 8px padding, one line, and the border. */
-const rowHeightPx = 36;
+/**
+ * The block padding of a body cell in each density. A one-line row is this
+ * padding on both sides, one line of body text, and the bottom border: 36px
+ * in `default` and 28px in `compact` at the default font size. The cell
+ * styles and the height of a virtualized scroller both read these values, so
+ * the scroller shows `visibleRows` rows in every density, also on a touch page.
+ */
+const cellPaddingBlock = { default: space.sm, compact: space.xs } as const;
+const rowHeight = {
+  default: `calc(2 * ${space.sm} + ${font.md} * ${font.leadingNormal} + 1px)`,
+  compact: `calc(2 * ${space.xs} + ${font.md} * ${font.leadingNormal} + 1px)`,
+} as const;
+const headHeight = { default: "2.5rem", compact: size.controlLg } as const;
+/**
+ * The row size before the virtualizer measures a row, such as in server
+ * rendering. A low value renders extra rows, never too few. After the first
+ * measurement, the measured size replaces it for the rows that are not measured.
+ */
+const rowEstimatePx = 28;
 const resizeStepPx = 16;
 const columnSizeDefaults = { size: 160, minSize: 64, maxSize: 640 } as const;
 const interactiveSelector =
@@ -382,14 +399,22 @@ export function DataTable<TData extends RowData>({
     onColumnSizingChange: setColumnSizing,
   });
   const rows = table.getRowModel().rows;
+  const measuredRowPx = useRef(rowEstimatePx);
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollerRef.current,
-    estimateSize: () => rowHeightPx,
+    // The row height comes from the density tokens, which only the browser resolves. Thus the
+    // rows that are not measured take the size of the last measured row.
+    estimateSize: () => measuredRowPx.current,
+    measureElement: (element, entry, instance) => {
+      const height = measureVirtualElement(element, entry, instance);
+      measuredRowPx.current = height;
+      return height;
+    },
     overscan: 8,
     enabled: virtualize !== undefined,
     // Server rendering has no scroll element; render the first screen of rows.
-    initialRect: { width: 0, height: (virtualize?.visibleRows ?? 0) * rowHeightPx },
+    initialRect: { width: 0, height: (virtualize?.visibleRows ?? 0) * rowEstimatePx },
   });
 
   const visibleColumns = table.getVisibleLeafColumns();
@@ -405,6 +430,11 @@ export function DataTable<TData extends RowData>({
     startIds,
     endIds,
     (id) => table.getColumn(id)?.getSize() ?? columnSizeDefaults.size,
+  );
+  const coveredEdges = useCoveredEdges(
+    scrollerRef,
+    startIds.length > 0 || endIds.length > 0,
+    data.length > 0 || isLoading,
   );
   for (const id of Object.keys(responsiveColumns)) {
     if (!columns.some((column) => columnId(column) === id))
@@ -431,10 +461,12 @@ export function DataTable<TData extends RowData>({
       utilityColumns.includes(id) && styles.utilityCell,
       startIndex !== -1 && styles.sticky,
       startIndex !== -1 && styles.stickyStart(offsets.start[id] ?? 0),
-      startIndex === startIds.length - 1 && styles.stickyStartEdge,
+      id === startIds.at(-1) && styles.stickyStartEdge,
+      id === startIds.at(-1) && coveredEdges.start && styles.stickyCovered,
       endIndex !== -1 && styles.sticky,
       endIndex !== -1 && styles.stickyEnd(offsets.end[id] ?? 0),
-      endIndex === 0 && styles.stickyEndEdge,
+      id === endIds[0] && styles.stickyEndEdge,
+      id === endIds[0] && coveredEdges.end && styles.stickyCovered,
     ];
   };
   const isPinned = (id: string) => startIds.includes(id) || endIds.includes(id);
@@ -523,7 +555,10 @@ export function DataTable<TData extends RowData>({
             >
               {utilityColumns.includes(column.id) ? null : (
                 <Skeleton
-                  style={skeletonWidthList[(index + columnIndex) % skeletonWidthList.length]}
+                  style={[
+                    styles.skeletonCell,
+                    skeletonWidthList[(index + columnIndex) % skeletonWidthList.length],
+                  ]}
                 />
               )}
             </td>
@@ -574,7 +609,7 @@ export function DataTable<TData extends RowData>({
           ref={scrollerRef}
           {...stylex.props(
             styles.scroller,
-            virtualize !== undefined && styles.scrollerHeight(virtualize.visibleRows),
+            virtualize !== undefined && scrollerHeights[density](virtualize.visibleRows),
           )}
           tabIndex={0}
           role="region"
@@ -596,12 +631,13 @@ export function DataTable<TData extends RowData>({
                   ref={headRowRef}
                   aria-rowindex={virtualize === undefined ? undefined : 1}
                 >
-                  {headerGroup.headers.map((header) => (
+                  {headerGroup.headers.map((header, index) => (
                     <HeaderCell
                       key={header.id}
                       header={header}
                       table={table}
                       isResizable={resizableColumns && header.column.getCanResize()}
+                      isLast={index === headerGroup.headers.length - 1}
                       isNumeric={numericColumns.includes(header.column.id)}
                       cellStyle={[densitiesHead[density], ...cellStyles(header.column.id)]}
                       width={resizableColumns ? header.getSize() : undefined}
@@ -652,6 +688,40 @@ function findColumn<TData extends RowData>(
 
 function detailId(prefix: string, rowId: string): string {
   return `${prefix}-detail-${rowId}`;
+}
+
+/**
+ * Tells whether columns scroll under the start or the end pins. A pinned edge
+ * then shows a strong line, so cut cell text reads as covered, not broken.
+ */
+function useCoveredEdges(
+  scrollerRef: RefObject<HTMLDivElement | null>,
+  hasPins: boolean,
+  hasScroller: boolean,
+): { readonly start: boolean; readonly end: boolean } {
+  const [edges, setEdges] = useState({ start: false, end: false });
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!hasPins || !hasScroller || scroller === null) return;
+    const measure = () => {
+      const start = scroller.scrollLeft > 0;
+      const end = scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 1;
+      setEdges((previous) =>
+        previous.start === start && previous.end === end ? previous : { start, end },
+      );
+    };
+    measure();
+    scroller.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(scroller);
+    const table = scroller.firstElementChild;
+    if (table !== null) observer.observe(table);
+    return () => {
+      scroller.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
+  }, [scrollerRef, hasPins, hasScroller]);
+  return edges;
 }
 
 /**
@@ -891,6 +961,7 @@ function HeaderCell<TData extends RowData>({
   header,
   table,
   isResizable,
+  isLast,
   isNumeric,
   cellStyle,
   width,
@@ -898,6 +969,7 @@ function HeaderCell<TData extends RowData>({
   readonly header: Header<DataTableFeatures, TData, unknown>;
   readonly table: Table<DataTableFeatures, TData>;
   readonly isResizable: boolean;
+  readonly isLast: boolean;
   readonly isNumeric: boolean;
   readonly cellStyle: ReadonlyArray<false | stylex.StyleXStyles>;
   readonly width: number | undefined;
@@ -930,7 +1002,7 @@ function HeaderCell<TData extends RowData>({
       ) : (
         content
       )}
-      {isResizable ? <ColumnResizer header={header} table={table} /> : null}
+      {isResizable ? <ColumnResizer header={header} table={table} isLast={isLast} /> : null}
     </th>
   );
 }
@@ -942,9 +1014,11 @@ function HeaderCell<TData extends RowData>({
 function ColumnResizer<TData extends RowData>({
   header,
   table,
+  isLast,
 }: {
   readonly header: Header<DataTableFeatures, TData, unknown>;
   readonly table: Table<DataTableFeatures, TData>;
+  readonly isLast: boolean;
 }) {
   const column = header.column;
   const minSize = column.columnDef.minSize ?? columnSizeDefaults.minSize;
@@ -978,7 +1052,7 @@ function ColumnResizer<TData extends RowData>({
         else return;
         event.preventDefault();
       }}
-      {...stylex.props(styles.resizer)}
+      {...stylex.props(styles.resizer, isLast && styles.resizerLast)}
     />
   );
 }
@@ -994,9 +1068,7 @@ function ColumnsMenu<TData extends RowData>({
   const visibleIds = hideable.filter((column) => column.getIsVisible()).map((column) => column.id);
   return (
     <MenuTrigger>
-      <Button intent="ghost" iconOnly aria-label="Choose columns">
-        <Columns3 aria-hidden {...stylex.props(styles.toolbarIcon)} />
-      </Button>
+      <Button intent="ghost" iconOnly icon={Columns3} aria-label="Choose columns" />
       <Menu
         aria-label="Visible columns"
         selectionMode="multiple"
@@ -1074,21 +1146,19 @@ function PaginationBar({ pagination }: { readonly pagination: DataTablePaginatio
           <Button
             intent="ghost"
             iconOnly
+            icon={ChevronLeft}
             aria-label="Previous page"
             isDisabled={page <= 1}
             onPress={() => onPageChange(page - 1)}
-          >
-            <ChevronLeft aria-hidden {...stylex.props(styles.toolbarIcon)} />
-          </Button>
+          />
           <Button
             intent="ghost"
             iconOnly
+            icon={ChevronRight}
             aria-label="Next page"
             isDisabled={page >= pageCount}
             onPress={() => onPageChange(page + 1)}
-          >
-            <ChevronRight aria-hidden {...stylex.props(styles.toolbarIcon)} />
-          </Button>
+          />
         </span>
       </nav>
     </ControlSizeProvider>
@@ -1181,7 +1251,6 @@ const styles = stylex.create({
     borderBottomColor: color.borderSubtle,
   },
   toolbarMain: { flex: "1", minWidth: 0 },
-  toolbarIcon: { width: size.iconSm, height: size.iconSm },
   selectedCount: {
     paddingInline: space.xs,
     fontSize: font.md,
@@ -1198,11 +1267,12 @@ const styles = stylex.create({
     outlineColor: color.focus,
     outlineOffset: "-2px",
   },
-  scrollerHeight: (rows: number) => ({
-    maxHeight: `${(rows + 1) * 2.25}rem`,
-    overflowY: "auto",
-  }),
-  table: { width: "100%", borderCollapse: "collapse", fontSize: font.md },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: font.md,
+    lineHeight: font.leadingNormal,
+  },
   tableFixed: (width: number) => ({ tableLayout: "fixed", width, minWidth: "100%" }),
   caption: {
     position: "absolute",
@@ -1246,8 +1316,19 @@ const styles = stylex.create({
     userSelect: "none",
     outlineStyle: "none",
   },
+  // The last handle lies on the edge of the frame, so at rest it reads as a second border.
+  resizerLast: {
+    backgroundColor: {
+      default: "transparent",
+      ":hover": color.borderStrong,
+      ":focus-visible": color.focus,
+    },
+  },
+  // A reversed flex box, as in a numeric header, can take its baseline from the icon, which
+  // lifts the label. Top alignment does not use the baseline, so all header labels line up.
   sortButton: {
     display: "inline-flex",
+    verticalAlign: "top",
     alignItems: "center",
     gap: space.xs,
     margin: `calc(-1 * ${space.xs})`,
@@ -1324,12 +1405,15 @@ const styles = stylex.create({
     textAlign: "start",
   },
   utilityCell: { width: "2.5rem", paddingInlineEnd: 0, lineHeight: "0" },
+  // The button is taller than a line of text. The negative margin keeps its row as tall as a
+  // row without the button.
   expandButton: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     width: "1.5rem",
     height: "1.5rem",
+    marginBlock: `calc((${font.md} * ${font.leadingNormal} - 1.5rem) / 2)`,
     borderStyle: "none",
     borderRadius: radius.sm,
     backgroundColor: { default: "transparent", ":hover": color.inset },
@@ -1347,6 +1431,8 @@ const styles = stylex.create({
     transitionTimingFunction: motion.easeOut,
   },
   expandIconOpen: { transform: "rotate(90deg)" },
+  // An inline block sits on a line of text, so a loading row is as tall as a row of data.
+  skeletonCell: { display: "inline-block", verticalAlign: "middle" },
   detailRow: {
     backgroundColor: color.subtle,
     borderBottomWidth: "1px",
@@ -1377,8 +1463,31 @@ const styles = stylex.create({
   sticky: { position: "sticky", zIndex: 1 },
   stickyStart: (offset: number) => ({ left: offset }),
   stickyEnd: (offset: number) => ({ right: offset }),
-  stickyStartEdge: { boxShadow: `1px 0 0 ${color.borderSubtle}` },
-  stickyEndEdge: { boxShadow: `-1px 0 0 ${color.borderSubtle}` },
+  // Chromium does not paint a box shadow on a cell of a collapsed table, so a pseudo element in the
+  // sticky cell draws the edge line.
+  stickyStartEdge: {
+    "::after": {
+      content: '""',
+      position: "absolute",
+      insetBlock: 0,
+      insetInlineEnd: 0,
+      width: "1px",
+      backgroundColor: color.borderSubtle,
+      pointerEvents: "none",
+    },
+  },
+  stickyEndEdge: {
+    "::after": {
+      content: '""',
+      position: "absolute",
+      insetBlock: 0,
+      insetInlineStart: 0,
+      width: "1px",
+      backgroundColor: color.borderSubtle,
+      pointerEvents: "none",
+    },
+  },
+  stickyCovered: { "::after": { backgroundColor: color.borderStrong } },
   // Inherit the row surface so hover and selection reach the pinned cell.
   stickyRowSurface: { backgroundColor: "inherit" },
   numeric: { textAlign: "end", fontVariantNumeric: "tabular-nums" },
@@ -1413,15 +1522,20 @@ const styles = stylex.create({
   },
   twoLine: { display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 },
   twoLinePrimary: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" },
+  // MetaLine wraps between facts. Above sm the cells stay on one line, so the secondary line keeps
+  // its full width and an overflowing table scrolls instead of stacking the facts.
   twoLineSecondary: {
-    minWidth: 0,
+    minWidth: { default: "max-content", [container.belowSm]: 0 },
     overflow: "hidden",
     textOverflow: "ellipsis",
     fontSize: font.sm,
     color: color.textMuted,
   },
+  // The track has no text, so the box takes its baseline from the track and rises above the
+  // line. Top alignment does not use the baseline, so the row keeps the height of one line.
   meter: {
     display: "inline-flex",
+    verticalAlign: "top",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: space.sm,
@@ -1456,13 +1570,24 @@ const showBelow = stylex.create({
 });
 
 const densities = stylex.create({
-  default: { paddingBlock: space.sm },
-  compact: { paddingBlock: space.xs },
+  default: { paddingBlock: cellPaddingBlock.default },
+  compact: { paddingBlock: cellPaddingBlock.compact },
 });
 
 const densitiesHead = stylex.create({
-  default: { height: "2.5rem" },
-  compact: { height: size.controlLg },
+  default: { height: headHeight.default },
+  compact: { height: headHeight.compact },
+});
+
+const scrollerHeights = stylex.create({
+  default: (rows: number) => ({
+    maxHeight: `calc(${headHeight.default} + ${rows} * ${rowHeight.default})`,
+    overflowY: "auto",
+  }),
+  compact: (rows: number) => ({
+    maxHeight: `calc(${headHeight.compact} + ${rows} * ${rowHeight.compact})`,
+    overflowY: "auto",
+  }),
 });
 
 const skeletonWidths = stylex.create({

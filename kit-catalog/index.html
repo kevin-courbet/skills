@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Design Kit</title>
+    <!--
+      The cascade layer that a page declares first has the lowest priority. In
+      development, StyleX adds its layers to this head before the script imports
+      `app.css`, so the reset and Aperture layers would override StyleX. This rule
+      declares those layers first, so StyleX overrides them, as in an app.
+    -->
+    <style>
+      @layer aperture, reset;
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/kit-catalog/main.tsx"></script>
+  </body>
+</html>

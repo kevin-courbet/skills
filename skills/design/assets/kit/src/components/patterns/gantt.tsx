@@ -17,6 +17,9 @@
  * - The task list is a tree. The names stay in view while the chart scrolls
  *   sideways. The dates of each task show from `md`.
  * - The chart opens with `today` in view.
+ * - A short plan makes its days wider, so that the time line fills the chart.
+ * - The label of a month or a week stays in view while the chart scrolls
+ *   sideways.
  * - A group bar spans its tasks. Its progress is the mean of their progress,
  *   weighted by their length in days.
  * - An arrow leaves its source bar through the bottom edge near the end and
@@ -190,7 +193,8 @@ interface Row {
 }
 
 const dayWidths = { day: 2, week: 0.625 } as const;
-const nameWidth = "15rem";
+// From `md` the name column also holds the dates, so it needs room for a name of about 25 characters.
+const nameWidth = "21rem";
 const nameWidthNarrow = "9.5rem";
 const rowHeight = 2.25;
 
@@ -225,6 +229,24 @@ export function Gantt({
   const bodyRef = useRef<HTMLDivElement>(null);
   const [rowDrop, setRowDrop] = useState<{ id: string; toIndex: number } | null>(null);
   const focusAfterMove = useRef<string | null>(null);
+  const [fitWidth, setFitWidth] = useState(0);
+  const isEmpty = tasks.length === 0;
+
+  // A short plan widens its days so that the time line fills the chart.
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const names = nameHeaderRef.current;
+    if (scroller === null || names === null) return;
+    const measure = () => {
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      setFitWidth(Math.floor(scroller.clientWidth - names.offsetWidth) / rem);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(scroller);
+    observer.observe(names);
+    return () => observer.disconnect();
+  }, [isEmpty]);
 
   // A moved row re-renders in its new place; keep the keyboard on it.
   useEffect(() => {
@@ -296,12 +318,25 @@ export function Gantt({
     appLocale,
   );
   const days = span(first, last);
-  const dayWidth = dayWidths[scale];
+  const dayWidth = Math.max(dayWidths[scale], fitWidth / days);
   const offset = (date: CalendarDate) => date.compare(first);
   const visible = visibleRows(tasks, expanded);
   const visibleCount = visible.length;
   const indexOf = new Map(visible.map((task, index) => [task.id, index]));
   const dropLine = rowDropLine(rowDrop, tasks, visible, indexOf);
+  // The tree keeps each rendered row until one of these values changes. A row must
+  // read no other value from this render, or it shows an old value.
+  const rowDependencies = [
+    tasks,
+    expanded,
+    preview,
+    first.toString(),
+    days,
+    dayWidth,
+    rowDrop?.id,
+    onTaskChange,
+    onReorder,
+  ];
 
   const commit = (task: GanttTask, start: CalendarDate, end: CalendarDate) => {
     onTaskChange?.(task, { start: start.toString(), end: end.toString() });
@@ -450,7 +485,7 @@ export function Gantt({
                     key={period.key}
                     {...stylex.props(styles.period, styles.width(`${period.days * dayWidth}rem`))}
                   >
-                    {period.label}
+                    <span {...stylex.props(styles.periodLabel)}>{period.label}</span>
                   </span>
                 ))}
               </div>
@@ -507,7 +542,7 @@ export function Gantt({
             <Tree
               aria-label={label}
               items={tasks}
-              dependencies={[preview, rows.size, scale, first.toString()]}
+              dependencies={rowDependencies}
               expandedKeys={expanded}
               onExpandedChange={setExpanded}
               selectionMode="single"
@@ -604,10 +639,7 @@ export function Gantt({
                       )}
                     </TreeItemContent>
                     {task.children === undefined ? null : (
-                      <Collection
-                        items={task.children}
-                        dependencies={[preview, rows.size, scale, first.toString()]}
-                      >
+                      <Collection items={task.children} dependencies={rowDependencies}>
                         {renderTask}
                       </Collection>
                     )}
@@ -1091,7 +1123,8 @@ const styles = stylex.create({
   headerBand: { display: "flex" },
   period: {
     flexShrink: 0,
-    overflow: "hidden",
+    // `clip` does not make a scroll container, so the label sticks to the chart scroller.
+    overflow: "clip",
     paddingBlock: "0.25rem",
     paddingInline: space.xs,
     whiteSpace: "nowrap",
@@ -1100,6 +1133,15 @@ const styles = stylex.create({
     borderInlineStartWidth: "1px",
     borderInlineStartStyle: "solid",
     borderInlineStartColor: color.borderSubtle,
+  },
+  // The label of a period that starts before the visible part stays next to the name column.
+  periodLabel: {
+    position: "sticky",
+    left: {
+      default: `calc(${nameWidthNarrow} + ${space.xs})`,
+      [media.md]: `calc(${nameWidth} + ${space.xs})`,
+    },
+    display: "inline-block",
   },
   dayCell: {
     flexShrink: 0,

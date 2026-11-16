@@ -54,17 +54,7 @@ import {
   type ModalOverlayProps,
 } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
-import {
-  color,
-  font,
-  layer,
-  media,
-  motion,
-  radius,
-  shadow,
-  size,
-  space,
-} from "@/styles/tokens.stylex";
+import { color, font, layer, media, motion, radius, shadow, space } from "@/styles/tokens.stylex";
 import { Button } from "./button";
 import { ScrollShadow } from "./scroll-shadow";
 import { ControlSizeProvider } from "@/components/helpers/control-size";
@@ -191,30 +181,33 @@ export function Sheet({
                           intent="ghost"
                           size="sm"
                           iconOnly
+                          icon={ChevronUp}
                           aria-label="Previous"
                           aria-keyshortcuts="k"
                           isDisabled={navigation.onPrevious === undefined}
                           onPress={navigation.onPrevious}
-                        >
-                          <ChevronUp aria-hidden {...stylex.props(styles.icon)} />
-                        </Button>
+                        />
                         <Button
                           intent="ghost"
                           size="sm"
                           iconOnly
+                          icon={ChevronDown}
                           aria-label="Next"
                           aria-keyshortcuts="j"
                           isDisabled={navigation.onNext === undefined}
                           onPress={navigation.onNext}
-                        >
-                          <ChevronDown aria-hidden {...stylex.props(styles.icon)} />
-                        </Button>
+                        />
                       </>
                     ) : null}
                     {headerActions}
-                    <Button intent="ghost" size="sm" iconOnly aria-label="Close" onPress={close}>
-                      <X aria-hidden {...stylex.props(styles.icon)} />
-                    </Button>
+                    <Button
+                      intent="ghost"
+                      size="sm"
+                      iconOnly
+                      icon={X}
+                      aria-label="Close"
+                      onPress={close}
+                    />
                   </div>
                 </header>
                 <ScrollShadow style={styles.bodyFrame}>
@@ -354,7 +347,6 @@ const styles = stylex.create({
   title: { fontSize: font.lg, fontWeight: font.semibold, lineHeight: font.leadingTight, margin: 0 },
   description: { fontSize: font.md, color: color.textMuted },
   headerActions: { display: "flex", alignItems: "center", gap: space.xs, flexShrink: 0 },
-  icon: { width: size.icon, height: size.icon },
   bodyFrame: { flex: "1" },
   body: { padding: space.lg },
   footer: {

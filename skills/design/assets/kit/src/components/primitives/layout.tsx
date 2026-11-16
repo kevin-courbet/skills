@@ -413,6 +413,7 @@ export type StatStripLink = Omit<
   | "style"
   | "activeProps"
   | "inactiveProps"
+  | "href"
   | "id"
   | "aria-label"
   | "aria-labelledby"
@@ -937,6 +938,8 @@ const styles = stylex.create({
     display: "grid",
     gridColumn: "1 / -1",
     gridTemplateColumns: "subgrid",
+    // A value with a control, such as a CopyButton, is taller than the term. The baselines keep them on one line.
+    alignItems: "baseline",
     gap: space.lg,
     paddingBlock: space.sm,
     borderBottomWidth: "1px",
@@ -1038,6 +1041,8 @@ const styles = stylex.create({
     height: "1px",
     backgroundColor: color.borderSubtle,
     marginBlock: space.lg,
+    marginInline: 0,
+    alignSelf: "stretch",
   },
 });
 

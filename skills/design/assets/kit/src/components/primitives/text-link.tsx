@@ -16,8 +16,8 @@
  * - With `to`, it is a router `Link`. It takes the same props as `LinkButton`,
  *   such as `to`, `params`, and `search`, and the router checks their types.
  * - With `href`, it is an external link. It opens in a new tab with
- *   `rel="noreferrer"` and shows an external-link icon. Screen readers hear
- *   "opens in a new tab".
+ *   `rel="noreferrer"` and shows an external-link icon. The icon wraps with
+ *   the last word. Screen readers hear "opens in a new tab".
  * - `inline` has the accent color and an underline. `quiet` has the color of
  *   the text, and the underline shows on hover with a mouse.
  *
@@ -67,9 +67,11 @@ export type TextLinkRouterProps = TextLinkOwnProps &
     readonly href?: never;
   };
 
-export interface TextLinkExternalProps extends TextLinkOwnProps {
+export interface TextLinkExternalProps extends Omit<TextLinkOwnProps, "children"> {
   /** An absolute `http` or `https` URL outside the app. The link opens in a new tab. */
   readonly href: string;
+  /** The name of the page, such as "Status page". The icon stays on its last word. */
+  readonly children: string;
 }
 
 export type TextLinkProps = TextLinkRouterProps | TextLinkExternalProps;
@@ -81,6 +83,11 @@ export function TextLink(props: TextLinkProps) {
       throw new Error(
         `TextLink takes an absolute http or https URL in href, not "${href}". Give a route of the app in to.`,
       );
+    const text = children.trim();
+    const lastWordStart = text.search(/\S+$/);
+    if (lastWordStart === -1) throw new Error("TextLink with href takes a text that is not empty.");
+    const head = text.slice(0, lastWordStart);
+    const lastWord = text.slice(lastWordStart);
     return (
       <a
         href={href}
@@ -88,8 +95,11 @@ export function TextLink(props: TextLinkProps) {
         rel="noreferrer"
         {...stylex.props(styles.base, variants[variant], style)}
       >
-        {children}
-        <ExternalLink aria-hidden {...stylex.props(styles.icon)} />
+        {head}
+        <span {...stylex.props(styles.lastWord)}>
+          {lastWord}
+          <ExternalLink aria-hidden {...stylex.props(styles.icon)} />
+        </span>
         <span {...stylex.props(field.hiddenLabel)}> (opens in a new tab)</span>
       </a>
     );
@@ -122,7 +132,11 @@ const styles = stylex.create({
     outlineOffset: "2px",
     WebkitTapHighlightColor: "transparent",
   },
-  // The icon sits on the last word, so a link that wraps does not leave it alone on a line.
+  // Chromium can break a line before an inline icon, also after a word joiner. The last word and
+  // the icon do not wrap, so a link that wraps does not leave the icon alone on a line.
+  lastWord: {
+    whiteSpace: "nowrap",
+  },
   icon: {
     display: "inline-block",
     width: "0.85em",

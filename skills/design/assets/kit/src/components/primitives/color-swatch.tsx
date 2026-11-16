@@ -36,7 +36,7 @@
  * ## Example
  * ```tsx
  * <ColorSwatchPicker label="Project color" value={project.color} onChange={setColor} />
- * <Inline gap="xs"><ColorSwatch color={project.color} />{project.name}</Inline>
+ * <span {...stylex.props(styles.category)}><ColorSwatch color={project.color} />{project.name}</span>
  * ```
  */
 import * as stylex from "@stylexjs/stylex";

@@ -177,7 +177,12 @@ export function MultiSelect<Value extends string>({
           label={`Selected ${label.toLowerCase()}`}
           hideLabel
           items={selected}
-          onRemove={(removed) => onChange(value.filter((id) => !removed.includes(id)))}
+          isDisabled={props.isDisabled}
+          onRemove={
+            props.isDisabled === true
+              ? undefined
+              : (removed) => onChange(value.filter((id) => !removed.includes(id)))
+          }
         />
       ) : null}
     </div>

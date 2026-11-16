@@ -16,7 +16,8 @@
  * - The source column aligns, and the times show in the app time zone.
  * - Warning and error lines show their level in words.
  * - The "All" and "Warnings and errors" switch shows only when the output has
- *   such lines. The search highlights each match.
+ *   such lines. The search and the download show only when it has lines. The
+ *   search highlights each match.
  * - The footer shows the line count, then `footnote`, each as its own element.
  * - The header row takes the `sm` control size, so controls in `filters` match
  *   it.
@@ -35,7 +36,7 @@
  *   label="Build output"
  *   title="Build logs"
  *   lines={lines}
- *   emptyState="Waiting for a runner"
+ *   emptyState={<EmptyState title="Waiting for a runner" />}
  *   follow={run.status === "running"}
  *   downloadName={`build-${run.id}.log`}
  *   footnote="Retained for 30 days"
@@ -47,7 +48,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDownToLine, Download } from "lucide-react";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { appLocale, appTimeZone } from "@/lib/locale";
-import { color, container, font, radius, size, space } from "@/styles/tokens.stylex";
+import { color, container, font, radius, space } from "@/styles/tokens.stylex";
 import { Button } from "@/components/primitives/button";
 import { ControlSizeProvider } from "@/components/helpers/control-size";
 import { EmptyState } from "@/components/primitives/feedback";
@@ -77,7 +78,7 @@ export interface LogViewerProps {
   readonly label: string;
   /** All lines, oldest first. */
   readonly lines: ReadonlyArray<LogLine>;
-  /** Shown while there are no lines at all, such as "Waiting for a runner". */
+  /** An `EmptyState` for output with no lines, such as "Waiting for a runner". */
   readonly emptyState: ReactNode;
   /** Heading content at the start of the header row, such as "Build logs" and a "Show all stages" link. */
   readonly title?: ReactNode;
@@ -85,10 +86,7 @@ export interface LogViewerProps {
   readonly query?: string;
   /** Receives the search text when people change it. */
   readonly onQueryChange?: (query: string) => void;
-  /**
-   * Level filter. The "All" and "Warnings and errors" switch shows when the
-   * output has warnings or errors. Pass it with `onLevelChange` to keep it in the URL.
-   */
+  /** Level filter. Pass it with `onLevelChange` to keep it in the URL. */
   readonly level?: LogLevelFilter;
   /** Receives the level filter when people change it. */
   readonly onLevelChange?: (level: LogLevelFilter) => void;
@@ -115,7 +113,10 @@ export interface LogViewerProps {
   readonly variant?: "standalone" | "embedded";
 }
 
-/** Matches font.sm at the 1.8 line height used below. */
+/**
+ * First estimate of a line at font.sm and the 1.8 line height used below. The virtualizer measures
+ * each line, and the scroller height comes from the same tokens, so the touch theme stays correct.
+ */
 const lineHeightPx = 22;
 
 export function LogViewer({
@@ -144,6 +145,7 @@ export function LogViewer({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [isAtEnd, setAtEnd] = useState(true);
   const needle = query.trim().toLowerCase();
+  const hasLines = lines.length > 0;
   const hasProblems = lines.some((line) => isProblem(line.level));
   const isFiltered = needle !== "" || (hasProblems && level === "problems");
   const matches = lines
@@ -175,11 +177,6 @@ export function LogViewer({
       virtualizer.scrollToIndex(matches.length - 1, { align: "end" });
   }, [follow, isAtEnd, matches.length, virtualizer]);
 
-  if (lines.length === 0)
-    return (
-      <div {...stylex.props(isEmbedded ? styles.embeddedEmpty : styles.frame)}>{emptyState}</div>
-    );
-
   const countText = isFiltered
     ? `${matches.length.toLocaleString(appLocale)} of ${lines.length.toLocaleString(appLocale)} lines`
     : `${lines.length.toLocaleString(appLocale)} lines`;
@@ -202,29 +199,30 @@ export function LogViewer({
                 ]}
               />
             ) : null}
-            <SearchField
-              label={`Search ${label.toLowerCase()}`}
-              hideLabel
-              placeholder="Find in output"
-              value={query}
-              onChange={setQuery}
-              style={styles.search}
-            />
+            {hasLines ? (
+              <SearchField
+                label={`Search ${label.toLowerCase()}`}
+                hideLabel
+                placeholder="Find in output"
+                value={query}
+                onChange={setQuery}
+                style={styles.search}
+              />
+            ) : null}
             {follow && !isAtEnd ? (
               <Button
                 intent="ghost"
+                icon={ArrowDownToLine}
                 onPress={() => {
                   setAtEnd(true);
                   virtualizer.scrollToIndex(matches.length - 1, { align: "end" });
                 }}
               >
-                <ArrowDownToLine aria-hidden {...stylex.props(styles.buttonIcon)} />
                 Follow output
               </Button>
             ) : null}
-            {downloadName === undefined ? null : (
-              <Button onPress={() => download(lines, downloadName)}>
-                <Download aria-hidden {...stylex.props(styles.buttonIcon)} />
+            {downloadName === undefined || !hasLines ? null : (
+              <Button icon={Download} onPress={() => download(lines, downloadName)}>
                 Download
               </Button>
             )}
@@ -233,20 +231,24 @@ export function LogViewer({
       </div>
       {matches.length === 0 ? (
         <div {...stylex.props(isEmbedded ? styles.embeddedEmpty : styles.frame)}>
-          <EmptyState
-            title="No lines match"
-            description="Change the search or show all lines."
-            action={
-              <Button
-                onPress={() => {
-                  setQuery("");
-                  setLevel("all");
-                }}
-              >
-                Show all lines
-              </Button>
-            }
-          />
+          {!hasLines ? (
+            emptyState
+          ) : (
+            <EmptyState
+              title="No lines match"
+              description="Change the search or show all lines."
+              action={
+                <Button
+                  onPress={() => {
+                    setQuery("");
+                    setLevel("all");
+                  }}
+                >
+                  Show all lines
+                </Button>
+              }
+            />
+          )}
         </div>
       ) : (
         <div
@@ -409,7 +411,6 @@ const styles = stylex.create({
     minWidth: 0,
   },
   search: { flex: "1", minWidth: "12rem", maxWidth: "20rem" },
-  buttonIcon: { width: size.iconSm, height: size.iconSm },
   frame: {
     position: "relative",
     backgroundColor: color.inset,
@@ -430,7 +431,9 @@ const styles = stylex.create({
     outlineOffset: "-2px",
   },
   // The canvas sets the height of short output; long output stops here and scrolls.
-  scrollerHeight: (lines: number) => ({ maxHeight: `${lines * lineHeightPx + 16}px` }),
+  scrollerHeight: (lines: number) => ({
+    maxHeight: `calc(${lines} * ${font.sm} * 1.8 + 16px)`,
+  }),
   canvas: (height: number) => ({
     position: "relative",
     height: `${height + 16}px`,
