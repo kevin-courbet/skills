@@ -3,13 +3,14 @@
  *
  * @layer primitive
  * @keywords progress bar, progress, upload progress, import progress, loading bar, percent complete, indeterminate progress
- * @related Meter, Feedback, FileUpload, Stepper
+ * @related Meter, ProgressCircle, Feedback, FileUpload, Stepper
  * @notes loading-states, internal-app-states
  *
  * Use it while a task runs toward an end. Do not use it for a level that
  * stays, such as quota or disk use: use `Meter`. For the steps of a pipeline,
- * use `Stepper`. For a short wait in a button or a field, use `Spinner` of
- * `Feedback`.
+ * use `Stepper`. For the same task in a table row or another narrow place, use
+ * `ProgressCircle`. For a short wait with no measure, in a button or a field,
+ * use `Spinner` of `Feedback`.
  *
  * ## Behavior
  * - The label and the value text connect to the bar for screen readers.

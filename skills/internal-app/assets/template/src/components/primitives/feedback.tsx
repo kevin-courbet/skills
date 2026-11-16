@@ -4,12 +4,13 @@
  *
  * @layer primitive
  * @keywords empty state, no results, no data yet, loading spinner, spinner, skeleton, loading placeholder, error state, failed to load, first run
- * @related Alert, IconTile, ProgressBar, RouteError, DataTable, Button
+ * @related Alert, IconTile, ProgressBar, ProgressCircle, RouteError, DataTable, Button
  * @notes loading-states, finishing-details, ux-writing, internal-app-states
  *
  * Use these for data that is not there yet, that is empty, or that failed. Do
  * not use them for a notice about data that loaded: use `Alert`. For a task
- * with a total, use `ProgressBar`. A route failure renders `RouteError`.
+ * with a total, use `ProgressBar`, or `ProgressCircle` where a bar has no
+ * room. A route failure renders `RouteError`.
  *
  * ## Behavior
  * - `Skeleton` pulses and `Spinner` turns, so that people see that the work
@@ -27,7 +28,7 @@
  *
  * ## Spinner
  * An `output` element whose accessible name is `label`. Use `sm` in a button or
- * in the `suffix` of a field.
+ * in the `suffix` of a field. For work with a measure, use `ProgressCircle`.
  *
  * ## EmptyState
  * Show it only after the data resolved to zero items. A result that filters
