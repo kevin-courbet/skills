@@ -77,7 +77,7 @@ These are the shadcn/ui-based component categories in the ReUI registry
 | Breadcrumb | Covered | `breadcrumbs.tsx` | Route breadcrumbs. |
 | Button | Covered | `button.tsx` | Intents and sizes. |
 | Button Group | Ported | `button.tsx` (`ButtonGroup`) | Split buttons, zoom controls, and joined actions. |
-| Calendar | Covered | `calendar.tsx`, `date-picker.tsx` | Calendar grids in the pickers. |
+| Calendar | Covered | `calendar.tsx`, `calendar-parts.tsx`, `date-picker.tsx` | The inline `Calendar` and `RangeCalendar`, and the calendar grids in the pickers. |
 | Card | Covered | `layout.tsx` | `Card` and `CardSection`. |
 | Carousel | Skipped | — | Internal pages show all items in lists or grids. |
 | Chart | Covered | Aperture (`design read internal-app-charts`) | Charts use Aperture. |

@@ -46,9 +46,6 @@ import { type CalendarDate, parseDate } from "@internationalized/date";
 import {
   Radio,
   RadioGroup,
-  Calendar,
-  CalendarCell,
-  CalendarGrid,
   DatePicker as AriaDatePicker,
   type DatePickerProps as AriaDatePickerProps,
   Dialog,
@@ -60,10 +57,10 @@ import { renderStyles } from "@/lib/rac";
 import { space } from "@/styles/tokens.stylex";
 import {
   CalendarButton,
-  CalendarHeader,
+  CalendarView,
   DateSegments,
   calendar,
-} from "@/components/helpers/calendar";
+} from "@/components/helpers/calendar-parts";
 import {
   control,
   field,
@@ -225,29 +222,7 @@ export function DatePicker({
         ])}
       >
         <Dialog {...stylex.props(calendar.dialog)}>
-          <Calendar {...stylex.props(calendar.calendar)}>
-            <CalendarHeader />
-            <CalendarGrid {...stylex.props(calendar.grid)}>
-              {(date) => (
-                <CalendarCell
-                  date={date}
-                  {...renderStyles<{
-                    isSelected: boolean;
-                    isFocusVisible: boolean;
-                    isOutsideMonth: boolean;
-                    isDisabled: boolean;
-                    isUnavailable: boolean;
-                  }>((state) => [
-                    calendar.cell,
-                    state.isOutsideMonth && calendar.outside,
-                    state.isSelected && calendar.selected,
-                    state.isFocusVisible && calendar.cellFocused,
-                    (state.isDisabled || state.isUnavailable) && calendar.unavailable,
-                  ])}
-                />
-              )}
-            </CalendarGrid>
-          </Calendar>
+          <CalendarView />
         </Dialog>
       </Popover>
     </AriaDatePicker>

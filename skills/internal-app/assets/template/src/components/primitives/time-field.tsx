@@ -53,7 +53,7 @@ import {
 import { appLocale } from "@/lib/locale";
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
-import { DateSegments } from "@/components/helpers/calendar";
+import { DateSegments } from "@/components/helpers/calendar-parts";
 import {
   control,
   field,
