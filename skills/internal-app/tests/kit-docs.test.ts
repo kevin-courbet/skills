@@ -275,6 +275,12 @@ const PARAPHRASES: ReadonlyArray<readonly [string, string]> = [
   ["my jobs on a kiosk tablet", "TouchQueue"],
   ["home page with key numbers and a trend", "OverviewPage"],
   ["inbox of requests to approve", "ApprovalList"],
+  ["costs of a repair with a grand total", "Table"],
+  ["link inside a paragraph", "TextLink"],
+  ["open a website in a new tab", "TextLink"],
+  ["button that stays down when clicked", "ToggleButton"],
+  ["percent done in a narrow cell", "ProgressCircle"],
+  ["hint that a box has more items past its edge", "ScrollShadow"],
 ];
 
 function expectTop3(queries: ReadonlyArray<readonly [string, string]>) {
