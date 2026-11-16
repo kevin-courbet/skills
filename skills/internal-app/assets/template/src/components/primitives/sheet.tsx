@@ -3,7 +3,7 @@
  *
  * @layer primitive
  * @keywords sheet, side panel, drawer, slide over, peek, detail panel, record preview, edit panel, next and previous record
- * @related Dialog, DataTable, WorkQueue, Kanban, Identifier, Button
+ * @related Dialog, DataTable, WorkQueue, Kanban, Identifier, Button, ScrollShadow
  * @notes overlays, navigation, internal-app-page-patterns, internal-app-touch-work-view
  *
  * Use it for detail or editing that benefits from the list behind it. Use
@@ -19,6 +19,8 @@
  *   only fades.
  * - The j and k keys of `navigation` do nothing while people type in a field.
  * - It takes the density of the page and the `md` control size.
+ * - The body scrolls between the header and the footer, and its edges fade
+ *   while content is out of view.
  *
  * ## Rules
  * - In a peek, put the identifier in `meta`, an "Open page" link to the detail
@@ -64,6 +66,7 @@ import {
   space,
 } from "@/styles/tokens.stylex";
 import { Button } from "./button";
+import { ScrollShadow } from "./scroll-shadow";
 import { ControlSizeProvider } from "@/components/helpers/control-size";
 import { useOverlayDensity } from "@/components/helpers/density";
 
@@ -214,9 +217,11 @@ export function Sheet({
                     </Button>
                   </div>
                 </header>
-                <div {...stylex.props(styles.body)}>
-                  {typeof children === "function" ? children(close) : children}
-                </div>
+                <ScrollShadow style={styles.bodyFrame}>
+                  <div {...stylex.props(styles.body)}>
+                    {typeof children === "function" ? children(close) : children}
+                  </div>
+                </ScrollShadow>
                 {actions ? (
                   <footer {...stylex.props(styles.footer)}>{actions(close)}</footer>
                 ) : null}
@@ -350,7 +355,8 @@ const styles = stylex.create({
   description: { fontSize: font.md, color: color.textMuted },
   headerActions: { display: "flex", alignItems: "center", gap: space.xs, flexShrink: 0 },
   icon: { width: size.icon, height: size.icon },
-  body: { flex: "1", minHeight: 0, overflow: "auto", padding: space.lg },
+  bodyFrame: { flex: "1" },
+  body: { padding: space.lg },
   footer: {
     display: "flex",
     justifyContent: "flex-end",

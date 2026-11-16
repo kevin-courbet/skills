@@ -4,7 +4,7 @@
  *
  * @layer primitive
  * @keywords scrollspy, on this page, table of contents, section links, jump links, anchor navigation, page outline, settings navigation
- * @related Tabs, Layout, Breadcrumbs, Disclosure
+ * @related Tabs, Layout, Breadcrumbs, Disclosure, ScrollShadow
  * @notes navigation, internal-app-page-patterns
  *
  * Use it on a long page with named parts, such as settings or a record with
@@ -20,6 +20,8 @@
  *   moves the focus to the section.
  * - An `id` with no element on the page throws an error when people press its
  *   link.
+ * - A `horizontal` list that is wider than its frame scrolls sideways, and
+ *   its edges fade.
  *
  * ## Rules
  * - Give each section on the page the `id` of its item and a heading with the
@@ -43,6 +45,7 @@ import type { StyleXStyles } from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import { Link } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
+import { ScrollShadow } from "./scroll-shadow";
 import { color, font, media, motion, radius, space } from "@/styles/tokens.stylex";
 
 export interface ScrollspyItem {
@@ -121,25 +124,35 @@ export function Scrollspy({
     setActiveId(id);
   };
 
+  const list = (
+    <ul {...stylex.props(styles.list, orientation === "horizontal" && styles.listHorizontal)}>
+      {items.map((item) => (
+        <li key={item.id}>
+          <Link
+            aria-current={item.id === activeId ? "location" : undefined}
+            onPress={() => jump(item.id)}
+            {...renderStyles<{ isFocusVisible: boolean }>((state) => [
+              styles.link,
+              item.id === activeId && styles.linkActive,
+              state.isFocusVisible && styles.linkFocused,
+            ])}
+          >
+            {item.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <nav aria-label={label} {...stylex.props(styles.nav, style)}>
-      <ul {...stylex.props(styles.list, orientation === "horizontal" && styles.listHorizontal)}>
-        {items.map((item) => (
-          <li key={item.id}>
-            <Link
-              aria-current={item.id === activeId ? "location" : undefined}
-              onPress={() => jump(item.id)}
-              {...renderStyles<{ isFocusVisible: boolean }>((state) => [
-                styles.link,
-                item.id === activeId && styles.linkActive,
-                state.isFocusVisible && styles.linkFocused,
-              ])}
-            >
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {orientation === "horizontal" ? (
+        <ScrollShadow orientation="horizontal" hideScrollbar>
+          {list}
+        </ScrollShadow>
+      ) : (
+        list
+      )}
     </nav>
   );
 }
@@ -166,7 +179,6 @@ const styles = stylex.create({
   listHorizontal: {
     flexDirection: "row",
     flexWrap: { default: "nowrap", [media.md]: "wrap" },
-    overflowX: "auto",
   },
   link: {
     display: "flex",

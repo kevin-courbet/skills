@@ -3,7 +3,7 @@
  *
  * @layer primitive
  * @keywords dialog, modal, modal dialog, popup form, create dialog, edit dialog, modal window
- * @related ConfirmDialog, Sheet, Popover, FormLayout, Button
+ * @related ConfirmDialog, Sheet, Popover, FormLayout, Button, ScrollShadow
  * @notes overlays, forms, internal-app-page-patterns, internal-app-forms
  *
  * Use it for a short task that must interrupt the page. Do not use it for a
@@ -15,6 +15,8 @@
  * - Focus moves into the dialog and stays there. Escape, the close button, and
  *   a click on the backdrop close it, and the focus goes back to the trigger.
  * - The dialog takes the density of the page and the `md` control size.
+ * - A long body scrolls between the header and the footer, and its edges fade
+ *   while content is out of view.
  * - It fades and rises in from the center, and closes faster than it opens.
  *   Under reduced motion, it only fades.
  *
@@ -66,6 +68,7 @@ import {
   space,
 } from "@/styles/tokens.stylex";
 import { Button } from "./button";
+import { ScrollShadow } from "./scroll-shadow";
 import { ControlSizeProvider } from "@/components/helpers/control-size";
 import { useOverlayDensity } from "@/components/helpers/density";
 
@@ -135,9 +138,11 @@ export function Dialog({
                     <X {...stylex.props(styles.closeIcon)} />
                   </Button>
                 </header>
-                <div {...stylex.props(styles.body)}>
-                  {typeof children === "function" ? children(close) : children}
-                </div>
+                <ScrollShadow>
+                  <div {...stylex.props(styles.body)}>
+                    {typeof children === "function" ? children(close) : children}
+                  </div>
+                </ScrollShadow>
                 {actions ? (
                   <footer {...stylex.props(styles.footer)}>{actions(close)}</footer>
                 ) : null}
@@ -224,7 +229,7 @@ const styles = stylex.create({
   title: { fontSize: font.lg, fontWeight: font.semibold, lineHeight: font.leadingTight, margin: 0 },
   description: { fontSize: font.md, color: color.textMuted },
   closeIcon: { width: size.icon, height: size.icon },
-  body: { padding: space.lg, paddingTop: space.sm, overflow: "auto", minHeight: 0 },
+  body: { padding: space.lg, paddingTop: space.sm },
   footer: {
     display: "flex",
     justifyContent: "flex-end",
