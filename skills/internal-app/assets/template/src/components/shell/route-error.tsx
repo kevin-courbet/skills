@@ -41,7 +41,6 @@
 import * as stylex from "@stylexjs/stylex";
 import {
   type ErrorComponentProps,
-  Link,
   SearchParamError,
   useRouter,
   useMatch,
@@ -126,7 +125,7 @@ export function RouteNotFound() {
       <EmptyState
         title="Page not found"
         description="The address does not match a page in this app."
-        action={<Link to="/">Go to overview</Link>}
+        action={<LinkButton to="/">Go to overview</LinkButton>}
       />
     </div>
   );

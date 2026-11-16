@@ -117,7 +117,7 @@
  */
 import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
-import { Link, type LinkComponentProps } from "@tanstack/react-router";
+import type { LinkComponentProps } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 import { touchDensity } from "@/styles/themes";
 import {
@@ -132,6 +132,7 @@ import {
   useShellPageDensity,
 } from "@/components/helpers/density";
 import { color, container, font, media, radius, size, space } from "@/styles/tokens.stylex";
+import { TextLink } from "./text-link";
 
 export interface PageHeaderProps {
   /**
@@ -485,16 +486,16 @@ function StatStripCell({
       >
         {item.link ? (
           // The name keeps the visible label and value, so screen reader and voice control users hear and say the count.
-          <Link
+          <TextLink
             {...item.link}
+            variant="quiet"
             id={valueId}
             aria-labelledby={`${labelId} ${valueId}`}
-            {...stylex.props(styles.stripLink)}
           >
             {item.value}
             {/* Covers the cell, so a click on the label or the detail opens the link too. */}
             <span aria-hidden {...stylex.props(styles.stripLinkCover)} />
-          </Link>
+          </TextLink>
         ) : (
           item.value
         )}
@@ -917,17 +918,6 @@ const styles = stylex.create({
   stripItemLinked: {
     position: "relative",
     backgroundColor: { default: "transparent", ":hover": color.subtle },
-  },
-  stripLink: {
-    color: "inherit",
-    textDecoration: { default: "none", ":hover": "underline" },
-    textUnderlineOffset: "3px",
-    textDecorationColor: color.borderStrong,
-    borderRadius: radius.sm,
-    outlineStyle: { default: "none", ":focus-visible": "solid" },
-    outlineWidth: "2px",
-    outlineColor: color.focus,
-    outlineOffset: "2px",
   },
   stripLinkCover: { position: "absolute", inset: 0 },
   stripLabel: { fontSize: font.sm, color: color.textMuted },

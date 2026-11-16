@@ -117,7 +117,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link, type LinkComponentProps } from "@tanstack/react-router";
+import type { LinkComponentProps } from "@tanstack/react-router";
 import { Button as AriaButton } from "react-aria-components";
 import { appLocale } from "@/lib/locale";
 import { color, container, font, media, motion, radius, size, space } from "@/styles/tokens.stylex";
@@ -129,6 +129,7 @@ import { field } from "@/components/helpers/field";
 import { Toolbar } from "@/components/primitives/layout";
 import { Menu, MenuItem, MenuTrigger } from "@/components/primitives/menu";
 import { Select } from "@/components/primitives/select";
+import { TextLink } from "@/components/primitives/text-link";
 
 export const dataTableFeatures = tableFeatures({
   rowSortingFeature,
@@ -787,16 +788,10 @@ function RowActionControl<TData extends RowData>({
   readonly children: ReactNode;
 }) {
   if ("link" in action) {
-    const resolved = stylex.props(styles.rowControl);
     return (
-      <Link
-        {...action.link(row)}
-        data-row-action
-        className={resolved.className}
-        style={resolved.style}
-      >
+      <TextLink {...action.link(row)} variant="quiet" data-row-action>
         {children}
-      </Link>
+      </TextLink>
     );
   }
   return (

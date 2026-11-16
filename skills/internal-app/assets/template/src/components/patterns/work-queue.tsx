@@ -63,7 +63,6 @@
  * ```
  */
 import * as stylex from "@stylexjs/stylex";
-import { Link } from "@tanstack/react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import {
   createContext,
@@ -81,9 +80,10 @@ import {
   useHasChanged,
   viewTransitionName,
 } from "@/components/helpers/motion";
-import { color, font, media, radius, shadow, size, space } from "@/styles/tokens.stylex";
+import { color, font, radius, shadow, size, space } from "@/styles/tokens.stylex";
 import { Button } from "@/components/primitives/button";
 import type { StatStripLink } from "@/components/primitives/layout";
+import { TextLink } from "@/components/primitives/text-link";
 
 interface WorkQueueValue {
   readonly scope: string;
@@ -331,13 +331,13 @@ export function QueueCard({
           {link === undefined ? (
             title
           ) : (
-            <Link {...link} {...stylex.props(styles.titleLink)}>
+            <TextLink {...link} variant="quiet" style={styles.titleLink}>
               {titleStart}
               <span {...stylex.props(styles.titleEnd)}>
                 {titleEnd}
                 <ChevronRight aria-hidden {...stylex.props(styles.chevron)} />
               </span>
-            </Link>
+            </TextLink>
           )}
         </h3>
         {subtitle === undefined ? null : <p {...stylex.props(styles.subtitle)}>{subtitle}</p>}
@@ -476,21 +476,7 @@ const styles = stylex.create({
   // The link is inline, so the chevron follows the last word of a title that
   // wraps. The block padding grows its hit area to the control height, so each
   // line is a full touch target on a touch page without a taller line.
-  titleLink: {
-    paddingBlock: titleLinkPadding,
-    color: "inherit",
-    textDecorationLine: {
-      default: "none",
-      ":hover": { default: "none", [media.finePointer]: "underline" },
-    },
-    textUnderlineOffset: "0.2em",
-    borderRadius: radius.sm,
-    outlineStyle: { default: "none", ":focus-visible": "solid" },
-    outlineWidth: "2px",
-    outlineColor: color.focus,
-    outlineOffset: "2px",
-    WebkitTapHighlightColor: "transparent",
-  },
+  titleLink: { paddingBlock: titleLinkPadding },
   // The last word and the chevron do not break, so the chevron never starts a line alone.
   titleEnd: { whiteSpace: "nowrap" },
   // The reset in app.css makes every svg a block, so the chevron opts back in to the line.
