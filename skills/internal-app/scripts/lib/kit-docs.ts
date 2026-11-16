@@ -471,8 +471,12 @@ function componentApi(source: string, name: string, paramsStart: number, decls: 
   const withDefaults: PropsShape = {
     variants: shape.variants.map((variant) => ({
       external: variant.external,
+      // A member of type `undefined` marks a prop that this variant does not take,
+      // so the default of the destructured parameter does not apply to it.
       members: variant.members.map((member) =>
-        defaults.has(member.name) ? { ...member, defaultValue: defaults.get(member.name)! } : member,
+        defaults.has(member.name) && member.type !== "undefined"
+          ? { ...member, defaultValue: defaults.get(member.name)! }
+          : member,
       ),
     })),
   };

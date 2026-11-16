@@ -140,6 +140,14 @@ describe("the kit docs of a new app", () => {
     expect(result.stdout).toContain("Design notes: patterns, motion, internal-app-composition, internal-app-states.");
   });
 
+  test("docs prints no default for a prop that a variant does not take", () => {
+    const result = run(INTERNAL_APP, ["docs", "Indicator"]);
+    expect(result.stdout).toContain("- `max?`: `number`. Default `99`.");
+    expect(result.stdout).toContain("- `max?`: `undefined`. Only a count has a max.");
+    expect(result.stdout).toContain("- `isVisible?`: `boolean`. Default `true`.");
+    expect(result.stdout).not.toContain("`undefined`. Default");
+  });
+
   test("docs finds an export by name and errors on an unknown name", () => {
     expect(run(INTERNAL_APP, ["docs", "CheckboxGroup"]).stdout).toStartWith("Checkbox  (primitive)");
     const unknown = run(INTERNAL_APP, ["docs", "Kanbna"]);
