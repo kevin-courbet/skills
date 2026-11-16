@@ -38,6 +38,7 @@ const styles = stylex.create({
 - A dynamic value, such as a measured width or a computed color, uses a style function: `stylex.create({ width: (px: number) => ({ width: px }) })`. Use style functions rarely.
 - You can use a custom property as a key: `"--aperture-color-text": color.text`. The chart host bridge uses this.
 - Use `stylex.keyframes` only for enter, exit, change, and loading motion. Each style that moves an element gets a `media.reducedMotion` override that removes the movement. Color and opacity transitions stay. Run `design read internal-app-motion`.
+- Give the reduced-motion override a value that stops the movement, such as `transform: { default: null, ":active": { default: "scale(0.97)", [media.reducedMotion]: "none" } }`. Do not use `null` for it: StyleX writes no rule for a `null` value, so the element still moves.
 - Do not use the pseudo-elements `::before` and `::after`. Render a real element.
 - Set the base font size on `<body>`, not on `<html>`. A rem-based `fontSize` on `<html>` changes the scale of each rem token.
 

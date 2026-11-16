@@ -77,7 +77,7 @@ Under `prefers-reduced-motion: reduce`, nothing moves, but the fades and the fun
 - The press scale and the switch thumb stop. Color changes stay.
 - The spinner turns more slowly. The skeleton pulse stays. An indeterminate `ProgressBar` shows a full fill that pulses in place.
 
-Each style that moves an element sets a `[media.reducedMotion]` value: a fade keyframe, a `none` or `null` transform, or a `0ms` duration of the transform transition. Do not add a global rule that sets all durations to zero.
+Each style that moves an element sets a `[media.reducedMotion]` value: a fade keyframe, a `none` transform, or a `0ms` duration of the transform transition. Do not add a global rule that sets all durations to zero.
 
 ## View Transitions
 

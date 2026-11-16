@@ -186,7 +186,7 @@ const styles = stylex.create({
   press: {
     transform: {
       default: null,
-      ":active": { default: "scale(0.97)", [media.reducedMotion]: null },
+      ":active": { default: "scale(0.97)", [media.reducedMotion]: "none" },
     },
   },
   disabledLink: { opacity: "0.5", pointerEvents: "none" },
