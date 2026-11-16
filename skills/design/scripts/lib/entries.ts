@@ -1,11 +1,14 @@
-import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import type { Graph, Problem, Section, SkillSource } from "./graph.ts";
+import { kitProblems, movedKitMessage, readKitDocs, type KitDoc } from "./kit/docs.ts";
+import { KitError } from "./kit/files.ts";
+import { docsSource, hubDocsSource, readKit, useCases, type DocsSource, type UseCase } from "./kit/kit.ts";
+import { labIndexProblems, readRecipes, recipeProblems, type Recipe } from "./kit/recipes.ts";
 import { countWords, slugify } from "./text.ts";
 
-// A search entry is a document that a member skill owns outside the note
-// graph, such as the docs of one component of a kit. The member prints its
-// entries on request, so that they match the project in the working folder.
+// A search entry is a document outside the note graph: the docs of one kit
+// component, or a recipe of the lab of a use case. Search ranks the entries
+// with the notes, and each entry prints the command that reads it.
 export interface Entry {
   readonly id: string;
   // What the entry is, such as "component".
@@ -23,17 +26,21 @@ export interface Entry {
   readonly read: string;
   // The name of the group of the entry, such as "components".
   readonly group: string;
+  // The skill that owns the entry: the hub for a kit component, the use case
+  // for a recipe.
   readonly skill: SkillSource;
+  // The file of the entry, for the location of a problem.
+  readonly file: string;
 }
 
-// A member prints its entries in groups. Each group has its own read command
-// and its own source, because the entries of one member can come from
-// different places, such as the kit of an app and the folder of the skill.
+// The entries come in groups. Each group has its own read command and its own
+// source, because the components come from the kit of an app or the hub, and
+// the recipes come from the lab of a use case.
 export interface EntrySource {
   readonly skill: SkillSource;
   // A plural noun, such as "components" or "recipes".
   readonly group: string;
-  // One line that tells where the entries come from, such as an app folder.
+  // One phrase that tells where the entries come from, such as an app folder.
   readonly source: string;
   readonly count: number;
   // The command that prints one entry, with {id} for the entry id.
@@ -46,152 +53,151 @@ export interface EntrySet {
   readonly problems: ReadonlyArray<Problem>;
 }
 
+// Where the entries come from. "folder" reads the kit of the app around the
+// folder, or the hub kit outside an app, and the recipes of the use case of
+// that app. "hub" reads the hub kit and every lab, for graph --check.
+export type EntryScope = { readonly kind: "folder"; readonly dir: string } | { readonly kind: "hub" };
+
+export const DOCS_COMMAND = "design docs {id}";
+export const RECIPE_COMMAND = "design recipe {id}";
+
 export function isEntry(value: object): value is Entry {
   return "read" in value && "kind" in value;
 }
 
-// An entry id starts with a capital letter, so that it never equals a note
-// id, which is lowercase.
-const ENTRY_ID = /^[A-Z][A-Za-z0-9]*$/;
-
-function text(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
+// "PageHeader" gives "page header", so that search finds an export by its words.
+function nameWords(name: string): string {
+  return name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
 }
 
-function strings(value: unknown): string[] | null {
-  return Array.isArray(value) && value.every((item) => typeof item === "string") ? (value as string[]) : null;
+function sections(items: ReadonlyArray<{ readonly title: string; readonly text: string }>): Section[] {
+  return items.map((item) => ({ title: item.title, slug: slugify(item.title), text: item.text, words: countWords(item.text), line: 0 }));
 }
 
-const GROUP_NAME = /^[a-z][a-z-]*$/;
-
-const OUTPUT_SHAPE =
-  '{ "problems": [...], "groups": [{ "name": "<plural noun>", "read": "<command with {id}>", "source": "<line>", "entries": [...] }] }';
-
-function parseEntry(skill: SkillSource, file: string, group: { name: string; read: string }, raw: unknown, index: number, problems: Problem[]): Entry | null {
-  const item = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
-  const id = text(item["id"]);
-  const kind = text(item["kind"]);
-  const summary = text(item["summary"]);
-  const keywords = strings(item["keywords"]);
-  const links = strings(item["links"]) ?? [];
-  const rawSections = Array.isArray(item["sections"]) ? item["sections"] : [];
-  if (id === null || !ENTRY_ID.test(id) || kind === null || summary === null || keywords === null) {
-    problems.push({ file, message: `${skill.name}: entry ${index + 1} of the group "${group.name}" needs an "id" in PascalCase, a "kind", a "summary", and "keywords"` });
-    return null;
-  }
-  const sections: Section[] = [];
-  for (const section of rawSections) {
-    const title = text((section as Record<string, unknown>)?.["title"]);
-    const body = text((section as Record<string, unknown>)?.["text"]);
-    if (title === null || body === null) {
-      problems.push({ file, message: `${skill.name}: a section of the entry ${id} needs a "title" and a "text"` });
-      continue;
-    }
-    sections.push({ title, slug: slugify(title), text: body, words: countWords(body), line: 0 });
-  }
+function componentEntry(doc: KitDoc, hub: SkillSource, root: string): Entry {
+  const exported = [...doc.exports.components.map((item) => item.name), ...doc.exports.hooks.map((item) => item.name)];
+  const props = doc.exports.components.flatMap((item) => item.props?.variants.flatMap((variant) => variant.members) ?? []);
   return {
-    id,
-    kind,
-    label: text(item["label"]) ?? "",
-    title: text(item["title"]) ?? id,
-    summary,
-    keywords,
-    intro: text(item["intro"]) ?? "",
-    sections,
-    links,
-    read: group.read.replaceAll("{id}", id),
-    group: group.name,
-    skill,
+    id: doc.id,
+    kind: "component",
+    label: doc.layer ?? "no layer",
+    title: doc.id,
+    summary: doc.summary,
+    keywords: [...new Set([...doc.keywords, ...exported.filter((name) => name !== doc.id).map(nameWords)])],
+    intro: doc.intro,
+    sections: sections([...doc.sections, { title: "Props", text: props.map((member) => `${member.name}: ${member.comment}`).join("\n") }]),
+    links: doc.notes,
+    read: DOCS_COMMAND.replaceAll("{id}", doc.id),
+    group: "components",
+    skill: hub,
+    file: join(root, doc.file),
   };
 }
 
-function parseOutput(skill: SkillSource, file: string, stdout: string, problems: Problem[]): { entries: Entry[]; sources: EntrySource[] } {
-  let data: unknown;
-  try {
-    data = JSON.parse(stdout);
-  } catch (error) {
-    problems.push({ file, message: `the entries command of "${skill.name}" did not print JSON: ${(error as Error).message}` });
-    return { entries: [], sources: [] };
-  }
-  const record = typeof data === "object" && data !== null && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
-  const groups = record?.["groups"];
-  if (!record || !Array.isArray(groups)) {
-    problems.push({ file, message: `the entries command of "${skill.name}" must print ${OUTPUT_SHAPE}` });
-    return { entries: [], sources: [] };
-  }
-  for (const item of strings(record["problems"]) ?? []) problems.push({ file, message: `${skill.name}: ${item}` });
-
-  const entries: Entry[] = [];
-  const sources: EntrySource[] = [];
-  const names = new Set<string>();
-  groups.forEach((rawGroup, groupIndex) => {
-    const group = typeof rawGroup === "object" && rawGroup !== null ? (rawGroup as Record<string, unknown>) : {};
-    const name = text(group["name"]);
-    const read = text(group["read"]);
-    const source = text(group["source"]);
-    const items = group["entries"];
-    if (name === null || !GROUP_NAME.test(name) || read === null || !read.includes("{id}") || source === null || !Array.isArray(items)) {
-      problems.push({ file, message: `${skill.name}: group ${groupIndex + 1} needs a lowercase "name", a "read" command with {id}, a "source", and "entries"; the output is ${OUTPUT_SHAPE}` });
-      return;
-    }
-    if (names.has(name)) problems.push({ file, message: `${skill.name}: the group name "${name}" appears twice` });
-    names.add(name);
-    const parsed = items.flatMap((raw, index) => parseEntry(skill, file, { name, read }, raw, index, problems) ?? []);
-    entries.push(...parsed);
-    sources.push({ skill, group: name, source, count: parsed.length, read });
-  });
-  return { entries, sources };
+function recipeEntry(recipe: Recipe, useCase: UseCase): Entry {
+  return {
+    id: recipe.id,
+    kind: "recipe",
+    label: "page",
+    title: recipe.id,
+    summary: recipe.summary,
+    keywords: [...recipe.keywords, nameWords(recipe.id)],
+    intro: recipe.intro,
+    sections: sections([...recipe.sections, { title: "Components", text: recipe.components.join(", ") }]),
+    links: recipe.notes,
+    read: RECIPE_COMMAND.replaceAll("{id}", recipe.id),
+    group: "recipes",
+    skill: useCase.skill,
+    file: join(useCase.app.lab!.dir, recipe.file),
+  };
 }
 
-function runCommand(skill: SkillSource, command: ReadonlyArray<string>, cwd: string, problems: Problem[]) {
-  const file = join(skill.dir, command[0]!);
-  // The member script runs with the runtime that runs this CLI, so that a
-  // member needs no executable bit and no shell.
-  const result = spawnSync(process.execPath, [file, ...command.slice(1)], { cwd, encoding: "utf8", timeout: 20_000 });
-  if (result.error) {
-    problems.push({ file, message: `the entries command of "${skill.name}" did not run: ${result.error.message}` });
-    return null;
-  }
-  if (result.status !== 0) {
-    const detail = (result.stderr || result.stdout).trim().split("\n").slice(0, 5).join("\n");
-    problems.push({ file, message: `the entries command of "${skill.name}" failed with exit status ${result.status}: ${detail}` });
-    return null;
-  }
-  return { file, stdout: result.stdout };
+export function recipeSourcePhrase(useCase: UseCase): string {
+  return `the recipes of the ${useCase.name} lab at ${useCase.app.lab!.dir}. They follow the newest kit; an app with an older kit can miss a component.`;
+}
+
+// The use cases whose recipes apply in a scope: the use case of the app, or
+// every use case with a lab outside an app and for graph --check.
+export function recipeUseCases(cases: ReadonlyArray<UseCase>, source: DocsSource): UseCase[] {
+  const withLab = cases.filter((item) => item.app.lab !== null);
+  return source.app === null ? withLab : withLab.filter((item) => item === source.app!.useCase);
 }
 
 const loaded = new WeakMap<Graph, Map<string, EntrySet>>();
 
-// Runs the entries command of each member in the folder `cwd`. A member finds
-// its project from that folder.
-export function loadEntries(graph: Graph, cwd: string): EntrySet {
+export function loadEntries(graph: Graph, scope: EntryScope): EntrySet {
   const cache = loaded.get(graph) ?? new Map<string, EntrySet>();
   loaded.set(graph, cache);
-  const cached = cache.get(cwd);
+  const key = scope.kind === "hub" ? "\u0000hub" : scope.dir;
+  const cached = cache.get(key);
   if (cached) return cached;
+  const set = buildEntries(graph, scope);
+  cache.set(key, set);
+  return set;
+}
 
+// A broken kit or lab does not stop search: the problems print as a warning,
+// and graph --check fails on them.
+function buildEntries(graph: Graph, scope: EntryScope): EntrySet {
   const entries: Entry[] = [];
   const sources: EntrySource[] = [];
   const problems: Problem[] = [];
-  for (const skill of graph.skills) {
-    if (skill.entries === null) continue;
-    const output = runCommand(skill, skill.entries, cwd, problems);
-    if (!output) continue;
-    const parsed = parseOutput(skill, output.file, output.stdout, problems);
-    sources.push(...parsed.sources);
-    entries.push(...parsed.entries);
+  const hubDir = graph.hub.dir;
+  let source: DocsSource;
+  let cases: UseCase[];
+  try {
+    const kit = readKit(hubDir);
+    cases = useCases(graph);
+    source = scope.kind === "hub" ? hubDocsSource(kit) : docsSource(scope.dir, kit, cases);
+  } catch (error) {
+    if (!(error instanceof KitError)) throw error;
+    problems.push({ file: join(hubDir, "assets", "kit.json"), message: error.message });
+    return { entries, sources, problems };
+  }
+
+  const moved = movedKitMessage(source.kit);
+  if (moved !== null) problems.push({ file: source.kit.root, message: moved });
+  const docs = readKitDocs(source.kit);
+  for (const [file, items] of kitProblems(docs)) {
+    for (const message of items) problems.push({ file: join(source.kit.root, file), message: `kit doc: ${message}` });
+  }
+  const components = docs.filter((doc) => doc.hasComment).map((doc) => componentEntry(doc, graph.hub, source.kit.root));
+  entries.push(...components);
+  sources.push({ skill: graph.hub, group: "components", source: source.phrase, count: components.length, read: DOCS_COMMAND });
+
+  for (const useCase of recipeUseCases(cases, source)) {
+    const lab = useCase.app.lab!;
+    let recipes: Recipe[];
+    try {
+      recipes = readRecipes(lab.dir, lab, useCase.name);
+    } catch (error) {
+      if (!(error instanceof KitError)) throw error;
+      problems.push({ file: lab.dir, message: `${useCase.name} lab: ${error.message}` });
+      continue;
+    }
+    // A recipe follows the newest kit, so only the hub kit can judge its
+    // components. An app with an older kit gets a warning when it prints the
+    // recipe instead.
+    const recipeIssues = scope.kind === "hub" ? recipeProblems(recipes, docs) : new Map(recipes.map((recipe) => [recipe.file, [...recipe.problems]]));
+    for (const [file, items] of recipeIssues) {
+      for (const message of items) problems.push({ file: join(lab.dir, file), message: `${useCase.name} recipe: ${message}` });
+    }
+    if (scope.kind === "hub") {
+      for (const message of labIndexProblems(lab.dir, lab, recipes)) problems.push({ file: join(lab.dir, lab.pages), message: `${useCase.name} lab: ${message}` });
+    }
+    const items = recipes.map((recipe) => recipeEntry(recipe, useCase));
+    entries.push(...items);
+    sources.push({ skill: useCase.skill, group: "recipes", source: recipeSourcePhrase(useCase), count: items.length, read: RECIPE_COMMAND });
   }
 
   const ids = new Map<string, Entry>();
   for (const entry of entries) {
     const key = entry.id.toLowerCase();
     const other = ids.get(key);
-    if (other) problems.push({ file: join(entry.skill.dir, entry.skill.entries![0]!), message: `the entry id "${entry.id}" of "${entry.skill.name}" is also an entry of "${other.skill.name}"` });
+    if (other) problems.push({ file: entry.file, message: `the entry id "${entry.id}" is also the id of ${other.file}; search and the read commands need one id for one entry` });
     ids.set(key, entry);
   }
-  const set = { entries, sources, problems };
-  cache.set(cwd, set);
-  return set;
+  return { entries, sources, problems };
 }
 
 export function findEntry(set: EntrySet, id: string): Entry | undefined {

@@ -21,9 +21,11 @@ design_references=$(
   {
     grep -ohE "$design_pointer" \
       "$repo_root/skills/internal-app/SKILL.md" \
-      "$repo_root"/skills/internal-app/notes/*.md \
-      "$repo_root/skills/internal-app/scripts/internal-app"
+      "$repo_root"/skills/internal-app/notes/*.md
     grep -rohE "$design_pointer" --include='*.ts' --include='*.tsx' \
+      "$design/scripts" \
+      "$design/assets/kit/src" \
+      "$repo_root/skills/internal-app/scripts" \
       "$repo_root/skills/internal-app/assets/template/src" \
       "$repo_root/skills/internal-app/assets/lab/src"
   } | sed 's/^design read //' | sort -u
@@ -74,29 +76,26 @@ for (const file of process.argv.slice(2)) {
 }
 NODE
 
+# The hub owns the kit and the one CLI. A use case such as internal-app adds
+# only its template, its lab, its notes, and its rules, so it must not keep a
+# kit or a CLI of its own. graph --check verifies the kit files and the parts
+# of each template that the kit depends on.
+test -f "$design/assets/kit.json"
+test -d "$design/assets/kit/src"
 internal_app="$repo_root/skills/internal-app"
-internal_app_cli="$internal_app/scripts/internal-app"
 test -f "$internal_app/SKILL.md"
-test -x "$internal_app_cli"
+test -f "$internal_app/design-graph.json"
+test -f "$internal_app/scripts/rules.ts"
+test ! -e "$internal_app/scripts/internal-app"
+test ! -e "$internal_app/assets/kit.json"
+test ! -e "$internal_app/assets/kit"
 (cd "$repo_root" && bun test skills/internal-app/tests)
-test -f "$internal_app/assets/kit.json"
 test -f "$internal_app/assets/template/bun.lock"
 test ! -e "$internal_app/assets/template/node_modules"
 test ! -e "$internal_app/assets/template/.output"
 test ! -e "$internal_app/assets/template/internal-app.kit.json"
-node - "$internal_app" <<'NODE'
-const fs = require("node:fs")
-const path = require("node:path")
-const root = process.argv[2]
-const manifest = JSON.parse(fs.readFileSync(path.join(root, "assets/kit.json"), "utf8"))
-for (const file of manifest.files) {
-  if (!fs.existsSync(path.join(root, "assets/template", file))) {
-    throw new Error(`kit.json lists a missing template file: ${file}`)
-  }
-}
-NODE
 scaffold_root=$(mktemp -d)
-bun "$internal_app_cli" new "$scaffold_root/app" --name "Validation app" >/dev/null
+bun "$design_cli" new "$scaffold_root/app" --app internal-app --name "Validation app" >/dev/null
 test -f "$scaffold_root/app/.oxlintrc.json"
 test -f "$scaffold_root/app/.oxfmtrc.json"
 test -f "$scaffold_root/app/.gitignore"
@@ -110,21 +109,21 @@ grep -q '"name": "validation-app"' "$scaffold_root/app/package.json"
   bun run lint >/dev/null
   bun --bun oxfmt --check >/dev/null
 )
-bun "$internal_app_cli" check "$scaffold_root/app" >/dev/null
-bun "$internal_app_cli" sync "$scaffold_root/app" >/dev/null
-bun "$internal_app_cli" doctor "$scaffold_root/app" >/dev/null
+bun "$design_cli" check "$scaffold_root/app" >/dev/null
+bun "$design_cli" sync "$scaffold_root/app" >/dev/null
+bun "$design_cli" doctor "$scaffold_root/app" >/dev/null
 # Agents read the component docs from inside an app, so the discovery path
 # must work there: the catalog, one doc, and the search hit with its command.
 (
   cd "$scaffold_root/app"
-  bun "$internal_app_cli" components | grep -q "installed kit of the app"
-  bun "$internal_app_cli" docs Kanban | grep -q "^Kanban  (pattern)"
-  bun "$design_cli" search "drag cards between columns" | grep -q "internal-app.* docs Kanban"
+  bun "$design_cli" components | grep -q "installed kit of the internal-app app"
+  bun "$design_cli" docs Kanban | grep -q "^Kanban  (pattern)"
+  bun "$design_cli" search "drag cards between columns" | grep -q "^  read: design docs Kanban$"
   bun "$design_cli" graph --check >/dev/null
 )
 # The recipes build only in a scaffold with the lab, so the lab app passes the
 # same gates as the plain app, and check holds each recipe to its contract.
-bun "$internal_app_cli" new "$scaffold_root/lab" --name "Lab app" --lab >/dev/null
+bun "$design_cli" new "$scaffold_root/lab" --app internal-app --name "Lab app" --lab >/dev/null
 (
   cd "$scaffold_root/lab"
   bun install --frozen-lockfile >/dev/null
@@ -133,10 +132,10 @@ bun "$internal_app_cli" new "$scaffold_root/lab" --name "Lab app" --lab >/dev/nu
   bun run lint >/dev/null
   bun --bun oxfmt --check >/dev/null
 )
-bun "$internal_app_cli" check "$scaffold_root/lab" >/dev/null
-bun "$internal_app_cli" recipe | grep -q "^  ListPage "
-bun "$internal_app_cli" recipe ListPage | grep -q "^ListPage  (recipe)"
-bun "$design_cli" search "list page with filters" | grep -q "internal-app.* recipe ListPage"
+bun "$design_cli" check "$scaffold_root/lab" >/dev/null
+bun "$design_cli" recipe | grep -q "^  ListPage "
+bun "$design_cli" recipe ListPage | grep -q "^ListPage  (recipe)"
+bun "$design_cli" search "list page with filters" | grep -q "^  read: design recipe ListPage$"
 rm -rf "$scaffold_root"
 
 test -f "$repo_root/skills/create-data-visualizations/SKILL.md"
@@ -161,6 +160,10 @@ test -f "$installed_design/SKILL.md"
 bun "$installed_design/scripts/design" graph --check >/dev/null
 bun "$installed_design/scripts/design" search "invoice preview" >/dev/null
 bun "$installed_design/scripts/design" read graphite --outline >/dev/null
+# A project can install the hub without a use case, so the kit docs must work
+# from the hub kit alone.
+bun "$installed_design/scripts/design" components | grep -q "^Primitives ("
+bun "$installed_design/scripts/design" docs Kanban | grep -q "^Kanban  (pattern)"
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" capabilities --json >/dev/null
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema capabilities --json >/dev/null
 bun "$repo_root/skills/create-data-visualizations/scripts/chart" schema chart-spec --json >/dev/null

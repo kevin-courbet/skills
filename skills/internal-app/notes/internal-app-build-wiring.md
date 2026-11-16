@@ -3,12 +3,12 @@ id: internal-app-build-wiring
 topic: internal-app
 summary: The vite.config.ts of an internal app with the StyleX, TanStack Start, Nitro, and React plugins, and the rules for the plugin order, the aliases, the global CSS, the dev stylesheet, and the Aperture cascade layer.
 keywords: [build wiring, vite config, vite.config.ts, StyleX plugin, stylex unplugin, plugin order, Fast Refresh, aliases, tsconfig paths, app.css, global CSS, CSS injection, cssInjectionTarget, virtual stylex css, cascade layer, Aperture layer, nitro bun preset]
-related: [internal-app-stack, internal-app-stylex, internal-app-project-layout, internal-app-charts]
+related: [internal-app-stack, kit-stylex, internal-app-project-layout, kit-charts]
 ---
 
 # Internal App Build Wiring
 
-The template has this wiring. An app that moves to the kit must have the same wiring. `doctor` reports a gap in it.
+The template has this wiring. An app that moves to the kit must have the same wiring. `design doctor` reports a gap in it.
 
 ## The Vite Config
 
@@ -52,4 +52,4 @@ export default defineConfig({
 
 ## The Aperture Layer
 
-Aperture puts each of its rules in the `aperture` cascade layer. `src/styles/app.css` imports Aperture first, so the layer comes before the reset layer and the StyleX layers. Thus a StyleX host style overrides an Aperture default without a specificity trick. Run `design read internal-app-charts#wiring` for the rest of the chart wiring.
+Aperture puts each of its rules in the `aperture` cascade layer. `src/styles/app.css` imports Aperture first, so the layer comes before the reset layer and the StyleX layers. Thus a StyleX host style overrides an Aperture default without a specificity trick. Run `design read kit-charts#wiring` for the rest of the chart wiring.

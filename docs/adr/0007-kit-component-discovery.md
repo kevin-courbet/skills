@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted. Extends ADR 0005 and ADR 0006.
+Superseded by ADR 0010. Extended ADR 0005 and ADR 0006.
 
 ## Context
 
@@ -72,8 +72,8 @@ and without an app.
 ### General rules are notes
 
 The rules of `components.md` that apply to more than one component are
-`internal-app` notes, such as `internal-app-forms` and
-`internal-app-composition`. Each note specializes the hub note that it
+`internal-app` notes, such as `kit-forms` and
+`kit-composition`. Each note specializes the hub note that it
 narrows. `components.md` is removed.
 
 ## Consequences

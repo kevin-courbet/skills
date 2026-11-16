@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { EntrySet } from "./entries.ts";
+import { checkKit } from "./kit/integrity.ts";
 import { NOTE_WORD_LIMIT, SKILL_WORD_LIMIT, type Graph, type Note, type Problem, type Target } from "./graph.ts";
 import { countWords, nearest } from "./text.ts";
 
@@ -41,17 +42,21 @@ function checkAssets(note: Note, problems: Problem[]): void {
 }
 
 export function checkGraph(graph: Graph, entries: EntrySet): CheckResult {
-  const problems: Problem[] = [...graph.problems, ...entries.problems];
+  const problems: Problem[] = [...graph.problems, ...entries.problems, ...checkKit(graph)];
   let links = 0;
 
   for (const entry of entries.entries) {
-    const file = join(entry.skill.dir, entry.skill.entries![0]!);
     for (const id of entry.links) {
       links += 1;
       const target = graph.notes.get(id);
       if (!target) {
         const hint = nearest(id, [...graph.notes.keys()], 3);
-        problems.push({ file, message: `the entry ${entry.id} links to "${id}", but no note has that id${hint.length > 0 ? `; nearest: ${hint.join(", ")}` : ""}` });
+        problems.push({ file: entry.file, message: `the ${entry.kind} ${entry.id} links to "${id}", but no note has that id${hint.length > 0 ? `; nearest: ${hint.join(", ")}` : ""}` });
+      } else if (entry.skill.hub && !target.skill.hub) {
+        problems.push({
+          file: entry.file,
+          message: `the kit ${entry.kind} ${entry.id} links to "${id}" of the member skill "${target.skill.name}"; the hub kit must work without the use cases`,
+        });
       }
     }
   }
@@ -69,10 +74,6 @@ export function checkGraph(graph: Graph, entries: EntrySet): CheckResult {
       const message = resolveTarget(graph, link, link.raw);
       if (message) {
         problems.push({ file: note.file, line: link.line, message: `${link.type}: ${message}` });
-        continue;
-      }
-      if (note.skill.hub && link.type === "specializes") {
-        problems.push({ file: note.file, line: link.line, message: `specializes: only a member note can specialize a hub note; "${note.id}" is a hub note` });
         continue;
       }
       const target = link.kind === "note" ? graph.notes.get(link.id) : undefined;

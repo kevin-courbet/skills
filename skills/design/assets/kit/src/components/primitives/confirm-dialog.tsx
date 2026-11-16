@@ -1,0 +1,167 @@
+/**
+ * A dialog that asks people to confirm an irreversible or high-impact action before it runs.
+ *
+ * @layer primitive
+ * @keywords confirm dialog, confirm before delete, confirmation, are you sure, delete confirmation, destructive action, rollback confirmation
+ * @related Dialog, Button, Menu, RadioGroup, DataTable
+ * @notes overlays, ux-writing, kit-composition, kit-writing
+ *
+ * Use it before a step that deletes data or that changes a live system. Do not
+ * use it for a small step that people can undo: do the step. For a short form,
+ * use `Dialog`.
+ *
+ * ## Behavior
+ * - The two buttons are disabled while `onConfirm` runs.
+ * - The dialog closes when `onConfirm` resolves. When it rejects, the dialog
+ *   stays open and shows the failure under the content.
+ *
+ * ## Rules
+ * - Only the confirm button is `danger`. The button or the menu item that opens
+ *   the dialog is not.
+ * - The copy names the exact object and every effect. The confirm button
+ *   repeats the verb of the title.
+ * - A destructive bulk action opens a `ConfirmDialog`, and the labels name the
+ *   count: "Delete 3 items".
+ *
+ * ## Example
+ * ```tsx
+ * <ConfirmDialog
+ *   isOpen={isDeleteOpen}
+ *   onOpenChange={setDeleteOpen}
+ *   title={`Delete ${item.name}?`}
+ *   description="The item and its 12 attachments are deleted. You cannot undo this."
+ *   confirmLabel="Delete item"
+ *   onConfirm={async () => {
+ *     await deleteItem.mutateAsync(item.id);
+ *   }}
+ * />
+ * ```
+ */
+import * as stylex from "@stylexjs/stylex";
+import { type ReactNode, useState } from "react";
+import { failureMessage } from "@/lib/server-result";
+import { color, font, space } from "@/styles/tokens.stylex";
+import { Button } from "./button";
+import { Dialog } from "./dialog";
+
+export interface ConfirmDialogProps {
+  /** Whether the dialog shows. The control that starts the action sets it. */
+  readonly isOpen: boolean;
+  /** Receives `false` on Cancel, on Escape, and after `onConfirm` resolves. */
+  readonly onOpenChange: (isOpen: boolean) => void;
+  /** Names the action and the object: "Roll back production to dpl_rxt8gA84n?" */
+  readonly title: string;
+  /**
+   * States the result in one or two sentences, with the exact objects:
+   * "app.example.com serves dpl_rxt8gA84n again. Automatic promotion pauses."
+   */
+  readonly description: ReactNode;
+  /**
+   * Each further effect as one short line, such as "1 staged deployment
+   * stays staged". Use it when the action has more than one effect.
+   */
+  readonly consequences?: ReadonlyArray<ReactNode>;
+  /** A choice the action needs, such as a RadioGroup of rollback targets. */
+  readonly children?: ReactNode;
+  /** The verb and the object, repeated on the button: "Roll back production". */
+  readonly confirmLabel: string;
+  /**
+   * `danger` for destructive or irreversible actions, `primary` for
+   * high-impact actions that people can undo, such as a promotion.
+   */
+  readonly intent?: "danger" | "primary";
+  /** Keeps the confirm button disabled until the choice in `children` is complete. */
+  readonly isConfirmDisabled?: boolean;
+  /** Runs the action. A rejection keeps the dialog open and shows the failure. */
+  readonly onConfirm: () => Promise<void>;
+}
+
+export function ConfirmDialog({
+  isOpen,
+  onOpenChange,
+  title,
+  description,
+  consequences = [],
+  children,
+  confirmLabel,
+  intent = "danger",
+  isConfirmDisabled = false,
+  onConfirm,
+}: ConfirmDialogProps) {
+  const [isPending, setPending] = useState(false);
+  const [failure, setFailure] = useState<string | undefined>(undefined);
+
+  async function confirm() {
+    setPending(true);
+    setFailure(undefined);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } catch (error) {
+      setFailure(failureMessage(error));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const hasBody = consequences.length > 0 || children !== undefined || failure !== undefined;
+  return (
+    <Dialog
+      isOpen={isOpen}
+      onOpenChange={(next) => {
+        if (!next) setFailure(undefined);
+        onOpenChange(next);
+      }}
+      size="sm"
+      title={title}
+      description={description}
+      actions={(close) => (
+        <>
+          <Button onPress={close} isDisabled={isPending}>
+            Cancel
+          </Button>
+          <Button
+            intent={intent}
+            onPress={() => void confirm()}
+            isDisabled={isPending || isConfirmDisabled}
+          >
+            {confirmLabel}
+          </Button>
+        </>
+      )}
+    >
+      {hasBody ? (
+        <div {...stylex.props(styles.body)}>
+          {consequences.length > 0 ? (
+            <ul {...stylex.props(styles.consequences)}>
+              {consequences.map((consequence, index) => (
+                <li key={index} {...stylex.props(styles.consequence)}>
+                  {consequence}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {children}
+          {failure ? (
+            <p role="alert" {...stylex.props(styles.failure)}>
+              {failure}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </Dialog>
+  );
+}
+
+const styles = stylex.create({
+  body: { display: "flex", flexDirection: "column", gap: space.md },
+  consequences: {
+    margin: 0,
+    paddingInlineStart: space.lg,
+    listStyleType: "disc",
+    fontSize: font.md,
+    color: color.text,
+  },
+  consequence: { paddingInlineStart: "2px", marginTop: { default: space.xs, ":first-child": 0 } },
+  failure: { margin: 0, fontSize: font.md, color: color.danger },
+});

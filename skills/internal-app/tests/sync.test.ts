@@ -5,9 +5,9 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSy
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 
-const SKILL = resolve(import.meta.dir, "..");
-const INTERNAL_APP = join(SKILL, "scripts/internal-app");
-const MANIFEST = JSON.parse(readFileSync(join(SKILL, "assets/kit.json"), "utf8")) as {
+const HUB = resolve(import.meta.dir, "../../design");
+const DESIGN = join(HUB, "scripts/design");
+const MANIFEST = JSON.parse(readFileSync(join(HUB, "assets/kit.json"), "utf8")) as {
   files: ReadonlyArray<string>;
   moves: Readonly<Record<string, string>>;
 };
@@ -27,7 +27,7 @@ function sha256(path: string): string {
 }
 
 function sync(app: string, ...flags: ReadonlyArray<string>): { code: number | null; report: SyncReport } {
-  const result = spawnSync(process.execPath, [INTERNAL_APP, "sync", app, "--json", ...flags], { encoding: "utf8" });
+  const result = spawnSync(process.execPath, [DESIGN, "sync", app, "--json", ...flags], { encoding: "utf8" });
   if (result.stderr !== "") throw new Error(result.stderr);
   return { code: result.status, report: JSON.parse(result.stdout) as SyncReport };
 }
@@ -75,7 +75,7 @@ function moveKitFile(app: string, lock: { files: Record<string, string> }, from:
 // them there, as an app that synced an older kit has.
 function oldLayoutApp(): string {
   const app = join(mkdtempSync(join(tmpdir(), "internal-app-sync-")), "app");
-  const created = spawnSync(process.execPath, [INTERNAL_APP, "new", app], { encoding: "utf8" });
+  const created = spawnSync(process.execPath, [DESIGN, "new", app, "--app", "internal-app"], { encoding: "utf8" });
   if (created.status !== 0) throw new Error(created.stderr);
   const lock = readLock(app);
   for (const [to, from] of OLD_PATHS) moveKitFile(app, lock, to, from);
@@ -174,7 +174,7 @@ describe("sync of an app with the old kit layout", () => {
     const other = Object.entries(MANIFEST.moves).find(([from, target]) => target === to && from !== firstPath)![0];
     lock.files[other] = lock.files[firstPath]!;
     writeFileSync(join(app, LOCK), `${JSON.stringify(lock, null, 2)}\n`);
-    const result = spawnSync(process.execPath, [INTERNAL_APP, "sync", app, "--json"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [DESIGN, "sync", app, "--json"], { encoding: "utf8" });
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain(`records two old paths of ${to}`);
   });
@@ -217,13 +217,13 @@ describe("sync of an app with the old kit layout", () => {
 
   test("check reports the old layout as a kit-layout finding, and components fails", () => {
     const app = oldLayoutApp();
-    const checked = spawnSync(process.execPath, [INTERNAL_APP, "check", "--json"], { cwd: app, encoding: "utf8" });
+    const checked = spawnSync(process.execPath, [DESIGN, "check", "--json"], { cwd: app, encoding: "utf8" });
     expect(checked.status).toBe(1);
     const findings = (JSON.parse(checked.stdout) as { findings: ReadonlyArray<{ rule: string; file: string }> }).findings;
     expect(findings).toContainEqual(expect.objectContaining({ rule: "kit-layout", file: LOCK }));
-    const listed = spawnSync(process.execPath, [INTERNAL_APP, "components"], { cwd: app, encoding: "utf8" });
+    const listed = spawnSync(process.execPath, [DESIGN, "components"], { cwd: app, encoding: "utf8" });
     expect(listed.status).toBe(2);
-    expect(listed.stderr).toContain("internal-app sync --write");
+    expect(listed.stderr).toContain("Run design sync --write");
   });
 
   test("an app file at an old kit path that the lock does not record stays, and its imports stay", () => {

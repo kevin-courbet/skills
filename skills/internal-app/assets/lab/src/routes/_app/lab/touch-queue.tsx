@@ -3,7 +3,7 @@
  *
  * @keywords touch queue, work queue, tablet page, kiosk, shared tablet, field work, technician queue, my work, person picker, large buttons
  * @components WorkQueue, QueueSection, QueueCard, RadioGroup, PageHeader, Sheet, DescriptionList, Page, toast, withViewTransition
- * @notes internal-app-touch-work-view, internal-app-density, internal-app-mutations, internal-app-motion, density
+ * @notes kit-touch-work-view, kit-density, internal-app-mutations, kit-motion, density
  * @files src/features/lab/work-orders.ts, src/features/lab/ui/work-order-card.tsx
  *
  * Use it when people work away from a desk and use a shared tablet or a

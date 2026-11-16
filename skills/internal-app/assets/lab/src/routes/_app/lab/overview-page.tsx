@@ -3,7 +3,7 @@
  *
  * @keywords overview page, dashboard, home page, kpi, key numbers, metrics page, stat tiles, trend chart, summary page, numbers and charts
  * @components Page, PageHeader, StatStrip, StatTile, Sparkline, TrendChart, Section, LinkButton
- * @notes dashboards, charts, internal-app-charts, internal-app-page-patterns, internal-app-states
+ * @notes dashboards, charts, kit-charts, internal-app-page-patterns, kit-states
  * @files src/features/lab/tickets.ts
  *
  * Use it as the first page of an area, when people come to see if something

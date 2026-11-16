@@ -3,7 +3,7 @@
  *
  * @keywords approval list, approvals, access requests, review queue, approve or decline, inbox, decisions, view transition, arrivals, animate list changes
  * @components ItemList, Item, Card, Badge, Avatar, Button, toast, withViewTransition, useArrivals, useHasChanged, motionStyles
- * @notes internal-app-motion, motion, internal-app-mutations, internal-app-composition, internal-app-states
+ * @notes kit-motion, motion, internal-app-mutations, kit-composition, kit-states
  * @files src/features/lab/access-requests.ts
  *
  * Use it when people decide on short requests one after another, such as

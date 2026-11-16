@@ -3,12 +3,12 @@ id: internal-app-stack
 topic: internal-app
 summary: The fixed packages of an internal app for the runtime, the framework, the styles, the UI, and the tools, the libraries that the stack replaces, and the TypeScript 7 rules.
 keywords: [stack, packages, dependencies, install, which library, tanstack start, tanstack table v9, effect 4, stylex, react-aria-components, aperture, sonner, oxlint, oxfmt, typescript 7, vitest, nitro, bun, replaced libraries, forbidden library, tailwind, shadcn, zod]
-related: [internal-app-project-layout, internal-app-rpc, internal-app-build-wiring, internal-app-charts]
+related: [internal-app-project-layout, internal-app-rpc, internal-app-build-wiring, kit-charts, kit-migration-map]
 ---
 
 # Internal App Stack
 
-Use this stack for each internal web app that clients do not use. Do not use a different library because you know it better. The `package.json` and the `bun.lock` of the template are the source of the versions. `doctor` compares an app with them and prints the `bun add` commands for each gap.
+Use this stack for each internal web app that clients do not use. Do not use a different library because you know it better. The `package.json` and the `bun.lock` of the template of this skill are the source of the versions. `design doctor` compares an app with them and prints the `bun add` commands for each gap.
 
 ## Runtime And Framework
 
@@ -35,7 +35,7 @@ Use this stack for each internal web app that clients do not use. Do not use a d
 | Accessible primitives | `react-aria-components` | The base of each interactive control. Aperture uses the same package. |
 | Dates | `@internationalized/date` | Only inside the kit `DatePicker`. App code gives ISO date strings. |
 | Icons | `lucide-react` | The only icon set. |
-| Charts and widgets | `@kevin-courbet/aperture` | Bridged to the app tokens. Run `design read internal-app-charts`. |
+| Charts and widgets | `@kevin-courbet/aperture` | Bridged to the app tokens. Run `design read kit-charts`. |
 | Toasts | `sonner` | `AppShell` mounts it once, with no style of its own and classes from StyleX. |
 | Fonts | `@fontsource-variable/geist`, `@fontsource-variable/geist-mono` | `src/styles/app.css` imports them. |
 
@@ -50,17 +50,17 @@ Use this stack for each internal web app that clients do not use. Do not use a d
 
 ## Replaced Libraries
 
-`check` and `doctor` fail when an app installs or imports one of these libraries. `assets/kit.json` has the full list.
+`design check` and `design doctor` fail when an app installs or imports a library that the kit replaces, such as Tailwind, Radix, zod, react-hook-form, recharts, heroicons, or framer-motion. [[kit-migration-map#libraries]] lists each library and its replacement. `design doctor` prints the `bun add` commands for each gap of the stack.
 
-| Replaced | Use instead |
+The stack also replaces these APIs. `design check` fails on them with the rule `legacy-api` or `hand-written-search-validation` ([[internal-app-check-rules]]).
+
+| Legacy | Use instead |
 |---|---|
-| Tailwind, `clsx`, `tailwind-merge`, `tailwind-variants`, `class-variance-authority` | StyleX `create` and `props`, variant maps |
-| shadcn/ui, IntentUI, Radix, Base UI, cmdk | Kit primitives on react-aria-components |
-| react-hook-form, `@hookform/*`, zod, valibot | TanStack Form with Effect Schema |
-| `@visx/*`, recharts | Aperture |
-| heroicons, phosphor, react-icons | lucide-react |
-| `motion`, framer-motion | StyleX keyframes with reduced-motion overrides |
-| react-virtuoso | `@tanstack/react-virtual` |
+| zod schemas | Effect Schema in `features/<name>/schemas.ts`. Validate with `Schema.toStandardSchemaV1(schema)` in server functions, forms, and `validateSearch`. |
+| `createServerFn` handlers that call services directly, or `.inputValidator` | `.validator(Schema.toStandardSchemaV1(...))` and a dynamic import of a `.server.ts` module that calls `runServerFn` ([[internal-app-server-functions]]) |
+| `Context.Tag`, `Effect.Service`, `ServiceMap` | `Context.Service` with a static `layer` ([[internal-app-effect-services]]) |
+| `validateSearch` functions written by hand | Effect Schema with defaults and `stripSearchParams` ([[internal-app-routes]]) |
+| `useReactTable` of Table v8 | `useTable` of Table v9 |
 
 ## Server Functions Or RPC
 

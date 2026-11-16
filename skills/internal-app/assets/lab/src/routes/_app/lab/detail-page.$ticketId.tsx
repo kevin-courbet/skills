@@ -3,7 +3,7 @@
  *
  * @keywords detail page, record page, show page, view one record, single item page, record header, delete record, not found
  * @components Page, PageHeader, Badge, MetaLine, Identifier, Section, DescriptionList, Alert, Button, ConfirmDialog
- * @notes internal-app-routes, internal-app-mutations, internal-app-page-patterns, hierarchy, internal-app-writing
+ * @notes internal-app-routes, internal-app-mutations, internal-app-page-patterns, hierarchy, kit-writing
  * @files src/features/lab/tickets.ts
  *
  * Use it for the page that a row of a list opens, when people read a record

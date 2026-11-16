@@ -3,7 +3,7 @@
  *
  * @keywords long form, live preview, form preview, create form, registration form, badge preview, label preview, split sections, error summary, sticky footer
  * @components FormLayout, FormPreview, FormFooter, ErrorSummary, Section, TextField, RadioGroup, CheckboxGroup, DatePicker, Alert, LinkButton, Button
- * @notes form-preview, internal-app-form-preview, form-layout, internal-app-forms, internal-app-form-submit, form-errors, form-choices
+ * @notes form-preview, kit-form-preview, form-layout, kit-forms, internal-app-form-submit, form-errors, form-choices
  * @files src/features/lab/visits.ts, src/features/lab/ui/visitor-badge.tsx
  *
  * Use it when a form has more than about six fields and makes a thing that

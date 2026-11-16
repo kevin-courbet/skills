@@ -116,7 +116,9 @@ describe("read", () => {
     expect(result.stdout).toStartWith("form-errors (topic forms,");
     expect(result.stdout).toContain("## Error Summary");
     expect(result.stdout).toMatch(/Read first:\n {2}forms {2}The entry note for forms[^\n]*\nSee also: /);
-    expect(result.stdout).toMatch(/\nSee also: form-fields, form-layout, accessibility, overlays, ux-writing\n$/);
+    expect(result.stdout).toMatch(
+      /\nSee also: form-fields, form-layout, accessibility, overlays, ux-writing\nSpecialized by: kit-forms\nImplemented by \(components\): [^\n]+\n {2}Read one with: design docs <id>\n$/,
+    );
     expect(result.stdout).not.toContain("Links:");
   });
 
@@ -164,10 +166,10 @@ describe("other commands", () => {
   });
 
   test("search warns before results that cover only part of the question", () => {
-    const result = cli(HUB_ALONE, "search", "kanban board columns");
+    const result = cli(HUB_ALONE, "search", "audio waveform editor");
     expect(result.code).toBe(0);
     expect(result.stdout).toStartWith(
-      '(no note or entry contains: kanban, board)\nNo strong match for "kanban board columns". The best result contains 1 of 3 query words.',
+      '(no note or entry contains: waveform)\nNo strong match for "audio waveform editor". The best result contains 1 of 3 query words.',
     );
   });
 
@@ -295,8 +297,8 @@ describe("graph membership", () => {
     expect(check.code).toBe(0);
 
     const forms = cli(hub, "read", "forms");
-    expect(forms.stdout).toMatch(/\nSpecialized by: demo-skill-forms\n$/);
-    expect(cli(hub, "read", "forms", "--outline").stdout).toContain("Specialized by:\n  demo-skill-forms [demo-skill]  ");
+    expect(forms.stdout).toContain("\nSpecialized by: kit-forms, demo-skill-forms\n");
+    expect(cli(hub, "read", "forms", "--outline").stdout).toMatch(/\nSpecialized by:\n  kit-forms +[^\n]+\n  demo-skill-forms \[demo-skill\] /);
 
     const member = cli(hub, "read", "demo-skill-forms");
     expect(member.stdout).toStartWith("demo-skill-forms [demo-skill]");
@@ -371,131 +373,135 @@ describe("graph membership", () => {
   });
 });
 
-// A member script that prints entries for the project in the working folder.
-// It reads the project name from the folder, so a test can see that the CLI
-// runs it in the folder of the agent.
-const entriesScript = (entries: string, extra = "") => `
-const { existsSync, readFileSync } = require("node:fs");
-const project = existsSync("project.txt") ? readFileSync("project.txt", "utf8").trim() : "no project";
-${extra}
-console.log(JSON.stringify({
-  problems: [],
-  groups: [{ name: "components", read: "demo-cli docs {id}", source: project + ".", entries: ${entries} }],
-}));
-`;
+// A use case is a member skill with an "app" block. The fixture template is
+// small, so the tests name the problem that each one adds.
+const useCaseGraph = (app: string) => `{ "notes": "notes", "app": ${app} }\n`;
 
-const boardEntry = (links = '["forms"]') => `[{
-  id: "Board", kind: "component", label: "pattern", title: "Board",
-  summary: "Columns of cards that people drag between stages.",
-  keywords: ["board", "drag cards between columns", "stages"],
-  intro: "Use it when the stage of an item is the main fact.",
-  sections: [{ title: "Rules", text: "Persist each move optimistically." }],
-  links: ${links},
-}]`;
-
-function addEntriesMember(root: string, script: string, graph = '{ "notes": "notes", "entries": ["entries.js"] }\n'): string {
+function addUseCase(root: string, app: string, files: Record<string, string> = {}): string {
   return addMember(join(root, "skills"), "demo-skill", {
-    "design-graph.json": graph,
+    "design-graph.json": useCaseGraph(app),
     "SKILL.md": memberSkill("demo-skill", "Before a form, run `design read demo-skill-forms`."),
     "notes/demo-skill-forms.md": memberNote("demo-skill-forms"),
-    "entries.js": script,
+    "template/package.json": '{ "name": "demo" }\n',
+    ...files,
   });
 }
 
-describe("member entries", () => {
-  test("search ranks the entries of a member with the notes and prints their read command", () => {
-    const { root, hub } = copyHub();
-    addEntriesMember(root, entriesScript(boardEntry()));
-    const project = join(root, "app");
-    mkdirSync(project);
-    writeFileSync(join(project, "project.txt"), "the demo app");
-
-    const found = run(["search", "drag cards between columns"], { skillDir: hub, cwd: project });
+describe("kit entries", () => {
+  test("search ranks the kit components with the notes and prints their read command", () => {
+    const found = cli(HUB_ALONE, "search", "drag cards between columns");
     expect(found.code).toBe(0);
-    expect(found.stdout).toStartWith("Board [demo-skill component, pattern]");
-    expect(found.stdout).toContain("  read: demo-cli docs Board");
-    expect(found.stdout).toContain("demo-skill components: the demo app.");
+    expect(found.stdout).toStartWith("Kanban [component, pattern]");
+    expect(found.stdout).toContain("  read: design docs Kanban");
+    expect(found.stdout).toContain(`components: the hub kit at ${join(HUB_ALONE, "assets", "kit")}`);
+  });
 
-    const read = run(["read", "Board"], { skillDir: hub, cwd: project });
+  test("read points a component id to its docs command", () => {
+    const read = cli(HUB_ALONE, "read", "Kanban");
     expect(read.code).toBe(1);
-    expect(read.stderr).toContain('"Board" is not a note. It is a component of the demo-skill skill. Read it with:\n  demo-cli docs Board');
-
-    const forms = run(["read", "forms"], { skillDir: hub, cwd: project });
-    expect(forms.stdout).toMatch(/\nImplemented by \(demo-skill components\): Board\n {2}Read one with: demo-cli docs <id>\n$/);
-    expect(forms.stdout).not.toContain("Board [demo-skill component, pattern]");
-    const outline = run(["read", "forms", "--outline"], { skillDir: hub, cwd: project });
-    expect(outline.stdout).toContain("Implemented by:\n  Board [demo-skill component, pattern]  ");
-    expect(outline.stdout).toContain("  Read one of the demo-skill components with: demo-cli docs <id>");
-
-    const check = run(["graph", "--check"], { skillDir: hub, cwd: project });
-    expect(check.code).toBe(0);
-    expect(check.stdout).toContain("1 entries");
+    expect(read.stderr).toContain('"Kanban" is not a note. It is a kit component. Read it with:\n  design docs Kanban');
   });
 
-  test("each group of entries has its own read command and source", () => {
-    const { root, hub } = copyHub();
-    const recipe = `[{ id: "BoardPage", kind: "recipe", label: "board", summary: "A page with a board of work.",
-      keywords: ["board page"], links: ["forms"] }]`;
-    addEntriesMember(
-      root,
-      `console.log(JSON.stringify({ problems: [], groups: [
-        { name: "components", read: "demo-cli docs {id}", source: "the demo app.", entries: ${boardEntry()} },
-        { name: "recipes", read: "demo-cli recipe {id}", source: "the demo skill.", entries: ${recipe} },
-      ] }));`,
-    );
-    const found = cli(hub, "search", "board");
-    expect(found.stdout).toContain("  read: demo-cli docs Board");
-    expect(found.stdout).toContain("  read: demo-cli recipe BoardPage");
-    expect(found.stdout).toContain("demo-skill components: the demo app.\ndemo-skill recipes: the demo skill.");
-    const forms = cli(hub, "read", "forms");
-    expect(forms.stdout).toContain(
-      "Implemented by (demo-skill components): Board\n  Read one with: demo-cli docs <id>\nImplemented by (demo-skill recipes): BoardPage\n  Read one with: demo-cli recipe <id>",
-    );
-    expect(cli(hub, "graph", "--check").code).toBe(0);
+  test("a note lists the components that implement it", () => {
+    expect(cli(HUB_ALONE, "read", "forms").stdout).toMatch(/\nImplemented by \(components\): [^\n]*FormLayout[^\n]*\n {2}Read one with: design docs <id>\n$/);
+    expect(cli(HUB_ALONE, "read", "forms", "--outline").stdout).toContain("  Read one of the components with: design docs <id>");
   });
 
-  test("an entry link to an unknown note fails the check", () => {
-    const { root, hub } = copyHub();
-    addEntriesMember(root, entriesScript(boardEntry('["form"]')));
+  test("a kit doc link to an unknown note fails the check", () => {
+    const { hub } = copyHub();
+    edit(join(hub, "assets/kit/src/components/patterns/kanban.tsx"), (text) => text.replace(" * @notes patterns,", " * @notes patern,"));
     const result = cli(hub, "graph", "--check");
     expect(result.code).toBe(1);
-    expect(result.stdout).toContain('"form"');
-    expect(result.stdout).toContain("forms");
+    expect(result.stdout).toContain('the component Kanban links to "patern", but no note has that id; nearest: patterns');
   });
 
-  test("a failed entries command is a warning in search and a failure in the check", () => {
+  test("a kit doc link to a member note fails the check", () => {
     const { root, hub } = copyHub();
-    addEntriesMember(root, entriesScript(boardEntry(), 'console.error("no kit here"); process.exit(3);'));
-    const found = cli(hub, "search", "forms");
-    expect(found.code).toBe(0);
-    expect(found.stderr).toContain("failed with exit status 3: no kit here");
-    const check = cli(hub, "graph", "--check");
-    expect(check.code).toBe(1);
-    expect(check.stdout).toContain("failed with exit status 3: no kit here");
-  });
-
-  test("output that is not the entries JSON fails the check", () => {
-    const { root, hub } = copyHub();
-    addEntriesMember(root, 'console.log("[]");');
+    addMember(join(root, "skills"), "demo-skill", {
+      "design-graph.json": '{ "notes": "notes" }\n',
+      "SKILL.md": memberSkill("demo-skill", "Run `design read demo-skill-forms`."),
+      "notes/demo-skill-forms.md": memberNote("demo-skill-forms"),
+    });
+    edit(join(hub, "assets/kit/src/components/patterns/kanban.tsx"), (text) => text.replace(" * @notes patterns,", " * @notes patterns, demo-skill-forms,"));
     const result = cli(hub, "graph", "--check");
     expect(result.code).toBe(1);
-    expect(result.stdout).toContain('must print { "problems": [...], "groups": [');
+    expect(result.stdout).toContain("the hub kit must work without the use cases");
   });
 
-  test("an entry id that is not PascalCase fails the check", () => {
-    const { root, hub } = copyHub();
-    addEntriesMember(root, entriesScript(boardEntry().replace('id: "Board"', 'id: "board"')));
+  test("a file in the kit folder that kit.json does not list fails the check", () => {
+    const { hub } = copyHub();
+    writeFileSync(join(hub, "assets/kit/src/components/patterns/extra.tsx"), "export const extra = 1;\n");
     const result = cli(hub, "graph", "--check");
     expect(result.code).toBe(1);
-    expect(result.stdout).toContain('entry 1 of the group "components" needs an "id" in PascalCase');
+    expect(result.stdout).toContain("kit.json does not list it");
+  });
+});
+
+describe("kit commands", () => {
+  test("components and docs read the hub kit outside an app", () => {
+    const listed = cli(HUB_ALONE, "components");
+    expect(listed.code).toBe(0);
+    expect(listed.stdout).toStartWith("Primitives (");
+    expect(listed.stdout).not.toContain("warning:");
+    const docs = cli(HUB_ALONE, "docs", "Kanban");
+    expect(docs.code).toBe(0);
+    expect(docs.stdout).toStartWith("Kanban  (pattern)  src/components/patterns/kanban.tsx");
+    expect(docs.stdout).toContain(`Source: the hub kit at ${join(HUB_ALONE, "assets", "kit")}`);
   });
 
-  test("an entries script outside the skill folder fails the check", () => {
+  test("an unknown doc id fails with the nearest ids", () => {
+    const result = cli(HUB_ALONE, "docs", "Kanbna");
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain('no kit doc or export is named "Kanbna". Nearest: Kanban');
+  });
+
+  test("the app commands need a use case", () => {
+    const sync = cli(HUB_ALONE, "sync");
+    expect(sync.code).toBe(2);
+    expect(sync.stderr).toContain("has no kit lock, so the use case of the app is not known");
+    expect(cli(HUB_ALONE, "new", "app").stderr).toContain("new: use design new <dir> --app <use case>");
+    expect(cli(HUB_ALONE, "recipe").stderr).toContain("no use case of the design skill has a lab with recipes");
+    expect(cli(HUB_ALONE, "check", "--bogus").stderr).toContain("check: unknown option --bogus");
+  });
+});
+
+describe("use cases", () => {
+  test("a template that misses the kit contract fails the check", () => {
     const { root, hub } = copyHub();
-    addEntriesMember(root, entriesScript(boardEntry()), '{ "notes": "notes", "entries": ["../entries.js"] }\n');
+    addUseCase(root, '{ "template": "template" }', { "template/src/components/primitives/badge.tsx": "export {};\n" });
     const result = cli(hub, "graph", "--check");
     expect(result.code).toBe(1);
-    expect(result.stdout).toContain("entries");
+    expect(result.stdout).toContain("the demo-skill template has the kit file src/components/primitives/badge.tsx");
+    expect(result.stdout).toContain("the demo-skill template must export defaultTheme from src/lib/brand.ts");
+    expect(result.stdout).toContain("the demo-skill template does not declare react");
+  });
+
+  test("a rules module without a default export fails the check", () => {
+    const { root, hub } = copyHub();
+    addUseCase(root, '{ "template": "template", "rules": "rules.ts" }', { "rules.ts": "export const rules = [];\n" });
+    const result = cli(hub, "graph", "--check");
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("the rules module of demo-skill must have a default export");
+  });
+
+  test("a membership file with a key other than notes and app fails the check", () => {
+    const { root, hub } = copyHub();
+    addMember(join(root, "skills"), "demo-skill", {
+      "design-graph.json": '{ "notes": "notes", "entries": ["entries.js"] }\n',
+      "SKILL.md": memberSkill("demo-skill", "Run `design read demo-skill-forms`."),
+      "notes/demo-skill-forms.md": memberNote("demo-skill-forms"),
+    });
+    const result = cli(hub, "graph", "--check");
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("design-graph.json has unknown keys: entries; the keys are notes, app");
+  });
+
+  test("an app block that names a missing template fails the load", () => {
+    const { root, hub } = copyHub();
+    addUseCase(root, '{ "template": "no-template" }');
+    const result = cli(hub, "graph", "--check");
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("no-template");
   });
 });
 

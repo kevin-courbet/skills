@@ -3,7 +3,7 @@ id: internal-app-routes
 topic: internal-app
 summary: Write a list route with validated search params and a loader that prefetches the query of the page, and a detail route that maps a missing record to the not-found page and names its breadcrumb.
 keywords: [route, file route, createFileRoute, loader, load data before render, prefetch, ensureQueryData, useSuspenseQuery, search params, validateSearch, stripSearchParams, detail route, not found, breadcrumb, crumb, routeTree, navigate]
-related: [internal-app-server-functions, internal-app-url-filters, internal-app-states, internal-app-page-patterns]
+related: [internal-app-server-functions, kit-url-filters, kit-states, internal-app-page-patterns]
 ---
 
 # Internal App Routes
@@ -36,7 +36,7 @@ function ItemsPage() {
 ## Search Params
 
 - A schema validates the search params. Each field is `optionalKey`, with its default in `itemsQueryDefaults`. `stripSearchParams` removes the defaults from the URL.
-- The filter params come from `filterSearchFields`. Run `design read internal-app-url-filters`. `itemsQueryFromSearch` in `features/items/filters.ts` changes the validated search into the server query.
+- The filter params come from `filterSearchFields`. Run `design read kit-url-filters`. `itemsQueryFromSearch` in `features/items/filters.ts` changes the validated search into the server query.
 - Change the search with `navigate({ search: (prev) => ({ ...prev, q }), replace: true })`. When a filter changes, reset the page number.
 
 ## Detail Routes
@@ -61,5 +61,5 @@ export const Route = createFileRoute("/_app/items/$itemId")({
 ## Router Setup
 
 - The build generates `routeTree.gen.ts`. Never edit it.
-- `routerDefaults` sets `defaultErrorComponent` and `defaultNotFoundComponent` to the shell components. Run `internal-app docs RouteError`.
+- `routerDefaults` sets `defaultErrorComponent` and `defaultNotFoundComponent` to the shell components. Run `design docs RouteError`.
 - To show a route in the breadcrumbs, set `staticData: { crumb: "Items" }` on it.

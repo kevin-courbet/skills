@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Accepted. ADR 0010 moves the kit and the commands of `scripts/internal-app`
+to the `design` skill.
 
 ## Decision
 

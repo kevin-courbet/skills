@@ -1,0 +1,83 @@
+/**
+ * The region for toasts, and the `toast` function that shows one.
+ *
+ * @layer primitive
+ * @keywords toast, toast after save, notification, snackbar, error toast, success message, flash message
+ * @related AppShell, Alert, CopyButton, Kanban, WorkQueue
+ * @notes overlays, form-errors, loading-states, ux-writing, kit-states, kit-writing
+ *
+ * Use `toast.error` for a failure that has no inline place, such as a move that
+ * a board puts back. Do not use a toast for a form error: show it at the field.
+ * For a notice about the page, use `Alert`.
+ *
+ * ## Behavior
+ * - `AppShell` mounts the only `Toaster`, at the bottom right, with a close
+ *   button on each toast. Do not mount another one.
+ * - An error toast shows the danger icon.
+ *
+ * ## Rules
+ * - Do not show a success toast when the UI already shows the result, such as
+ *   a saved field, a new row, or a card in its new column. Show one only when
+ *   the result is not on the screen.
+ * - The title names the object and the problem. The description says what to
+ *   do: "WO-1042 did not change. Try again."
+ *
+ * ## Example
+ * ```tsx
+ * toast.error(`${order.id} did not change. Try again.`);
+ * toast.error("The theme could not be saved", { description: failureMessage(error) });
+ * ```
+ */
+import * as stylex from "@stylexjs/stylex";
+import { Toaster as SonnerToaster } from "sonner";
+import { CircleAlert } from "lucide-react";
+import { color, font, layer, radius, shadow, space } from "@/styles/tokens.stylex";
+
+export { toast } from "sonner";
+
+export function Toaster() {
+  const base = stylex.props(styles.toast);
+  const region = stylex.props(styles.region);
+  return (
+    <SonnerToaster
+      position="bottom-right"
+      closeButton
+      icons={{ error: <CircleAlert width={16} height={16} {...stylex.props(styles.errorIcon)} /> }}
+      className={region.className}
+      style={region.style}
+      toastOptions={{
+        unstyled: true,
+        classNames: {
+          toast: base.className ?? "",
+          title: stylex.props(styles.title).className ?? "",
+          description: stylex.props(styles.description).className ?? "",
+          closeButton: stylex.props(styles.close).className ?? "",
+        },
+      }}
+    />
+  );
+}
+
+const styles = stylex.create({
+  region: { zIndex: layer.toast },
+  toast: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space.xs,
+    width: "22rem",
+    padding: space.md,
+    fontFamily: font.sans,
+    fontSize: font.md,
+    color: color.text,
+    backgroundColor: color.overlay,
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: color.border,
+    borderRadius: radius.lg,
+    boxShadow: shadow.lg,
+  },
+  title: { fontWeight: font.medium },
+  description: { color: color.textMuted, fontSize: font.sm },
+  close: { color: color.textMuted },
+  errorIcon: { color: color.danger },
+});

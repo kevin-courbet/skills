@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { parseFrontMatter, readSkillName, type FrontValue } from "./frontmatter.ts";
+import { parseFrontMatter, readSkillName } from "./frontmatter.ts";
 import { countWords, slugify, unique } from "./text.ts";
 
 export const HUB_SKILL = "design";
@@ -56,9 +56,35 @@ export interface SkillSource {
   readonly notesDir: string;
   readonly hub: boolean;
   readonly skillFile: string;
-  // The command that prints the search entries of a member, as an argument
-  // list. The first item is a script in the skill folder.
-  readonly entries: ReadonlyArray<string> | null;
+  // The app use case of a member: the template that a new app starts from, the
+  // lab with the recipes, and the rules that check and doctor add to the kit
+  // rules. The hub and a member without apps have none.
+  readonly app: AppConfig | null;
+}
+
+// The lab of a use case is an overlay of the template with the recipe pages.
+export interface LabConfig {
+  readonly dir: string;
+  // The app folder of the recipe pages, such as "src/routes/_app/lab/".
+  readonly pages: string;
+  // The URL path of that folder in a scaffold with the lab, such as "/lab/".
+  readonly route: string;
+  // The app folder of the companion files of the recipes, such as "src/features/lab/".
+  readonly files: string;
+}
+
+// The text in the template that `design new --name` replaces with the app name.
+export interface AppName {
+  readonly placeholder: string;
+  readonly files: ReadonlyArray<string>;
+}
+
+export interface AppConfig {
+  readonly template: string;
+  readonly name: AppName | null;
+  readonly lab: LabConfig | null;
+  // The module with the rules and the doctor checks of the use case.
+  readonly rules: string | null;
 }
 
 export interface Reference extends Target {
@@ -174,11 +200,6 @@ function parseBody(body: string, bodyLine: number): ParsedBody {
   const introEnd = headings.length > 0 ? headings[0]!.index : lines.length;
   const intro = lines.slice(titleIndex + 1, introEnd).join("\n").trim();
   return { title, intro, sections, problems };
-}
-
-function list(value: FrontValue | undefined): ReadonlyArray<string> {
-  if (value === undefined) return [];
-  return typeof value === "string" ? [value] : value;
 }
 
 function loadNote(file: string, skill: SkillSource, problems: Problem[]): Note | null {
@@ -314,7 +335,7 @@ function readMember(dir: string, entry: string, problems: Problem[]): SkillSourc
     problems.push({ file: membership, message: `"notes" must stay inside the skill folder: ${notes}` });
     return null;
   }
-  const entries = readEntriesCommand(dir, membership, record["entries"], problems);
+  const app = readAppConfig(dir, membership, record["app"], problems);
   const skillFile = join(dir, "SKILL.md");
   let name = entry;
   if (existsSync(skillFile)) {
@@ -322,28 +343,104 @@ function readMember(dir: string, entry: string, problems: Problem[]): SkillSourc
   } else {
     problems.push({ file: skillFile, message: "a member skill must have a SKILL.md" });
   }
-  return { name, dir, notesDir, hub: false, skillFile, entries };
+  return { name, dir, notesDir, hub: false, skillFile, app };
 }
 
-const MEMBERSHIP_KEYS = new Set(["notes", "entries"]);
+const MEMBERSHIP_KEYS = new Set(["notes", "app"]);
+const APP_KEYS = new Set(["template", "name", "lab", "rules"]);
+const LAB_KEYS = new Set(["dir", "pages", "route", "files"]);
+const APP_SHAPE =
+  '"app": { "template": "assets/template", "name": { "placeholder": "My app", "files": ["src/app.tsx"] }, "lab": { "dir": "assets/lab", "pages": "src/routes/lab/", "route": "/lab/", "files": "src/features/lab/" }, "rules": "scripts/rules.ts" }; only "template" is required';
 
-function readEntriesCommand(dir: string, membership: string, value: unknown, problems: Problem[]): ReadonlyArray<string> | null {
+function record(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+// A path in the skill folder that must exist. Returns the absolute path, or
+// null after it reports the problem.
+function skillPath(dir: string, membership: string, key: string, value: unknown, kind: "file" | "folder", problems: Problem[]): string | null {
+  if (typeof value !== "string" || value === "" || isAbsolute(value)) {
+    problems.push({ file: membership, message: `"${key}" must be a relative path in the skill folder; the shape is ${APP_SHAPE}` });
+    return null;
+  }
+  const path = resolve(dir, value);
+  if (relative(dir, path).startsWith("..")) {
+    problems.push({ file: membership, message: `"${key}" must stay inside the skill folder: ${value}` });
+    return null;
+  }
+  const exists = existsSync(path) && (kind === "file" ? statSync(path).isFile() : statSync(path).isDirectory());
+  if (!exists) {
+    problems.push({ file: membership, message: `the ${kind} of "${key}" does not exist: ${value}` });
+    return null;
+  }
+  return path;
+}
+
+// An app folder in the config, such as "src/routes/_app/lab/". It is relative
+// to the app root and ends with a slash, so that a prefix test is exact.
+function appFolder(membership: string, key: string, value: unknown, problems: Problem[]): string | null {
+  if (typeof value !== "string" || !/^[A-Za-z0-9_$.-]+(?:\/[A-Za-z0-9_$.-]+)*\/$/.test(value) || value.split("/").includes("..")) {
+    problems.push({ file: membership, message: `"${key}" must be a folder of the app that ends with "/", such as "src/features/lab/"` });
+    return null;
+  }
+  return value;
+}
+
+function unknownKeys(membership: string, where: string, value: Record<string, unknown>, known: ReadonlySet<string>, problems: Problem[]): void {
+  const extra = Object.keys(value).filter((key) => !known.has(key));
+  if (extra.length > 0) problems.push({ file: membership, message: `${where} has unknown keys: ${extra.join(", ")}; the keys are ${[...known].join(", ")}` });
+}
+
+function readLab(dir: string, membership: string, value: unknown, problems: Problem[]): LabConfig | null {
+  const lab = record(value);
+  if (lab === null) {
+    problems.push({ file: membership, message: `"app.lab" must be an object; the shape is ${APP_SHAPE}` });
+    return null;
+  }
+  unknownKeys(membership, '"app.lab"', lab, LAB_KEYS, problems);
+  const labDir = skillPath(dir, membership, "app.lab.dir", lab["dir"], "folder", problems);
+  const pages = appFolder(membership, "app.lab.pages", lab["pages"], problems);
+  const files = appFolder(membership, "app.lab.files", lab["files"], problems);
+  const route = lab["route"];
+  if (typeof route !== "string" || !/^\/(?:[a-z0-9-]+\/)*$/.test(route)) {
+    problems.push({ file: membership, message: '"app.lab.route" must be a URL path that starts and ends with "/", such as "/lab/"' });
+    return null;
+  }
+  if (labDir === null || pages === null || files === null) return null;
+  return { dir: labDir, pages, route, files };
+}
+
+function readName(membership: string, value: unknown, problems: Problem[]): AppName | null | undefined {
+  const name = record(value);
+  const placeholder = name?.["placeholder"];
+  const files = name?.["files"];
+  if (name === null || typeof placeholder !== "string" || placeholder === "" || !Array.isArray(files) || !files.every((file) => typeof file === "string" && file !== "")) {
+    problems.push({ file: membership, message: `"app.name" needs a "placeholder" text and the template "files" that hold it; the shape is ${APP_SHAPE}` });
+    return undefined;
+  }
+  unknownKeys(membership, '"app.name"', name, new Set(["placeholder", "files"]), problems);
+  return { placeholder, files: files as string[] };
+}
+
+function readAppConfig(dir: string, membership: string, value: unknown, problems: Problem[]): AppConfig | null {
   if (value === undefined) return null;
-  const usage = `"entries" must be a list of strings: a script in the skill folder and its arguments, such as ["scripts/tool", "design-entries"]`;
-  if (!Array.isArray(value) || value.length === 0 || !value.every((item) => typeof item === "string" && item !== "")) {
-    problems.push({ file: membership, message: usage });
+  const app = record(value);
+  if (app === null) {
+    problems.push({ file: membership, message: `"app" must be an object; the shape is ${APP_SHAPE}` });
     return null;
   }
-  const script = resolve(dir, value[0] as string);
-  if (relative(dir, script).startsWith("..") || isAbsolute(value[0] as string)) {
-    problems.push({ file: membership, message: `the "entries" script must be a relative path inside the skill folder: ${value[0]}` });
-    return null;
+  unknownKeys(membership, '"app"', app, APP_KEYS, problems);
+  const template = skillPath(dir, membership, "app.template", app["template"], "folder", problems);
+  const name = app["name"] === undefined ? null : readName(membership, app["name"], problems);
+  const lab = app["lab"] === undefined ? null : readLab(dir, membership, app["lab"], problems);
+  const rules = app["rules"] === undefined ? null : skillPath(dir, membership, "app.rules", app["rules"], "file", problems);
+  // A use case with a broken part has no app config, so that a command stops
+  // with the load problem and does not run with a part of the use case.
+  if (template === null || name === undefined || (app["lab"] !== undefined && lab === null) || (app["rules"] !== undefined && rules === null)) return null;
+  for (const file of name?.files ?? []) {
+    if (!existsSync(join(template, file))) problems.push({ file: membership, message: `"app.name.files" names ${file}, which is not a file of the template` });
   }
-  if (!existsSync(script) || !statSync(script).isFile()) {
-    problems.push({ file: membership, message: `the "entries" script does not exist: ${value[0]}` });
-    return null;
-  }
-  return value as string[];
+  return { template, name, lab, rules };
 }
 
 export interface LoadOptions {
@@ -354,7 +451,7 @@ export interface LoadOptions {
 
 function discoverSkills(options: LoadOptions, problems: Problem[]): { hub: SkillSource; skills: SkillSource[] } {
   const hubDir = resolve(options.skillDir);
-  const hub: SkillSource = { name: HUB_SKILL, dir: hubDir, notesDir: join(hubDir, "notes"), hub: true, skillFile: join(hubDir, "SKILL.md"), entries: null };
+  const hub: SkillSource = { name: HUB_SKILL, dir: hubDir, notesDir: join(hubDir, "notes"), hub: true, skillFile: join(hubDir, "SKILL.md"), app: null };
   const skills: SkillSource[] = [hub];
   const seen = new Set<string>([realpathSync(hubDir)]);
   const hubPaths = [hubDir, realpathSync(hubDir), options.invokedSkillDir ? resolve(options.invokedSkillDir) : null];

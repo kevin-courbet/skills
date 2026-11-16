@@ -1,13 +1,16 @@
 import { relative } from "node:path";
 import { checkGraph } from "./check.ts";
 import { entriesFor, findEntry, isEntry, loadEntries, type Entry, type EntrySet, type EntrySource } from "./entries.ts";
+import { LookupError, UsageError } from "./errors.ts";
 import { backlinks, findSection, loadGraph, NOTE_WORD_LIMIT, type Graph, type Link, type LoadOptions, type Note } from "./graph.ts";
+import { KIT_COMMANDS, runKitCommand } from "./kit/commands.ts";
+import { KitError } from "./kit/files.ts";
 import { search } from "./search.ts";
 import { nearest, unique } from "./text.ts";
 
 export interface RunOptions extends LoadOptions {
-  // The folder that the agent works in. A member skill finds its project, such
-  // as an app, from this folder when it prints its search entries.
+  // The folder that the agent works in. The kit commands and the search
+  // entries find the app, and so its installed kit, from this folder.
   readonly cwd: string;
   readonly color?: boolean;
 }
@@ -20,9 +23,9 @@ export interface RunResult {
 
 export const USAGE = `design <command> [arguments]
 
-Commands:
-  search <query> [--limit <n>]   Rank notes and member entries, such as the
-                                 components of a kit, for a question. Default limit: 8.
+Design notes:
+  search <query> [--limit <n>]   Rank the notes, the kit components, and the recipes
+                                 for a question. Default limit: 8.
                                  Warns when the best result has under half the words.
   read <id>                      Print a note, the notes to read first, and the
                                  ids of the other linked notes.
@@ -30,14 +33,32 @@ Commands:
   read <id> --outline            Print the summary, the sections, and the links.
   list                           Print every note, grouped by topic.
   links <id>                     Print the links to and from a note.
-  graph --check                  Validate the note graph. Exit status 1 on a problem.
+  graph --check                  Validate the notes, the kit, and the use cases.
+                                 Exit status 1 on a problem.
+
+Kit:
+  components [dir]               List the kit components of the app around dir,
+                                 or of the hub kit outside an app.
+  docs <id>[#part] [dir]         Print the docs of one component or export.
+                                 Parts: #props or #<section>.
+  recipe [<id>[#files]] [dir]    List the page recipes, or print one recipe.
+
+Apps:
+  new <dir> --app <use case> [--name "App name"] [--lab]
+                                 Create an app from the template of a use case
+                                 and the hub kit. --lab adds the recipe pages.
+  sync [dir] [--write] [--force] Compare the kit files of an app with the hub kit.
+                                 --write applies the update.
+  check [dir]                    Run the kit rules and the rules of the use case.
+  doctor [dir]                   Check the stack, the kit, and the conventions.
+  sync, check, and doctor take --app <use case> for an app without a kit lock.
+  Each kit and app command takes --json.
+
   help                           Print this text.
 
 [[id]] in a note is a link: run "design read <id>" to follow it.
-A member entry, such as a kit component, prints the command that reads it.`;
+A search result for a component or a recipe prints the command that reads it.`;
 
-class UsageError extends Error {}
-class LookupError extends Error {}
 
 interface Style {
   readonly id: (text: string) => string;
@@ -53,8 +74,8 @@ function owner(note: Note): string {
   return note.skill.hub ? "" : ` [${note.skill.name}]`;
 }
 
-// Loads the entries of the members only when a command needs them, because
-// each member runs a process to print them.
+// Loads the entries only when a command needs them, because they parse the
+// whole kit and the labs.
 class Context {
   private set: EntrySet | null = null;
   constructor(
@@ -62,7 +83,7 @@ class Context {
     private readonly cwd: string,
   ) {}
   entries(): EntrySet {
-    this.set ??= loadEntries(this.graph, this.cwd);
+    this.set ??= loadEntries(this.graph, { kind: "folder", dir: this.cwd });
     return this.set;
   }
   // A warning for the problems of the entries, which the command prints on stderr.
@@ -70,12 +91,19 @@ class Context {
     if (this.set === null || this.set.problems.length === 0) return "";
     const shown = this.set.problems.slice(0, 3).map((problem) => `  ${problem.message}`);
     const more = this.set.problems.length > 3 ? [`  and ${this.set.problems.length - 3} more`] : [];
-    return [`warning: the member entries have ${this.set.problems.length} ${this.set.problems.length === 1 ? "problem" : "problems"}. Run "design graph --check".`, ...shown, ...more, ""].join("\n");
+    return [`warning: the kit components and the recipes have ${this.set.problems.length} ${this.set.problems.length === 1 ? "problem" : "problems"}. Run "design graph --check".`, ...shown, ...more, ""].join("\n");
   }
 }
 
+// A kit component belongs to the hub, so it prints no skill name. A recipe
+// belongs to a use case, such as [internal-app recipe, page].
 function entryOwner(entry: Entry): string {
-  return ` [${entry.skill.name} ${entry.kind}${entry.label === "" ? "" : `, ${entry.label}`}]`;
+  const kind = `${entry.kind}${entry.label === "" ? "" : `, ${entry.label}`}`;
+  return entry.skill.hub ? ` [${kind}]` : ` [${entry.skill.name} ${kind}]`;
+}
+
+function entryPhrase(entry: Entry): string {
+  return entry.skill.hub ? `a kit ${entry.kind}` : `a ${entry.kind} of the ${entry.skill.name} use case`;
 }
 
 function lookup(context: Context, id: string): Note {
@@ -88,7 +116,7 @@ function lookup(context: Context, id: string): Note {
   if (note) return note;
   const entry = findEntry(context.entries(), id);
   if (entry) {
-    throw new LookupError(`"${entry.id}" is not a note. It is a ${entry.kind} of the ${entry.skill.name} skill. Read it with:\n  ${entry.read}`);
+    throw new LookupError(`"${entry.id}" is not a note. It is ${entryPhrase(entry)}. Read it with:\n  ${entry.read}`);
   }
   const close = nearest(id, [...graph.notes.keys()], 5);
   const found = search(graph.ordered, id.replaceAll("-", " "), 5).hits.map((hit) => hit.doc.id);
@@ -167,12 +195,12 @@ function inSource(entry: Entry, source: EntrySource): boolean {
   return entry.skill === source.skill && entry.group === source.group;
 }
 
-// The member skill and the group, such as "internal-app components".
+// The group, such as "components", or "internal-app recipes" for the group of a use case.
 function sourceName(source: EntrySource): string {
-  return `${source.skill.name} ${source.group}`;
+  return source.skill.hub ? source.group : `${source.skill.name} ${source.group}`;
 }
 
-// The member entries that apply the note, such as the kit components that
+// The entries that apply the note, such as the kit components that
 // implement a form rule.
 function implementationLines(context: Context, note: Note, s: Style): string[] {
   const entries = entriesFor(context.entries(), note.id);
@@ -319,7 +347,7 @@ function commandList(context: Context, s: Style): string {
   }
   const sources = context.entries().sources;
   if (sources.length > 0) {
-    lines.push("", s.heading("member entries"), "  Search finds them with the notes:");
+    lines.push("", s.heading("entries"), "  Search finds them with the notes:");
     for (const source of sources) lines.push(`  ${sourceName(source)}: ${source.count} entries from ${source.source}`);
   }
   return lines.join("\n");
@@ -369,7 +397,7 @@ function commandLinks(context: Context, args: string[], s: Style): string {
 function commandCheck(context: Context, args: string[]): { text: string; ok: boolean } {
   const graph = context.graph;
   if (args.length !== 1 || args[0] !== "--check") throw new UsageError("graph: use graph --check");
-  const entries = context.entries();
+  const entries = loadEntries(graph, { kind: "hub" });
   const result = checkGraph(graph, entries);
   const base = graph.hub.dir;
   const where = (file: string, line?: number) => {
@@ -397,6 +425,10 @@ export function run(argv: ReadonlyArray<string>, options: RunOptions): RunResult
         ? `warning: the design graph has ${graph.problems.length} load ${graph.problems.length === 1 ? "problem" : "problems"}. Run "design graph --check".\n`
         : "";
     const warning = () => `${graphWarning}${context.entryWarning()}`;
+    if (KIT_COMMANDS.has(command)) {
+      const result = runKitCommand(command, args, graph, options.cwd);
+      return { code: result.code, stdout: result.stdout, stderr: graphWarning };
+    }
     switch (command) {
       case "search": {
         const result = commandSearch(context, args, s);
@@ -427,6 +459,7 @@ export function run(argv: ReadonlyArray<string>, options: RunOptions): RunResult
   } catch (error) {
     if (error instanceof UsageError) return { code: 2, stdout: "", stderr: `design: ${error.message}\n\n${USAGE}\n` };
     if (error instanceof LookupError) return { code: 1, stdout: "", stderr: `design: ${error.message}\n` };
+    if (error instanceof KitError) return { code: 2, stdout: "", stderr: `design: ${error.message}\n` };
     throw error;
   }
 }

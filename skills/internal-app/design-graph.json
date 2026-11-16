@@ -1,1 +1,9 @@
-{ "notes": "notes", "entries": ["scripts/internal-app", "design-entries"] }
+{
+  "notes": "notes",
+  "app": {
+    "template": "assets/template",
+    "name": { "placeholder": "Internal app", "files": ["src/routes/__root.tsx", "src/routes/_app.tsx"] },
+    "lab": { "dir": "assets/lab", "pages": "src/routes/_app/lab/", "route": "/lab/", "files": "src/features/lab/" },
+    "rules": "scripts/rules.ts"
+  }
+}

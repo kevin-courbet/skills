@@ -3,7 +3,7 @@
  *
  * @keywords kanban, work board, board page, stages, columns of cards, drag and drop, move between columns, pipeline, peek sheet
  * @components Kanban, Sheet, LinkButton, Identifier, DescriptionList, Avatar, Code, toast, withViewTransition
- * @notes internal-app-mutations, internal-app-composition, internal-app-motion, internal-app-page-patterns
+ * @notes internal-app-mutations, kit-composition, kit-motion, internal-app-page-patterns
  * @files src/features/lab/tickets.ts
  *
  * Use it when the stage of a record is the main fact and people change the

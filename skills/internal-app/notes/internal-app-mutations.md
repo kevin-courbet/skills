@@ -4,7 +4,7 @@ topic: internal-app
 summary: Write a mutation that invalidates by key prefix and shows its failure where people acted, an optimistic move that writes the cache inside the view transition, and a delete that runs from ConfirmDialog.
 keywords: [mutation, useMutation, invalidate queries, optimistic update, optimistic move, instant update, update before the server answers, rollback, restore on failure, move on a board, delete, destructive action, mutateAsync, setQueryData, cancelQueries, success toast]
 specializes: [loading-states]
-related: [internal-app-server-functions, internal-app-composition, internal-app-states, internal-app-motion]
+related: [internal-app-server-functions, kit-composition, kit-states, kit-motion]
 ---
 
 # Internal App Mutations
@@ -27,7 +27,7 @@ const create = useMutation({
 
 ## Optimistic Moves
 
-A move on a `Kanban`, a `SortableList`, a `Tree`, a `Gantt`, an `EventCalendar`, or a touch work queue changes the screen at once, and saves in the background. Write the query cache synchronously in the update of the view transition.
+A move on a `Kanban`, a `SortableList`, a `Tree`, a `Gantt`, an `EventCalendar`, or a touch work queue changes the screen at once, and saves in the background. [[kit-composition#moves]] gives the kit rules. In an internal app, write the query cache synchronously in the update of the view transition.
 
 Do not write the cache in `onMutate`. `onMutate` runs after an await, after the browser captures the new state, so the object jumps and does not move.
 
@@ -60,7 +60,7 @@ const move = (next: TicketBoard, change: KanbanMove) => {
 
 ## Destructive Actions
 
-- Run a destructive mutation from `ConfirmDialog`. Give `mutateAsync` to `onConfirm`. Run `internal-app docs ConfirmDialog`.
+- Run a destructive mutation from `ConfirmDialog`. Give `mutateAsync` to `onConfirm`. Run `design docs ConfirmDialog`.
 - After a delete, remove the detail query, invalidate the list keys, and go to the list:
 
 ```ts

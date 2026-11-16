@@ -3,12 +3,12 @@ id: internal-app-form-submit
 topic: internal-app
 summary: Wire a TanStack Form to its Effect Schema and its mutation, with the submit button in the dialog footer, the server failure above the footer, the ErrorSummary of a long form, and a reset when the dialog closes.
 keywords: [form submit, useForm, TanStack Form, form state, form schema, standard schema, submit to the server, save a form, form mutation, mutateAsync, form id, submit button outside the form, server error in a form, reset form, onDynamic]
-related: [internal-app-forms, internal-app-mutations, internal-app-server-functions]
+related: [kit-forms, internal-app-mutations, internal-app-server-functions]
 ---
 
 # Internal App Form Submit
 
-A form uses TanStack Form with an Effect Schema through Standard Schema. Run `design read forms` for the design of the form, and `design read internal-app-forms` for the kit control of each answer. The helpers `formBehavior`, `fieldError`, and `formErrors` and their rules are in `internal-app docs Form`.
+A form uses TanStack Form with an Effect Schema through Standard Schema. Run `design read forms` for the design of the form, and `design read kit-forms` for the kit control of each answer. The helpers `formBehavior`, `fieldError`, and `formErrors` and their rules are in `design docs Form`.
 
 ## Wire The Form
 

@@ -5,7 +5,7 @@ description: Design, review, or refactor any user interface. Covers project cont
 
 # Design
 
-Load this skill before you design, build, or review a user interface. It holds the taste rules and the process. The details are in small notes that the `design` CLI searches and prints.
+Load this skill before you design, build, or review a user interface. The details are in small notes that the `design` CLI searches and prints.
 
 ## The CLI
 
@@ -26,7 +26,6 @@ design list                          # every note, by topic
 
 - `[[id]]` in a note is a link. Run `design read <id>` to follow it.
 - Asset paths, such as `assets/themes/graphite.css`, are relative to this skill folder.
-- When you do not know the note, run `design search` with the words of the question.
 
 ## Taste Rules
 
@@ -37,11 +36,11 @@ These rules apply to every interface. A note gives the details of each rule.
 - Keep semantic HTML, accessible names, native behavior, and keyboard operation, also when you reduce the visible labels. [[accessibility]]
 - Use color as support, never as the only signal for status or selection. [[accessibility]]
 - Design every state: default, hover, active, focus, selected, disabled, invalid, error, success, and loading. [[accessibility]]
-- Do not put a contrasting strip on only the left or top edge of a card, notice, navigation item, or row. Never mark the current navigation item with a left-edge border, rail, or inset shadow. Use a surface change, text weight, and `aria-current`. [[edge-accents]]
-- Do not join separate entities into one string with a middle dot, a bullet, or a vertical bar, such as `Q3 2026 · YTD Sep`. Give each entity its own element. A wish to add a separator is a sign that the structure is wrong. [[grouped-values]]
+- Do not put a contrasting strip on only the left or top edge of a card, notice, navigation item, or row. Mark the current navigation item with a surface change, text weight, and `aria-current`, never with a left-edge border. [[edge-accents]]
+- Do not join separate entities into one string with a middle dot, a bullet, or a vertical bar, such as `Q3 2026 · YTD Sep`. Give each entity its own element. A wish for a separator shows a wrong structure. [[grouped-values]]
 - Group form fields by user intent, not by storage structure. [[forms]]
 - Put field errors near their controls. Give an error summary when users must find several errors. [[form-errors]]
-- Show the end result when the work makes a tangible thing that people see or hold outside the app, such as a printed tag, an invoice, a document, or an outgoing message. Make the preview look like that thing. Humans are visual creatures. Do not preview a record that lives only in the app, such as an edited contact. [[form-preview]]
+- Show the end result when the work makes a tangible thing that people see or hold outside the app, such as a printed tag, an invoice, a document, or an outgoing message. Make the preview look like that thing. Do not preview a record that lives only in the app, such as an edited contact. [[form-preview]]
 - A functional design may have one or two signature elements from its domain, such as a paper repair tag. They are part of the design. A rule set must not forbid them. [[signature-elements]]
 - Controls in one row have the same height. [[density]]
 - Changing the density of one page must not change the app frame on desktop. [[density]]
@@ -55,14 +54,32 @@ These rules apply to every interface. A note gives the details of each rule.
 1. **Context, users, and priorities.** Before you choose a layout, read `DESIGN.md` at the project root when it exists. Otherwise, run `design read project-context#when-to-collect-the-context`. Then run `design read method#establish-users-and-priorities`. Identify the users, the task, and what they must notice first.
 2. **Direction.** For a new product, or for a marketing or content page, run `design read visual-direction` and choose a direction inside the house rules. For a functional app, keep the product system and use [[signature-elements]].
 3. **Structure.** Before you choose components, run `design read hierarchy` and `design read patterns --outline`. For a form, run `design read forms` first. For data, run `design read dashboards` or `design read tables`.
-4. **Build.** Before each part, read its note. Examples: `design read color` before you set colors, `design read dark-theme` before a dark theme, `design read font-selection` before you pick a font, `design read icons` before you add icons, `design read motion` before you animate, and `design read ux-writing` before you write labels, errors, or empty states. When the part has no obvious note, run `design search`.
+4. **Build.** Before each part, read its note, such as `design read color`, `design read dark-theme`, `design read font-selection`, `design read icons`, `design read motion`, or `design read ux-writing`. When the part has no obvious note, run `design search`.
 5. **Review.** Before you finish, run `design read review` and answer each question. Follow the link of each question that fails.
 
-To propose a design or a UX change before implementation, run `design read proposal-previews`. Show the proposal as a running preview of the real components.
+To propose a design or a UX change before implementation, run `design read proposal-previews`. Show it as a running preview of the real components.
+
+## The Kit
+
+The kit is the component set on StyleX and react-aria-components, in `assets/kit/`. A use-case skill, such as `internal-app`, gives the stack and the template.
+
+```bash
+design new <dir> --app <use case> [--lab] # scaffold an app
+design components                         # kit catalog by layer
+design docs <Id>[#part]                   # docs of one kit component
+design recipe [<Id>[#files]]              # complete pages
+design sync [--write] [--force]           # install or update kit files
+design check                              # kit and use-case rules
+design doctor                             # audit and list fixes
+```
+
+The commands read the app in the working folder or in `[dir]`. Without a kit lock, add `--app <use case>`. `--json` prints JSON.
+
+Kit notes: [[kit-composition]], [[kit-recipes]], [[kit-adding-a-component]], [[kit-update]], [[kit-migration-map]], and [[kit-check-rules]].
 
 ## Specializations
 
-A product skill can join this graph and narrow the rules, so that its agents make fewer design choices. `design read <id>` lists these notes under "Specialized by". In that product, the specialization wins. Before you add or change a member skill, run `design read graph-membership`.
+A use-case skill can join this graph and narrow the rules, so that its agents make fewer design choices. `design read <id>` lists these notes under "Specialized by". There, the specialization wins. Before you add or change a member skill, run `design read graph-membership`.
 
 ## Charts
 

@@ -57,7 +57,7 @@
   "paraphrases": [
     {"query": "should this panel slide in or just show up", "expect": ["motion"]},
     {"query": "is movement on this card worth adding", "expect": ["motion"]},
-    {"query": "why would a screen need any motion at all", "expect": ["motion"]},
+    {"query": "why would a screen need any motion at all", "expect": ["motion", "kit-motion"]},
     {"query": "how long should a fade take to feel snappy", "expect": ["easing-and-duration"]},
     {"query": "which slow-start timing curve for opening a menu", "expect": ["easing-and-duration"]},
     {"query": "transition feels sluggish, what speed fix", "expect": ["easing-and-duration"]},
@@ -100,7 +100,7 @@
     {"query": "audio waveform player"},
     {"query": "3d globe rotation"},
     {"query": "map pin clustering"},
-    {"query": "chat bubble layout"},
+    {"query": "spreadsheet formula editor"},
     {"query": "calendar week view"}
   ]
 }

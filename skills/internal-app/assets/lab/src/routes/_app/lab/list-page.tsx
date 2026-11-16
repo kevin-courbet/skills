@@ -3,7 +3,7 @@
  *
  * @keywords list page, index page, records list, table page, url filters, search and filter, sortable table, paginated list, admin list
  * @components Page, PageHeader, Toolbar, SearchField, Filters, DataTable, StatusDot, EmptyState, Button
- * @notes internal-app-routes, internal-app-url-filters, tables, internal-app-states, internal-app-page-patterns
+ * @notes internal-app-routes, kit-url-filters, tables, kit-states, internal-app-page-patterns
  * @files src/features/lab/tickets.ts
  *
  * Use it when people look for records, compare them in columns, and open one.

@@ -3,7 +3,7 @@
  *
  * @keywords settings page, preferences, configuration page, account settings, toggles, switches, setting rows, save on change
  * @components Page, PageHeader, SettingsCard, SettingRow, Switch, Select, NumberField, Identifier, toast
- * @notes internal-app-page-patterns, internal-app-mutations, internal-app-forms, internal-app-writing
+ * @notes internal-app-page-patterns, internal-app-mutations, kit-forms, kit-writing
  * @files src/features/lab/desk-settings.ts
  *
  * Use it for settings that people change one at a time and that take effect

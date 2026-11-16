@@ -36,7 +36,7 @@ export async function runServerFn<A, E extends WireError>(
 - `unwrap(result)` from `src/lib/server-result.ts` returns the value, or throws a `ServerFnError` that carries the typed error. Use it in each `queryFn` and `mutationFn`, so that TanStack Query sees a thrown error.
 - Branch on a failure with `isServerFnError<WireErrorEncoded>(error) && error.error._tag === "ConflictError"`.
 - Show a failure to people with `failureMessage(error)`. It returns the `message` of the wire error, a "no longer exists" text for `NotFoundError`, or a general retry text for an unexpected error. The details of an unexpected error stay in the server log.
-- The wire errors in `src/lib/wire-errors.ts` are `NotFoundError`, `ConflictError`, `ValidationError`, and `ForbiddenError`. They are kit files. When an app needs one more expected failure, add it to the kit in this skill.
+- The wire errors in `src/lib/wire-errors.ts` are `NotFoundError`, `ConflictError`, `ValidationError`, and `ForbiddenError`. They are kit files. When an app needs one more expected failure, add it to the kit in the design skill ([[kit-adding-a-component]]).
 
 ## Feature Module Shape
 

@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted. Supersedes ADR 0002 and ADR 0003.
+Accepted. Supersedes ADR 0002 and ADR 0003. ADR 0010 supersedes the sections
+"CLI" and "Graph membership".
 
 ## Context
 

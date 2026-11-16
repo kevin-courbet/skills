@@ -7,14 +7,14 @@ were used. No ReUI Pro block or template was used.
 
 This file is for the maintainers of the kit. It does not ship with the skill.
 The kit files that it names are in
-`skills/internal-app/assets/template/src/components/`. The rules for app
+`skills/design/assets/kit/src/components/`. The rules for app
 builders about the skipped controls are in the "Controls The Kit Leaves Out"
-section of `skills/internal-app/notes/internal-app-adding-a-primitive.md`.
+section of `skills/design/notes/kit-adding-a-component.md`.
 
 The test for each item: does an internal tool (an operations console, an
 admin, a back office, or a data app) plausibly use it? Ported items are
 re-implemented with StyleX, react-aria-components, and lucide.
-`skills/internal-app/THIRD_PARTY_NOTICES.md` lists every kit file that uses ReUI behavior or
+`skills/design/THIRD_PARTY_NOTICES.md` lists every kit file that uses ReUI behavior or
 design.
 
 Decisions:
@@ -80,7 +80,7 @@ These are the shadcn/ui-based component categories in the ReUI registry
 | Calendar | Covered | `calendar.tsx`, `calendar-parts.tsx`, `date-picker.tsx` | The inline `Calendar` and `RangeCalendar`, and the calendar grids in the pickers. |
 | Card | Covered | `layout.tsx` | `Card` and `CardSection`. |
 | Carousel | Skipped | — | Internal pages show all items in lists or grids. |
-| Chart | Covered | Aperture (`design read internal-app-charts`) | Charts use Aperture. |
+| Chart | Covered | Aperture (`design read kit-charts`) | Charts use Aperture. |
 | Checkbox | Covered | `checkbox.tsx` | Includes indeterminate. |
 | Combobox | Covered | `combo-box.tsx`, `multi-select.tsx` | Single and multiple choices. |
 | Command | Covered | `command-palette.tsx` | App-wide command palette. |

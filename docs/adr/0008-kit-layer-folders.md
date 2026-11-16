@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted. Extends ADR 0005 and ADR 0007.
+Accepted. Extends ADR 0005 and ADR 0007. ADR 0010 moves the kit files to
+`skills/design/assets/kit/` and the commands to the `design` CLI.
 
 ## Context
 

@@ -3,7 +3,8 @@
 ## Status
 
 Accepted. Extends ADR 0007 and ADR 0008. Replaces the design-kit showcase
-routes of the template.
+routes of the template. ADR 0010 moves the `recipe` command to the `design`
+CLI, and the lab joins the `app` block of `design-graph.json`.
 
 ## Context
 
@@ -80,10 +81,10 @@ check, the lint, the format check, and `check` on it.
 
 - A new app has no `/design-kit` routes. `sync` removes the old showcase
   files from an app whose lock records them. An app file that still imports
-  them fails the build, and `internal-app-kit-update` says what to do.
+  them fails the build, and `kit-update` says what to do.
 - A kit component that no recipe uses has no visual check page. A change to
   such a component needs its own page in a lab scaffold that is not copied
-  back, as `internal-app-adding-a-primitive` says.
+  back, as `kit-adding-a-component` says.
 - The example stores of the recipes live in memory on the server. After a
   change, the server render and the browser can show different data until
   the next refetch. This is acceptable for example data only.

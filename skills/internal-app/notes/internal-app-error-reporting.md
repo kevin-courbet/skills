@@ -3,12 +3,12 @@ id: internal-app-error-reporting
 topic: internal-app
 summary: Where an internal app reports and records its errors, from the query client and the route error page to the Start server entry, the function middleware, the failure messages, and the router serializers.
 keywords: [error reporting, error tracker, sentry, crash reporting, exceptions, observability, error ownership, onError, createQueryClient, recordEffectCause, unexpectedFailureMessage, function middleware, start.ts, http 200 error, serialization adapter, SearchParamError, diagnostic reference]
-related: [internal-app-server-functions, internal-app-states, internal-app-routes]
+related: [internal-app-server-functions, kit-states, internal-app-routes]
 ---
 
 # Internal App Error Reporting
 
-The app owns the reporting of its errors. The kit gives a place for each report. The route error page is `RouteError`: run `internal-app docs RouteError`.
+The app owns the reporting of its errors. The kit gives a place for each report. The route error page is `RouteError`: run `design docs RouteError`.
 
 ## Query And Mutation Errors
 

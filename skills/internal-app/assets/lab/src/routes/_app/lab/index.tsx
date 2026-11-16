@@ -4,9 +4,9 @@ import { Item, ItemList } from "@/components/primitives/item";
 import { Page, PageHeader } from "@/components/primitives/layout";
 
 /**
- * The index of the lab: one row per recipe. `internal-app check` in the skill
- * fails when a recipe route is missing here, so that each recipe stays one
- * click away in a scaffold with the lab.
+ * The index of the lab: one row per recipe. In a scaffold with the lab,
+ * `design check` fails when a recipe route is missing here, so that each
+ * recipe stays one click away.
  */
 export const Route = createFileRoute("/_app/lab/")({
   staticData: { crumb: "Lab" },
@@ -18,7 +18,7 @@ function LabPage() {
     <Page width="reading">
       <PageHeader
         title="Lab"
-        description="Each recipe is a complete page for one page type. Print one with internal-app recipe <id>."
+        description="Each recipe is a complete page for one page type. Print one with design recipe <id>."
       />
       <ItemList label="Recipes">
         <Item
