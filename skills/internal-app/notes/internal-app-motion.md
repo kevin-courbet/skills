@@ -36,7 +36,7 @@ The hub notes give the method: [[motion]], [[easing-and-duration]], [[component-
 
 | Component | Motion |
 |---|---|
-| `Button`, `LinkButton`, `ToggleButton` | Scale to 0.97 while pressed, in `motion.fast` with `easeOut`. Colors use `ease`. |
+| `Button`, `LinkButton`, `ToggleButton`, `ToggleGroup` | Scale to 0.97 while pressed, in `motion.fast` with `easeOut`. Colors use `ease`. |
 | `Menu`, `Popover`, `Select`, `ComboBox` | Grow from 0.97 and fade in from the point next to the trigger. `overlay` in `helpers/overlay.tsx` uses CSS transitions, so a close during the open turns back from where it is. |
 | `Tooltip` | Opens on hover after 600ms. While one tooltip is open, and for 500ms after it closes, the next tooltip opens at once and without motion. |
 | `Dialog`, `ConfirmDialog` | Fade and rise from the center of the viewport, with no trigger origin. |

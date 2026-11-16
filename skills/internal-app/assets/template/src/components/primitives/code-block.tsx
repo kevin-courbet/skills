@@ -4,7 +4,7 @@
  *
  * @layer primitive
  * @keywords code block, code snippet, syntax highlighting, config file, json payload, sql query, shell command, diff view, copy code
- * @related LogViewer, Layout, Trace, Card
+ * @related LogViewer, Layout, Trace, Card, ToggleButton
  * @notes typography, internal-app-cards
  *
  * Use it for code that people read or copy, such as a config file, a request
@@ -47,10 +47,10 @@ import * as stylex from "@stylexjs/stylex";
 import type { StyleXStyles } from "@stylexjs/stylex";
 import { ChevronDown, WrapText } from "lucide-react";
 import { Fragment, type ReactNode, useId, useState } from "react";
-import { Button, ToggleButton } from "react-aria-components";
-import { renderStyles } from "@/lib/rac";
+import { Button } from "react-aria-components";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { CopyButton } from "./copy-button";
+import { ToggleButton } from "./toggle-button";
 import { field } from "@/components/helpers/field";
 
 export type CodeLanguage =
@@ -161,16 +161,14 @@ export function CodeBlock({
         <div {...stylex.props(styles.headerActions)}>
           {headerActions}
           <ToggleButton
+            intent="ghost"
+            iconOnly
+            icon={WrapText}
+            label="Wrap long lines"
             isSelected={wrap}
             onChange={setWrap}
-            aria-label="Wrap long lines"
-            {...renderStyles<{ isSelected: boolean }>((state) => [
-              styles.iconButton,
-              state.isSelected && styles.iconButtonOn,
-            ])}
-          >
-            <WrapText aria-hidden {...stylex.props(styles.icon)} />
-          </ToggleButton>
+            style={styles.headerToggle}
+          />
           <CopyButton value={code} label={`Copy ${title ?? "code"}`} />
         </div>
       </div>
@@ -644,23 +642,13 @@ const styles = stylex.create({
     marginInlineStart: "auto",
     flexShrink: 0,
   },
-  iconButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
+  // Matches the size, the corners, and the focus ring of the `CopyButton` beside it.
+  headerToggle: {
     width: "1.5rem",
     height: "1.5rem",
-    padding: 0,
-    borderStyle: "none",
     borderRadius: radius.sm,
-    backgroundColor: { default: "transparent", ":hover": color.subtle },
-    color: { default: color.textMuted, ":hover": color.text },
-    cursor: "pointer",
-    outlineStyle: { default: "none", ":focus-visible": "solid" },
-    outlineWidth: "2px",
-    outlineColor: color.focus,
+    outlineOffset: 0,
   },
-  iconButtonOn: { backgroundColor: color.selected, color: color.accentText },
   icon: { width: size.iconSm, height: size.iconSm, flexShrink: 0 },
   flip: { transform: "rotate(180deg)" },
   pre: {
