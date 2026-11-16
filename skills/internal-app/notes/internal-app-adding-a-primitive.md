@@ -37,7 +37,7 @@ The kit does not have these controls on purpose. Do not add them. Use the replac
 | Carousel | A list or a grid | Internal pages show all the items. |
 | Chat bubbles and message lists | `Timeline` for comments and history, and `FileUpload` with `FileTypeIcon` for files | Internal tools are not chat apps. |
 | Questionnaire | The field primitives in a form | Survey flows are not a pattern of internal tools. |
-| Scroll area | Native scrolling | It keeps the behavior of the platform. |
+| Scroll area | Native scrolling, and `ScrollShadow` when the edges must show that more content is out of view | Native scrolling keeps the behavior of the platform. `ScrollShadow` adds only the edge fades. |
 | Menubar, navigation menu | `AppShell` for the navigation, and toolbars and menus in pages | The sidebar of the app shell is the navigation. |
 | Aspect ratio | The CSS `aspectRatio` property | No primitive is necessary. |
 | Isometric icon stack | `IconTile` | It is a decoration. |

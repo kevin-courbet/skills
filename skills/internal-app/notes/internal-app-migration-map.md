@@ -14,7 +14,7 @@ These tables give the replacement for each legacy part of an app that moves onto
 
 | Legacy | Kit |
 |---|---|
-| shadcn or IntentUI `Button` | `Button` with `intent`: `default` becomes `primary`, `secondary` and `outline` become `secondary`, `ghost` stays `ghost`, and `destructive` becomes `danger`. For `link`, use `LinkButton` for navigation and a router `Link` for an inline link. |
+| shadcn or IntentUI `Button` | `Button` with `intent`: `default` becomes `primary`, `secondary` and `outline` become `secondary`, `ghost` stays `ghost`, and `destructive` becomes `danger`. For `link`, use `LinkButton` for navigation that looks like a button, and `TextLink` for a link in text. |
 | `Input`, `Label`, `FormItem`, `FormMessage` | `TextField` with `label`, `description`, and `errorMessage` |
 | `Textarea` | `TextField multiline` |
 | `Select`, `ResponsiveSelect` | `Select` for a short list, or `ComboBox` for a long list |
@@ -27,10 +27,14 @@ These tables give the replacement for each legacy part of an app that moves onto
 | `Popover` | `Popover` in `PopoverTrigger` |
 | `Tooltip` | `Tooltip` in `TooltipTrigger` |
 | `Tabs` | `Tabs` |
-| `Table` and tables that a page renders by hand | `DataTable` |
+| `Toggle` | `ToggleButton`, and `ToggleGroup` for several options of the same kind |
+| `ScrollArea` | `ScrollShadow`, or the native scroll of the element when no edge needs a fade |
+| Styled `<a>` elements and `Link` wrappers | `TextLink`, with `to` for a route or `href` for an external page |
+| `Table` and tables that a page renders by hand | `DataTable` for records that people sort, filter, page, or open. `Table` for a small read-only table of up to about 20 rows, such as the line items of an estimate with a total. |
 | `Badge` | `Badge` |
 | `Card` | `Card`, or no container when the spacing makes the group |
 | `Skeleton`, spinners | `Skeleton`, `Spinner`, and none for SSR data |
+| `Progress`, a circular progress | `ProgressBar`, or `ProgressCircle` in a table row or another narrow place |
 | `Alert`, callouts | `Alert` |
 | Toast and Sonner wrappers | `toast` from `@/components/primitives/toaster` |
 | `Breadcrumb` components | `staticData.crumb` and the loader `{ crumb }` |

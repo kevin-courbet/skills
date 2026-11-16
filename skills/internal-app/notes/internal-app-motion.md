@@ -9,7 +9,7 @@ related: [internal-app-mutations, internal-app-stylex, internal-app-tokens]
 
 # Internal App Motion
 
-The hub notes give the method: [[motion]], [[easing-and-duration]], [[component-feel]], [[reduced-motion]], and [[motion-performance]]. This note gives the tokens and the components of the kit that apply that method. Do not write a motion that the kit already has.
+The hub notes give the method: [[motion]], [[easing-and-duration]], [[component-feel]], [[reduced-motion]], and [[motion-performance]]. This note gives the kit tokens and components that apply that method. Do not write a motion that the kit already has.
 
 `src/components/helpers/motion.ts` has the helpers. Run `internal-app docs Motion` for the rules of the update and of the names. The ApprovalList recipe uses each helper on one page: run `internal-app recipe ApprovalList`.
 
@@ -36,7 +36,7 @@ The hub notes give the method: [[motion]], [[easing-and-duration]], [[component-
 
 | Component | Motion |
 |---|---|
-| `Button`, `LinkButton` | Scale to 0.97 while pressed, in `motion.fast` with `easeOut`. Colors use `ease`. |
+| `Button`, `LinkButton`, `ToggleButton` | Scale to 0.97 while pressed, in `motion.fast` with `easeOut`. Colors use `ease`. |
 | `Menu`, `Popover`, `Select`, `ComboBox` | Grow from 0.97 and fade in from the point next to the trigger. `overlay` in `helpers/overlay.tsx` uses CSS transitions, so a close during the open turns back from where it is. |
 | `Tooltip` | Opens on hover after 600ms. While one tooltip is open, and for 500ms after it closes, the next tooltip opens at once and without motion. |
 | `Dialog`, `ConfirmDialog` | Fade and rise from the center of the viewport, with no trigger origin. |
@@ -44,7 +44,7 @@ The hub notes give the method: [[motion]], [[easing-and-duration]], [[component-
 | `CommandPalette` | No motion. People open it from the keyboard many times each day. |
 | `Switch` | The thumb slides with `easeInOut`. The track color uses `ease`. |
 | Chevrons, such as in `Disclosure`, `Tree`, and `DataTable` | Turn with `easeOut`. |
-| `Spinner`, `Skeleton`, `ProgressBar` | The only motion that repeats. It shows that work runs. |
+| `Spinner`, `Skeleton`, `ProgressBar`, `ProgressCircle` | The only motion that repeats. It shows that work runs. |
 
 A new overlay without the popover surface puts `overlay.transition` before `overlay.entering` and `overlay.exiting`. Do not start an entry from `scale(0)`.
 
@@ -75,7 +75,7 @@ Under `prefers-reduced-motion: reduce`, nothing moves, but the fades and the fun
 - In a view transition, `app.css` stops the group animation. A moved item shows at its new place at once, and its old and new images cross-fade in `motion.normal`. An item that leaves or arrives fades.
 - `motionStyles.enter` and `motionStyles.changed` only fade.
 - The press scale and the switch thumb stop. Color changes stay.
-- The spinner turns more slowly. The skeleton pulse stays. An indeterminate `ProgressBar` shows a full fill that pulses in place.
+- The spinner and `ProgressCircle` turn more slowly. The skeleton pulse stays. An indeterminate `ProgressBar` shows a full fill that pulses in place.
 
 Each style that moves an element sets a `[media.reducedMotion]` value: a fade keyframe, a `none` transform, or a `0ms` duration of the transform transition. Do not add a global rule that sets all durations to zero.
 

@@ -210,6 +210,13 @@ const GOLDEN: ReadonlyArray<readonly [string, string]> = [
   ["touch queue on a shared tablet", "TouchQueue"],
   ["overview page with kpi tiles", "OverviewPage"],
   ["approval list", "ApprovalList"],
+  ["parts list with a total row", "Table"],
+  ["small static table", "Table"],
+  ["text link", "TextLink"],
+  ["external link", "TextLink"],
+  ["toggle button", "ToggleButton"],
+  ["progress ring", "ProgressCircle"],
+  ["scroll fade", "ScrollShadow"],
 ];
 
 // The same needs in other words, written after the docs, so that the docs do
