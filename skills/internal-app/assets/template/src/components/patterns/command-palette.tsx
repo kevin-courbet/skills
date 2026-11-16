@@ -145,11 +145,7 @@ export function CommandPalette({
                         id={command.id}
                         textValue={[command.label, ...(command.keywords ?? [])].join(" ")}
                         href={command.href}
-                        icon={
-                          command.icon === undefined ? undefined : (
-                            <command.icon aria-hidden {...stylex.props(styles.itemIcon)} />
-                          )
-                        }
+                        icon={command.icon}
                         shortcut={command.shortcut}
                         onAction={() => {
                           onOpenChange(false);
@@ -283,7 +279,6 @@ const styles = stylex.create({
     fontWeight: font.medium,
     color: color.textFaint,
   },
-  itemIcon: { width: size.icon, height: size.icon },
   empty: {
     paddingBlock: space.xxl,
     paddingInline: space.lg,

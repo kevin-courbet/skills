@@ -34,8 +34,9 @@
  * ```
  */
 import * as stylex from "@stylexjs/stylex";
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { color, font, media, radius, size, space } from "@/styles/tokens.stylex";
+import { color, font, media, radius, space } from "@/styles/tokens.stylex";
 
 export type BadgeIntent = "neutral" | "accent" | "success" | "warning" | "danger" | "info";
 /** `subtle` is the default tinted badge; `solid` fills with the intent color; `outline` keeps a plain surface. */
@@ -51,8 +52,11 @@ export interface BadgeProps {
   readonly size?: BadgeSize;
   /** `pill` rounds the ends fully, for counts and short tags such as "Current". */
   readonly shape?: "rounded" | "pill";
-  /** A lucide icon element before the text. It is decorative; the text carries the meaning. */
-  readonly icon?: ReactNode;
+  /**
+   * A Lucide icon component before the text, such as `Clock`. The badge sizes
+   * it to its text. It is decorative; the text carries the meaning.
+   */
+  readonly icon?: LucideIcon;
   /** The status word, the count, or the tag. */
   readonly children: ReactNode;
 }
@@ -62,7 +66,7 @@ export function Badge({
   appearance = "subtle",
   size: sizeKey = "md",
   shape = "rounded",
-  icon,
+  icon: Icon,
   children,
 }: BadgeProps) {
   return (
@@ -77,12 +81,8 @@ export function Badge({
         appearance === "outline" && outlineText[intent],
       )}
     >
-      {icon ? (
-        <span aria-hidden {...stylex.props(styles.icon)}>
-          {icon}
-        </span>
-      ) : null}
-      {appearance === "outline" && intent !== "neutral" && icon === undefined ? (
+      {Icon === undefined ? null : <Icon aria-hidden {...stylex.props(styles.icon)} />}
+      {appearance === "outline" && intent !== "neutral" && Icon === undefined ? (
         <span aria-hidden {...stylex.props(styles.outlineDot, dots[intent])} />
       ) : null}
       {children}
@@ -143,10 +143,10 @@ const styles = stylex.create({
   pill: { borderRadius: radius.full },
   outlined: { backgroundColor: color.raised, borderColor: color.border },
   outlineDot: { width: "0.375rem", height: "0.375rem", flexShrink: 0, borderRadius: radius.full },
+  // The icon follows the text size, so it stays balanced in every badge size and density.
   icon: {
-    display: "inline-flex",
-    width: size.iconSm,
-    height: size.iconSm,
+    width: "1.125em",
+    height: "1.125em",
     marginInlineStart: "-1px",
     flexShrink: 0,
   },

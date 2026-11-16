@@ -4,7 +4,7 @@
  *
  * @layer primitive
  * @keywords menu, dropdown menu, row menu, overflow menu, more actions, context menu, right click menu, kebab menu, actions menu
- * @related Button, Popover, Select, CommandPalette, DataTable, ConfirmDialog
+ * @related Button, Popover, Select, CommandPalette, DataTable, ConfirmDialog, Avatar
  * @notes overlays, internal-app-composition, internal-app-touch-work-view
  *
  * Use it for row actions and overflow actions. Do not use it for a choice that
@@ -16,11 +16,15 @@
  *   typeahead move between the items.
  * - In a `Menu` with `selectionMode`, each item shows a check mark when it is
  *   selected.
+ * - A `MenuItem` sizes its `icon` and its `avatar`. It throws when it has both,
+ *   or when it has an `avatar` but no text label or `textValue` for the initials.
  *
  * ## Rules
  * - Wrap the trigger button and the `Menu` in `MenuTrigger`.
  * - Give each `MenuItem` an `id`, and handle `onAction` on the menu.
  * - Separate groups of items with `MenuSeparator`.
+ * - Use `avatar` only when the label names a person, such as in a menu that
+ *   picks a staff member.
  *
  * ## ContextMenu
  * Wraps an area, such as a table row, a card, or a tree, and keeps the layout
@@ -34,15 +38,15 @@
  * <MenuTrigger>
  *   <Button intent="ghost" iconOnly aria-label="Job actions"><Ellipsis /></Button>
  *   <Menu onAction={(id) => runAction(job, id)}>
- *     <MenuItem id="duplicate" icon={<Copy />}>Duplicate</MenuItem>
+ *     <MenuItem id="duplicate" icon={Copy}>Duplicate</MenuItem>
  *     <MenuSeparator />
- *     <MenuItem id="delete" icon={<Trash2 />} isDestructive>Delete job</MenuItem>
+ *     <MenuItem id="delete" icon={Trash2} isDestructive>Delete job</MenuItem>
  *   </Menu>
  * </MenuTrigger>
  * ```
  */
 import * as stylex from "@stylexjs/stylex";
-import { Check } from "lucide-react";
+import { Check, type LucideIcon } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   Menu as AriaMenu,
@@ -56,6 +60,7 @@ import {
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { overlay } from "@/components/helpers/overlay";
+import { Avatar } from "@/components/primitives/avatar";
 import { useOverlayDensity } from "@/components/helpers/density";
 
 export { MenuTrigger };
@@ -89,8 +94,13 @@ export function Menu<Item extends object>({ placement = "bottom end", ...props }
 export interface MenuItemProps extends Omit<AriaMenuItemProps, "className" | "style" | "children"> {
   /** The label: a verb, or a verb and an object, such as "Delete job". */
   readonly children: ReactNode;
-  /** An icon before the label, such as a Lucide icon. */
-  readonly icon?: ReactNode;
+  /** A Lucide icon component before the label, such as `Copy`. The item sizes it. */
+  readonly icon?: LucideIcon;
+  /**
+   * Shows the avatar of the person that the label names, in place of an icon.
+   * The initials show when `src` is missing.
+   */
+  readonly avatar?: { readonly src?: string };
   /** Keyboard shortcut that runs the action outside the menu, such as "⌘D". Shown only as a hint. */
   readonly shortcut?: string;
   /** Visual warning for an irreversible step. Pair it with a confirmation. */
@@ -99,15 +109,23 @@ export interface MenuItemProps extends Omit<AriaMenuItemProps, "className" | "st
 
 export function MenuItem({
   children,
-  icon,
+  icon: Icon,
+  avatar,
   shortcut,
   isDestructive = false,
   ...props
 }: MenuItemProps) {
+  const textValue = props.textValue ?? (typeof children === "string" ? children : undefined);
+  if (Icon !== undefined && avatar !== undefined)
+    throw new Error(`MenuItem "${String(props.id)}" has both an icon and an avatar.`);
+  if (avatar !== undefined && textValue === undefined)
+    throw new Error(
+      `MenuItem "${String(props.id)}" has an avatar but no text label or textValue for the initials.`,
+    );
   return (
     <AriaMenuItem
       {...props}
-      textValue={props.textValue ?? (typeof children === "string" ? children : undefined)}
+      textValue={textValue}
       {...renderStyles<{ isFocused: boolean; isDisabled: boolean }>((state) => [
         styles.item,
         state.isFocused && styles.itemFocused,
@@ -120,7 +138,13 @@ export function MenuItem({
           {selectionMode === "none" ? null : (
             <Check aria-hidden {...stylex.props(styles.check, !isSelected && styles.unchecked)} />
           )}
-          {icon ? <span {...stylex.props(styles.icon)}>{icon}</span> : null}
+          {Icon === undefined ? null : <Icon aria-hidden {...stylex.props(styles.icon)} />}
+          {avatar === undefined || textValue === undefined ? null : (
+            // The label names the person, so the avatar is decoration here.
+            <span aria-hidden {...stylex.props(styles.avatar)}>
+              <Avatar name={textValue} src={avatar.src} size="xs" />
+            </span>
+          )}
           <span {...stylex.props(styles.label)}>{children}</span>
           {shortcut ? <kbd {...stylex.props(styles.shortcut)}>{shortcut}</kbd> : null}
         </>
@@ -245,12 +269,12 @@ const styles = stylex.create({
   itemDestructive: { color: color.danger },
   itemDisabled: { opacity: "0.5" },
   icon: {
-    display: "inline-flex",
     width: size.icon,
     height: size.icon,
     color: color.textMuted,
     flexShrink: 0,
   },
+  avatar: { display: "inline-flex", flexShrink: 0 },
   check: { width: size.iconSm, height: size.iconSm, flexShrink: 0, color: color.accentText },
   unchecked: { visibility: "hidden" },
   label: { flex: "1", minWidth: 0 },

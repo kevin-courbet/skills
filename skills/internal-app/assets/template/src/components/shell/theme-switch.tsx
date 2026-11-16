@@ -59,13 +59,13 @@ export function ThemeSwitch() {
         selectedKeys={[value]}
         onAction={(key) => mutation.mutate(Schema.decodeUnknownSync(ThemeChoice)(key))}
       >
-        <MenuItem id="light" icon={<Sun width={16} height={16} />}>
+        <MenuItem id="light" icon={Sun}>
           Light
         </MenuItem>
-        <MenuItem id="dark" icon={<Moon width={16} height={16} />}>
+        <MenuItem id="dark" icon={Moon}>
           Dark
         </MenuItem>
-        <MenuItem id="system" icon={<Monitor width={16} height={16} />}>
+        <MenuItem id="system" icon={Monitor}>
           System
         </MenuItem>
       </Menu>
