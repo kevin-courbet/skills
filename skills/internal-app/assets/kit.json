@@ -29,6 +29,7 @@
     "src/components/primitives/hover-card.tsx",
     "src/components/primitives/icon-tile.tsx",
     "src/components/primitives/identifier.tsx",
+    "src/components/primitives/indicator.tsx",
     "src/components/primitives/item.tsx",
     "src/components/primitives/layout.tsx",
     "src/components/primitives/menu.tsx",

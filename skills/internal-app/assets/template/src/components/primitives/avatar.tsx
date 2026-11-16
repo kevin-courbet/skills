@@ -3,7 +3,7 @@
  *
  * @layer primitive
  * @keywords avatar, user picture, profile image, initials, people, assignee, avatar group, team members, owners
- * @related Item, Timeline, IconTile, HoverCard, Layout
+ * @related Item, Timeline, IconTile, HoverCard, Layout, Indicator
  * @notes accessibility, grouped-values, internal-app-composition
  *
  * Use it to show who a person is next to the name. Do not use it for a thing
@@ -13,7 +13,8 @@
  * ## Behavior
  * - The avatar shows the initials of the first and the last word of `name`
  *   when `src` is missing or the image fails to load.
- * - `name` is the accessible name and the hover title.
+ * - `name` is the accessible name and the hover title. `label` replaces
+ *   them, such as for the name and the status that an `Indicator` gives.
  * - `AvatarGroup` shows `max` avatars and one "+N" count for the rest. The
  *   count names the other people for screen readers and on hover.
  *
@@ -47,13 +48,18 @@ export interface AvatarProps {
   readonly src?: string;
   /** `xs` 18px sits inline in a line of text. `sm` is 24px, `md` 32px, and `lg` 40px. */
   readonly size?: AvatarSize;
+  /**
+   * Accessible name and hover title when they must tell more than `name`,
+   * such as "Sam Lee, online" from an `Indicator`. The initials still come from `name`.
+   */
+  readonly label?: string;
 }
 
-export function Avatar({ name, src, size = "md" }: AvatarProps) {
+export function Avatar({ name, src, size = "md", label = name }: AvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = src !== undefined && failedSrc !== src;
   return (
-    <span role="img" aria-label={name} title={name} {...stylex.props(styles.avatar, sizes[size])}>
+    <span role="img" aria-label={label} title={label} {...stylex.props(styles.avatar, sizes[size])}>
       {showImage ? (
         <img src={src} alt="" onError={() => setFailedSrc(src)} {...stylex.props(styles.image)} />
       ) : (
