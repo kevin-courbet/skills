@@ -195,6 +195,7 @@ const styles = stylex.create({
     height: "2.5rem",
     paddingBlock: 0,
     fontWeight: font.medium,
+    color: color.textMuted,
     whiteSpace: "nowrap",
     backgroundColor: color.subtle,
     borderBottomWidth: "1px",

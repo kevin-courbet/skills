@@ -1220,7 +1220,7 @@ const styles = stylex.create({
     textAlign: "start",
     fontSize: font.md,
     fontWeight: font.medium,
-    color: color.text,
+    color: color.textMuted,
     whiteSpace: "nowrap",
     backgroundColor: color.subtle,
     borderBottomWidth: "1px",

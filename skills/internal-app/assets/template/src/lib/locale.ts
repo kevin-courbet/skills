@@ -3,11 +3,10 @@ export const appLocale = "en-GB";
 export const appTimeZone = "UTC";
 
 const integer = new Intl.NumberFormat(appLocale);
-const currency = new Intl.NumberFormat(appLocale, {
-  style: "currency",
-  currency: "EUR",
-  maximumFractionDigits: 0,
-});
+// Amounts show cents, because estimates and invoices must add up to the cent.
+// An app whose amounts are always whole, such as a budget overview, can set
+// `maximumFractionDigits: 0` here.
+const currency = new Intl.NumberFormat(appLocale, { style: "currency", currency: "EUR" });
 const dateTime = new Intl.DateTimeFormat(appLocale, {
   dateStyle: "medium",
   timeStyle: "short",

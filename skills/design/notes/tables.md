@@ -2,7 +2,7 @@
 id: tables
 topic: data
 summary: Table alignment, quiet headings, row rules only between rows, its own surface, and narrow-screen behavior.
-keywords: [table, tables, data table, grid, table row hover, row hover, zebra striping, striped rows, table border, table header, column alignment, numeric columns, horizontal scroll, sticky header]
+keywords: [table, tables, data table, grid, table row hover, row hover, zebra striping, striped rows, table border, table header, column alignment, numeric columns, horizontal scroll, sticky header, column heading, heading case, uppercase headings]
 requires: [hierarchy]
 related: [graphite, dashboards, responsive, typography]
 ---
@@ -31,7 +31,7 @@ Give each table its own surface. The surface separates the table from the page a
 - Put the table in a container with a 1px border in the subtle rule color and an 8px radius.
 - Use a raised surface for the container.
 - Give the header row a band in a different tone from the container.
-- Keep headings quiet. Use `0.75rem`, uppercase, `0.06em` letter-spacing, weight 600, and the muted text color.
+- Keep headings quiet. Use sentence case, the text size of the cells, a medium weight, and the muted text color. Do not use uppercase headings. They are slower to read, and they make the columns wider.
 - Use the product font for headings, not a monospace font.
 - Give cells `14px 16px` padding.
 - Put rules only between rows. Do not put a rule after the last row. Do not add column rules.
