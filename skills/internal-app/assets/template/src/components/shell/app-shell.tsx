@@ -1,5 +1,5 @@
 /**
- * The frame of every signed-in page: the sidebar navigation, the top bar, and the page in a recessed panel.
+ * The frame of every signed-in page: the sidebar navigation, the top bar, and the page in a panel that is lighter than the sidebar.
  *
  * @layer shell
  * @keywords app shell, sidebar navigation, side nav, app frame, top bar, layout of the app, navigation groups, brand, command palette, mobile navigation

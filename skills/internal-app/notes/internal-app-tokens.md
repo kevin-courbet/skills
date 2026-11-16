@@ -36,10 +36,12 @@ Each component uses these role names and no other color:
 
 ## Surface Depth
 
-The order of the surfaces, from recessed to raised, is `page`, `inset`, `frame`, `raised`, `subtle`, and `overlay`.
+The order of the surfaces, from recessed to raised, is `frame`, `inset`, `page`, `raised`, `subtle`, and `overlay`.
 
-- The content panel (`page`) is the deepest surface, so the cards on `raised` stand clearly off it.
-- The sidebar (`frame`) is lighter than the panel, so the navigation is a separate plane.
+- The sidebar (`frame`) is the darkest base surface in the two themes. The navigation stays quiet behind the content.
+- The content panel (`page`) is lighter than the sidebar, so the work comes forward. In the light theme it is almost white.
+- Cards on `raised` stand off the panel with a border in the light theme and with a lighter fill in the dark theme.
+- `inset` wells are darker than the panel, so they read as recessed.
 - Keep these gaps when you tune the palette. Equal values make the app look washed out.
 
 ## Other Token Groups

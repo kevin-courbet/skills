@@ -7,20 +7,21 @@ import * as stylex from "@stylexjs/stylex";
  * OKLCH keeps perceptual steps even; the hue 260 gives neutrals a slight cool cast.
  * Dark neutrals keep chroma near 0.003 so large surfaces read as neutral, not blue.
  *
- * Surface order, from recessed to raised: page, inset, frame, raised, subtle, overlay.
- * The page behind content is the deepest surface so raised cards stand clearly off it,
- * and the sidebar frame sits lighter than the page so navigation reads as its own plane.
+ * Surface order, from recessed to raised: frame, inset, page, raised, subtle, overlay.
+ * The sidebar frame is the darkest base surface in both themes, so the content panel
+ * comes forward and the navigation stays quiet behind it. Inset wells sit below the
+ * panel, and cards sit on it with a border in light and a lighter fill in dark.
  * Keep that order and the accent contrast when you change the values.
  */
 export const lightBrand = stylex.defineConsts({
-  frame: "oklch(0.988 0.002 260)",
-  frameHover: "oklch(0.952 0.004 260)",
-  frameSelected: "oklch(0.93 0.005 260)",
-  page: "oklch(0.948 0.004 260)",
+  frame: "oklch(0.958 0.004 260)",
+  frameHover: "oklch(0.928 0.005 260)",
+  frameSelected: "oklch(0.905 0.006 260)",
+  page: "oklch(0.995 0.001 260)",
   subtle: "oklch(0.965 0.003 260)",
   raised: "oklch(1 0 0)",
   overlay: "oklch(1 0 0)",
-  inset: "oklch(0.958 0.004 260)",
+  inset: "oklch(0.962 0.003 260)",
   text: "oklch(0.18 0.012 260)",
   textMuted: "oklch(0.44 0.014 260)",
   textFaint: "oklch(0.5 0.012 260)",
@@ -40,14 +41,14 @@ export const lightBrand = stylex.defineConsts({
 });
 
 export const darkBrand = stylex.defineConsts({
-  frame: "oklch(0.195 0.003 260)",
-  frameHover: "oklch(0.24 0.004 260)",
-  frameSelected: "oklch(0.27 0.004 260)",
-  page: "oklch(0.13 0.002 260)",
+  frame: "oklch(0.13 0.002 260)",
+  frameHover: "oklch(0.18 0.003 260)",
+  frameSelected: "oklch(0.215 0.004 260)",
+  page: "oklch(0.17 0.003 260)",
   subtle: "oklch(0.245 0.004 260)",
   raised: "oklch(0.205 0.003 260)",
   overlay: "oklch(0.245 0.005 260)",
-  inset: "oklch(0.158 0.003 260)",
+  inset: "oklch(0.145 0.003 260)",
   text: "oklch(0.965 0.003 260)",
   textMuted: "oklch(0.75 0.006 260)",
   textFaint: "oklch(0.67 0.006 260)",

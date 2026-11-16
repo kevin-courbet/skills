@@ -2,7 +2,7 @@
 id: depth
 topic: layout
 summary: Surfaces, borders, and one small elevation scale separate regions without decoration.
-keywords: [depth, elevation, shadow, drop shadow, box shadow, surface, raised, inset, border, borders, radius, corner radius, layering, z-index, z-index scale, stacking order]
+keywords: [depth, elevation, shadow, drop shadow, box shadow, surface, raised, inset, border, borders, radius, corner radius, layering, z-index, z-index scale, stacking order, sidebar color, navigation surface, content panel, app shell]
 requires: [spacing]
 related: [dark-theme, color, finishing-details]
 ---
@@ -31,6 +31,11 @@ Separate regions with space and surfaces first. Add depth only when it explains 
 Define a semantic z-index scale, not arbitrary numbers. From low to high: dropdown, sticky, modal backdrop, modal, toast, and tooltip.
 
 On a dark theme, shadows are weak. [[dark-theme#surface-hierarchy]] gives the rules.
+
+## App Shell Surfaces
+
+- Make the navigation frame darker than the content panel, in the light theme and in the dark theme. The content is the work, so it comes forward. The navigation stays behind it.
+- Make the content panel the lightest base surface. Do not put white controls on a gray panel. They look pasted on, and the panel looks dull.
 
 ## Inset And Raised Surfaces
 
