@@ -231,7 +231,13 @@ function planSync(appDir: string): { entries: Array<SyncEntry>; lock: Lock | und
   // Only a file that the lock records is a kit file. An app file at an old kit
   // path, such as the button of another UI library, does not move.
   const moves = new Map(Object.entries(manifest.moves).filter(([from]) => lock?.files[from] !== undefined));
-  const movedFrom = new Map([...moves].map(([from, to]) => [to, from]));
+  const movedFrom = new Map<string, string>();
+  for (const [from, to] of moves) {
+    const other = movedFrom.get(to);
+    // A kit file that moved twice has two old paths. An app has only one of them.
+    if (other !== undefined) throw new CliError(`${join(appDir, lockName)} records two old paths of ${to}: ${other} and ${from}. Remove the stale path from the lock.`);
+    movedFrom.set(to, from);
+  }
   const entries: Array<SyncEntry> = [];
   for (const path of manifest.files) {
     const kitHash = sha256(join(templateDir, path));

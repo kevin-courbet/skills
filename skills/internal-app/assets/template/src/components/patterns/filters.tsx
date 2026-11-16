@@ -79,7 +79,7 @@ import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { Button } from "@/components/primitives/button";
 import { ControlSizeProvider, useControlSize } from "@/components/helpers/control-size";
-import { RangeCalendarView } from "@/components/helpers/calendar";
+import { RangeCalendarView } from "@/components/helpers/calendar-parts";
 import {
   type DateRange,
   DateRangePresetList,

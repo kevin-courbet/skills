@@ -11,7 +11,7 @@ const DESIGN = join(SKILLS, "design/scripts/design");
 
 // These docs are longer than the limit, so the docs command prints their
 // outline and the agent reads one part at a time.
-const OUTLINE_DOCS = ["AppShell", "DataTable", "EventCalendar", "FormLayout", "Gantt", "Layout", "WorkQueue"];
+const OUTLINE_DOCS = ["AppShell", "Calendar", "DataTable", "EventCalendar", "FormLayout", "Gantt", "Layout", "WorkQueue"];
 
 let app = "";
 
@@ -170,6 +170,15 @@ const GOLDEN: ReadonlyArray<readonly [string, string]> = [
   ["reorder a list by drag", "SortableList"],
   ["gantt chart", "Gantt"],
   ["week calendar of events", "EventCalendar"],
+  ["inline calendar", "Calendar"],
+  ["range calendar", "Calendar"],
+  ["calendar with unavailable dates", "Calendar"],
+  ["jump to a month and a year", "Calendar"],
+  ["color swatch", "ColorSwatch"],
+  ["swatch picker", "ColorSwatch"],
+  ["notification count on an icon", "Indicator"],
+  ["online dot on an avatar", "Indicator"],
+  ["unread count", "Indicator"],
   ["trend chart", "TrendChart"],
   ["copy to clipboard", "CopyButton"],
   ["command palette", "CommandPalette"],
@@ -238,6 +247,14 @@ const PARAPHRASES: ReadonlyArray<readonly [string, string]> = [
   ["change the order of rows by dragging", "SortableList"],
   ["plan of tasks over weeks", "Gantt"],
   ["schedule of appointments", "EventCalendar"],
+  ["pick a day from a month that stays on the page", "Calendar"],
+  ["booking days shown as a month grid", "Calendar"],
+  ["small colored circle before a team name", "ColorSwatch"],
+  ["pick a color for a tag", "ColorSwatch"],
+  ["label color for a project", "ColorSwatch"],
+  ["small number in the corner of a button", "Indicator"],
+  ["mark on a profile picture that the person is online", "Indicator"],
+  ["how many messages wait, shown on the icon", "Indicator"],
   ["small chart of a value over time", "Sparkline"],
   ["drawer that opens from the side", "Sheet"],
   ["jump to any page with the keyboard", "CommandPalette"],

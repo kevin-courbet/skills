@@ -3,7 +3,7 @@
  *
  * @layer primitive
  * @keywords tag group, tags, labels, chips, recipients, removable tags, tag list, token list
- * @related Filters, MultiSelect, Checkbox, Badge
+ * @related Filters, MultiSelect, Checkbox, Badge, ColorSwatch
  * @notes grouped-values, form-fields, internal-app-forms
  *
  * Use it to show a set of short values and, with `onRemove`, to let people
@@ -17,6 +17,8 @@
  * - With `onRemove`, each tag gets a remove button with the name
  *   "Remove <label>", and Backspace and Delete remove the focused tag.
  * - Without tags, the group shows `emptyLabel`.
+ * - A tag with `color` shows a `ColorSwatch` before the label, for a
+ *   category such as a project.
  *
  * ## Rules
  * - Give each tag one short value. Do not join several facts in one tag.
@@ -38,12 +40,16 @@ import { Button, Tag as AriaTag, TagGroup as AriaTagGroup, TagList } from "react
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import { field, FieldDescription, FieldLabel } from "@/components/helpers/field";
+import { ColorSwatch } from "@/components/primitives/color-swatch";
+import type { CategoryColor } from "@/styles/category";
 
 export interface TagItem<Value extends string> {
   /** Stable id of the value. `onRemove` receives it. */
   readonly id: Value;
   /** Visible text of the tag. */
   readonly label: string;
+  /** Shows a `ColorSwatch` before the label, for a tag that is a category. */
+  readonly color?: CategoryColor;
 }
 
 export interface TagGroupProps<Value extends string> {
@@ -101,6 +107,11 @@ export function TagGroup<Value extends string>({
           >
             {({ allowsRemoving }) => (
               <>
+                {item.color === undefined ? null : (
+                  <span {...stylex.props(styles.swatch)}>
+                    <ColorSwatch color={item.color} />
+                  </span>
+                )}
                 {item.label}
                 {allowsRemoving ? (
                   <Button
@@ -143,6 +154,7 @@ const styles = stylex.create({
     outlineStyle: "none",
   },
   tagStatic: { paddingInlineEnd: space.sm },
+  swatch: { display: "inline-flex", marginInlineEnd: space.xs },
   tagFocused: {
     outlineStyle: "solid",
     outlineWidth: "2px",

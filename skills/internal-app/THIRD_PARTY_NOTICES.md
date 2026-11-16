@@ -71,6 +71,10 @@ Each file has a one-line header that points to this notice.
 
 | Kit file (under `assets/template/`) | HeroUI source (under `packages/react/src/components/`) |
 |---|---|
+| `src/components/helpers/calendar-parts.tsx` | Calendar, RangeCalendar, CalendarYearPicker (`calendar/`, `range-calendar/`, `calendar-year-picker/`) |
+| `src/components/primitives/calendar.tsx` | Calendar, RangeCalendar, CalendarYearPicker (`calendar/`, `range-calendar/`, `calendar-year-picker/`) |
+| `src/components/primitives/color-swatch.tsx` | ColorSwatch, ColorSwatchPicker (`color-swatch/`, `color-swatch-picker/`) |
+| `src/components/primitives/indicator.tsx` | Badge (`badge/`) |
 | `src/components/primitives/progress-circle.tsx` | ProgressCircle (`progress-circle/`) |
 | `src/components/primitives/scroll-shadow.tsx` | ScrollShadow (`scroll-shadow/`) |
 | `src/components/primitives/table.tsx` | Table (`table/`) |

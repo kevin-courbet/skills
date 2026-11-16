@@ -51,19 +51,34 @@ function write(app: string, file: string, text: string) {
   writeFileSync(join(app, file), text);
 }
 
+// A kit file that moved twice has two old paths, and an app has one of them.
+// The old layout puts each kit file at the first old path in kit.json.
+const OLD_PATHS: ReadonlyMap<string, string> = new Map(
+  Object.entries(MANIFEST.moves)
+    .reverse()
+    .map(([from, to]) => [to, from]),
+);
+
+function readLock(app: string): { kit: string; files: Record<string, string> } {
+  return JSON.parse(readFileSync(join(app, LOCK), "utf8")) as { kit: string; files: Record<string, string> };
+}
+
+// Moves a kit file of the app from one path to another and records the new path in the lock.
+function moveKitFile(app: string, lock: { files: Record<string, string> }, from: string, to: string) {
+  mkdirSync(dirname(join(app, to)), { recursive: true });
+  renameSync(join(app, from), join(app, to));
+  delete lock.files[from];
+  lock.files[to] = sha256(join(app, to));
+}
+
 // A new app with the kit files at their old paths and a lock that records
 // them there, as an app that synced an older kit has.
 function oldLayoutApp(): string {
   const app = join(mkdtempSync(join(tmpdir(), "internal-app-sync-")), "app");
   const created = spawnSync(process.execPath, [INTERNAL_APP, "new", app], { encoding: "utf8" });
   if (created.status !== 0) throw new Error(created.stderr);
-  const lock = JSON.parse(readFileSync(join(app, LOCK), "utf8")) as { kit: string; files: Record<string, string> };
-  for (const [from, to] of Object.entries(MANIFEST.moves)) {
-    mkdirSync(dirname(join(app, from)), { recursive: true });
-    renameSync(join(app, to), join(app, from));
-    delete lock.files[to];
-    lock.files[from] = sha256(join(app, from));
-  }
+  const lock = readLock(app);
+  for (const [to, from] of OLD_PATHS) moveKitFile(app, lock, to, from);
   writeFileSync(join(app, LOCK), `${JSON.stringify(lock, null, 2)}\n`);
   write(
     app,
@@ -128,6 +143,40 @@ describe("sync of an app with the old kit layout", () => {
     const lock = JSON.parse(readFileSync(join(app, LOCK), "utf8")) as { files: Record<string, string> };
     expect(Object.keys(lock.files).sort()).toEqual([...MANIFEST.files].sort());
     expect(sync(app).report.pending).toEqual([]);
+  });
+
+  test("a kit file that moved twice moves from each of its old paths", () => {
+    const twice = [...new Set(Object.values(MANIFEST.moves))].filter(
+      (to) => Object.values(MANIFEST.moves).filter((target) => target === to).length > 1,
+    );
+    expect(twice.length).toBeGreaterThan(0);
+    for (const to of twice) {
+      const firstPath = OLD_PATHS.get(to)!;
+      for (const [from] of Object.entries(MANIFEST.moves).filter(([, target]) => target === to)) {
+        if (from === firstPath) continue;
+        const app = oldLayoutApp();
+        const lock = readLock(app);
+        moveKitFile(app, lock, firstPath, from);
+        writeFileSync(join(app, LOCK), `${JSON.stringify(lock, null, 2)}\n`);
+        const { code, report } = sync(app, "--write");
+        expect(code).toBe(0);
+        expect(report.applied).toContainEqual(expect.objectContaining({ status: "move", path: to, from }));
+        expect(existsSync(join(app, from))).toBe(false);
+        expect(existsSync(join(app, to))).toBe(true);
+      }
+    }
+  });
+
+  test("it fails when the lock records two old paths of one kit file", () => {
+    const app = oldLayoutApp();
+    const lock = readLock(app);
+    const [to, firstPath] = [...OLD_PATHS].find(([target]) => Object.values(MANIFEST.moves).filter((value) => value === target).length > 1)!;
+    const other = Object.entries(MANIFEST.moves).find(([from, target]) => target === to && from !== firstPath)![0];
+    lock.files[other] = lock.files[firstPath]!;
+    writeFileSync(join(app, LOCK), `${JSON.stringify(lock, null, 2)}\n`);
+    const result = spawnSync(process.execPath, [INTERNAL_APP, "sync", app, "--json"], { encoding: "utf8" });
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(`records two old paths of ${to}`);
   });
 
   test("it fails on an import that it cannot rewrite, with the file and the line, and writes nothing", () => {
