@@ -2,7 +2,7 @@
 id: internal-app-adding-a-primitive
 topic: internal-app
 summary: Add a missing control to the kit in this skill, with its doc comment, a visual check in the lab, the template checks, kit.json, and a sync into each app, and the controls that the kit leaves out on purpose.
-keywords: [add a primitive, new component, missing control, extend the kit, kit component, one-off control, port reui, doc comment, kit.json, lab, recipe, color picker, phone input, rating, emoji picker, signature pad, otp input, carousel, chat, scroll area, menubar, navigation menu]
+keywords: [add a primitive, new component, missing control, extend the kit, kit component, one-off control, port reui, port heroui, doc comment, kit.json, lab, recipe, color picker, phone input, rating, emoji picker, signature pad, otp input, carousel, chat, scroll area, menubar, navigation menu]
 related: [internal-app-page-patterns, internal-app-composition, method]
 ---
 
@@ -19,9 +19,9 @@ Kit components live in this skill, not in an app. Do not build a one-off control
 5. Copy the file into `assets/template/src`, add its path to the `files` of `assets/kit.json`, and run `bash scripts/validate-skills` in the skills repository. Copy a changed recipe into `assets/lab`.
 6. In each app, run `sync --write`.
 
-## Ports Of ReUI
+## Ports Of ReUI And HeroUI
 
-Several kit components use the behavior and the design of free ReUI components. `THIRD_PARTY_NOTICES.md` in this skill lists them with the ReUI license. Keep the license line first in a ported file. The skills repository records which ReUI components the kit covers in `docs/reui-coverage.md`.
+Several kit components use the behavior and the design of free ReUI components (MIT License) or of HeroUI v3 components (Apache License 2.0). `THIRD_PARTY_NOTICES.md` in this skill lists them with the two licenses. Keep the license line first in a ported file. For a new port, add the file to the table of its source in `THIRD_PARTY_NOTICES.md`. The skills repository records which components of each source the kit covers in `docs/reui-coverage.md` and `docs/heroui-coverage.md`.
 
 ## Controls The Kit Leaves Out
 
