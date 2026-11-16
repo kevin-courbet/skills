@@ -35,7 +35,7 @@ ReUI-authored parts of `registry/bases/base/ui`).
 | Badge | Ported (phase 1) | `badge.tsx` | Status labels. |
 | Cascader | Ported (phase 1) | `cascader.tsx` | Choices from a tree, such as region and city. |
 | Code Block | Ported | `code-block.tsx` | Config, payloads, queries, diffs, and diagnostics with copy and wrap. A small built-in highlighter replaces Shiki and covers TS, TSX, JS, JSX, JSON, shell, Bash, SQL, YAML, CSS, HTML, Python, Go, Rust, TOML, Dockerfile, Markdown, and diff with no bundle cost. |
-| Color Picker | Skipped | — | Kit colors come from tokens. Free colors in app data break the token rule; pick an `intent` from a Select. |
+| Color Picker | Skipped | — | A free color in app data breaks the token rule. People pick a key of the category palette with `ColorSwatchPicker` in `color-swatch.tsx`. |
 | Data Grid | Ported (phase 1) | `data-table.tsx` | Tables with selection, pinning, resizing, and virtualization. |
 | Date Selector | Covered | `date-picker.tsx`, `date-range-picker.tsx`, `filters.tsx` | Dates, ranges with presets, and date filters. |
 | Emoji Picker | Skipped | — | Internal tools do not need emoji input. |

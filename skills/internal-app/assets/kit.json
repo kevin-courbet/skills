@@ -15,6 +15,7 @@
     "src/components/primitives/cascader.tsx",
     "src/components/primitives/checkbox.tsx",
     "src/components/primitives/code-block.tsx",
+    "src/components/primitives/color-swatch.tsx",
     "src/components/primitives/combo-box.tsx",
     "src/components/primitives/confirm-dialog.tsx",
     "src/components/primitives/copy-button.tsx",

@@ -29,7 +29,7 @@ The kit does not have these controls on purpose. Do not add them. Use the replac
 
 | Control | Use instead | Reason |
 |---|---|---|
-| Color picker | A `Select` of an `intent` | The colors come from tokens. A free color in app data breaks the token rule. |
+| Free color picker | `ColorSwatchPicker` over the category palette | The colors come from tokens. A free color in app data breaks the token rule. The app stores the key of a palette color. |
 | Phone input | `TextField` with `type="tel"` | Correct formatting needs a library for phone numbers. |
 | Star rating | `RadioGroup` or `Select` for a score | Star ratings are a pattern for consumers. |
 | Emoji picker, signature pad | Nothing | Internal tools do not need them. |

@@ -3,7 +3,7 @@
  *
  * @layer primitive
  * @keywords select, dropdown, single choice, pick one option, option list, picker, toolbar select, choose from a list
- * @related RadioGroup, ComboBox, Cascader, MultiSelect, ListBox, Layout
+ * @related RadioGroup, ComboBox, Cascader, MultiSelect, ListBox, Layout, ColorSwatch
  * @notes form-choices, form-fields, internal-app-forms
  *
  * Use it for one choice from more than about seven options, or from a short
@@ -15,7 +15,7 @@
  *
  * ## Behavior
  * - An option shows its `description` under the label. An option with `intent`
- *   shows a status dot.
+ *   shows a status dot, and an option with `color` shows a `ColorSwatch`.
  * - The selected option shows a check mark. The trigger shows only the label.
  * - The popover takes the width of the trigger and the density of the page.
  * - The height follows the nearest `ControlSizeProvider`.

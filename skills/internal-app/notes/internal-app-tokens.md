@@ -2,7 +2,7 @@
 id: internal-app-tokens
 topic: internal-app
 summary: The token files of the kit, which file the app owns, the semantic color roles, the depth of the frame, the panel, and the cards, the other token groups, and the category colors for projects, teams, or tags.
-keywords: [StyleX tokens, design tokens, token files, tokens.stylex.ts, palette.stylex.ts, brand.stylex.ts, semantic color roles, color roles, which token, background color, text color, surface depth, frame color, raised surface, inset, overlay, status colors, shadow tokens, font tokens, space tokens, radius tokens, media tokens, container queries, z-index layer, category colors, categoryColor, project color, tag color]
+keywords: [StyleX tokens, design tokens, token files, tokens.stylex.ts, palette.stylex.ts, brand.stylex.ts, semantic color roles, color roles, which token, background color, text color, surface depth, frame color, raised surface, inset, overlay, status colors, shadow tokens, font tokens, space tokens, radius tokens, media tokens, container queries, z-index layer, category colors, categoryColor, category palette, palette key, project color, tag color]
 specializes: [semantic-tokens, depth]
 related: [internal-app-brand-colors, internal-app-themes, internal-app-density, internal-app-stylex]
 ---
@@ -55,16 +55,17 @@ The order of the surfaces, from recessed to raised, is `page`, `inset`, `frame`,
 
 ## Category Colors
 
-`src/styles/category.ts` gives colors to categories that a hue identifies, such as projects, teams, or tags. `categoryColor(hue, role)` returns the `text`, `surface`, or `line` color for a hue from 0 to 360.
+`src/styles/category.ts` gives colors to categories, such as projects, teams, or tags. The palette is fixed. Each color has a key, such as `"blue"`, and the app stores the key with the record, never a color value. `categoryColor(key, role)` returns the `text`, `surface`, `line`, or `onLine` color of a key.
 
 - All categories use the same lightness and chroma for a role. Thus only the hue makes them different, and no category is more prominent than a different category.
 - The value contains `light-dark()`, so it follows `color-scheme`. `AppDocument` and the explicit themes set `color-scheme`.
-- Apply the value through a style function:
+- People pick a key with `ColorSwatchPicker`. `ColorSwatch` shows the color next to the name of the category. `Select` options and `TagGroup` tags with `color` show it before the label.
+- Validate a stored key with `categoryColorKeys`, such as `Schema.Literals(categoryColorKeys)`. `categoryColor` throws for a key that is not in the palette.
+- Apply a value through a style function:
 
 ```ts
 const styles = stylex.create({ ink: (value: string) => ({ color: value }) });
-<span {...stylex.props(styles.ink(categoryColor(project.hue, "text")))} />
+<span {...stylex.props(styles.ink(categoryColor(project.color, "text")))} />
 ```
 
-- Store the hue with the record.
 - Do not use category colors for a status. Use the status roles.

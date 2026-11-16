@@ -14,7 +14,7 @@
  * ## Behavior
  * - Typing filters the options. The chevron button opens the full list.
  * - An option shows its `description` under the label. An option with `intent`
- *   shows a status dot.
+ *   shows a status dot, and an option with `color` shows a `ColorSwatch`.
  * - The popover takes the width of the field and the density of the page.
  * - The height follows the nearest `ControlSizeProvider`.
  *

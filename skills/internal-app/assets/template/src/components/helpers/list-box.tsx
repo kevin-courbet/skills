@@ -3,8 +3,8 @@
  * Filters.
  *
  * @layer helper
- * @keywords option list, list box, listbox, options in a popover, option status dot, dropdown options, list option
- * @related Select, MultiSelect, ComboBox, Filters, Item
+ * @keywords option list, list box, listbox, options in a popover, option status dot, option color swatch, dropdown options, list option
+ * @related Select, MultiSelect, ComboBox, Filters, Item, ColorSwatch
  * @notes internal-app-adding-a-primitive
  *
  * It is a part of the kit fields. Do not use it on a page: use `Select`,
@@ -14,7 +14,8 @@
  * ## Behavior
  * - An option shows its `description` under the label, and a check mark while
  *   it is selected.
- * - An option with `intent` shows a status dot before the label.
+ * - An option with `intent` shows a status dot before the label. An option
+ *   with `color` shows a `ColorSwatch` before the label.
  * - The list scrolls when it is higher than 18rem.
  *
  * ## Rules
@@ -35,17 +36,32 @@ import { ListBox, ListBoxItem, type ListBoxProps } from "react-aria-components";
 import { renderStyles } from "@/lib/rac";
 import { color, font, radius, size, space } from "@/styles/tokens.stylex";
 import type { BadgeIntent } from "@/components/primitives/badge";
+import { ColorSwatch } from "@/components/primitives/color-swatch";
+import type { CategoryColor } from "@/styles/category";
 
-export interface ListOption<Value extends string> {
+interface ListOptionBase<Value extends string> {
   /** Stable id of the option. The field value holds it. */
   readonly id: Value;
   /** Visible text of the option, in sentence case. */
   readonly label: string;
   /** Quiet line under the label. */
   readonly description?: string;
-  /** Shows a status dot before the label, for options that are statuses. */
-  readonly intent?: BadgeIntent;
 }
+
+/** An option has one mark before the label at most: a status dot or a color swatch. */
+export type ListOption<Value extends string> = ListOptionBase<Value> &
+  (
+    | {
+        /** Shows a status dot before the label, for options that are statuses. */
+        readonly intent?: BadgeIntent;
+        readonly color?: undefined;
+      }
+    | {
+        /** Shows a `ColorSwatch` before the label, for options that are categories. */
+        readonly color: CategoryColor;
+        readonly intent?: undefined;
+      }
+  );
 
 export type OptionListProps<Value extends string> = Omit<
   ListBoxProps<ListOption<Value>>,
@@ -73,6 +89,7 @@ export function OptionList<Value extends string>({ options, ...props }: OptionLi
               {option.intent === undefined ? null : (
                 <span aria-hidden {...stylex.props(styles.dot, dots[option.intent])} />
               )}
+              {option.color === undefined ? null : <ColorSwatch color={option.color} />}
               <span {...stylex.props(styles.label)}>
                 {option.label}
                 {option.description ? (

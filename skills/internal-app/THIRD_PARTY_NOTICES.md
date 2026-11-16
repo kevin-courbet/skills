@@ -74,6 +74,7 @@ Each file has a one-line header that points to this notice.
 |---|---|
 | `src/components/helpers/calendar-parts.tsx` | `calendar`, `range-calendar`, `calendar-year-picker` |
 | `src/components/primitives/calendar.tsx` | `calendar`, `range-calendar`, `calendar-year-picker` |
+| `src/components/primitives/color-swatch.tsx` | `color-swatch`, `color-swatch-picker` |
 
 HeroUI license, from https://github.com/heroui-inc/heroui/blob/301d65909379d4634d05355dcea6f71d21a0429f/LICENSE:
 
